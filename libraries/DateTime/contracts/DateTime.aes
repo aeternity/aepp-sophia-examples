@@ -22,8 +22,7 @@ contract DateTime =
       hour : int,
       minute : int,
       second : int,
-      weekday : int,
-      timestamp : int
+      weekday : int
     }
   
   record buff = 
@@ -78,25 +77,25 @@ contract DateTime =
     dt
 
   public function get_year(timestamp : int) : int =
-    parse_timestamp(timestamp).year
+    get_year'(timestamp).year
 
   public function get_month(timestamp : int) : int =
-    parse_timestamp(timestamp).month
+    get_month'(timestamp).month
 
   public function get_day(timestamp : int) : int =
-    parse_timestamp(timestamp).day
+    get_day'(timestamp).day
 
   public function get_hour(timestamp : int) : int =
-    parse_timestamp(timestamp).hour
+    rest(timestamp / 60 /60, 24)
 
-  public function get_minute(timestamp : int) : int =
-    parse_timestamp(timestamp).minute
+  public function get_minute(timestamp :  int) : int =
+    rest(timestamp / 60, 60)
 
   public function get_second(timestamp : int) : int =
-    parse_timestamp(timestamp).second
+    rest(timestamp, 60)
 
   public function get_weekday(timestamp : int) : int =
-    parse_timestamp(timestamp).weekday
+    rest(timestamp / state.day_in_seconds + 4, 7)
   
   public function to_timestamp(year : int,
                                month : int,
@@ -135,8 +134,7 @@ contract DateTime =
       hour = 0,
       minute = 0,
       second = 0,
-      weekday = 0,
-      timestamp = timestamp
+      weekday = 0
       }
 
   private function init_buff(timestamp : int) : buff =
@@ -168,6 +166,10 @@ contract DateTime =
     else
       b
 
+  private function get_year'(timestamp : int) : buff =
+    let b : buff = init_buff(timestamp)
+    p_get_year(b)
+
   private function p_get_month(b : buff) : buff =
     let buf : buff = p_get_month'(1, 12, b)
     buf
@@ -182,6 +184,10 @@ contract DateTime =
         b{seconds_accounted_for = b.seconds_accounted_for + seconds_in_month}
       p_get_month'(begin + 1, end, buf)
 
+  private function get_month'(timestamp : int) : buff =
+    let b : buff = get_year'(timestamp)
+    p_get_month(b)
+
   private function p_get_day(b : buff) : buff =
     p_get_day'(1, get_days_in_month(b.month, b.year), b)
   
@@ -192,6 +198,10 @@ contract DateTime =
     else
       let buf : buff = b{seconds_accounted_for = b.seconds_accounted_for + state.day_in_seconds}
       p_get_day'(from + 1, to, buf)
+
+  private function get_day'(timestamp : int) : buff =
+    let b : buff =  get_month'(timestamp)
+    p_get_day(b)
 
   private function month_to_timestamp(from : int, year : int, month : int, timestamp : int) : int =
     let day_in_month = {[1] = 31,
