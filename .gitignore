@@ -1,2 +1,2 @@
 # Ignore node_modules
-/libraries/DateTime/node_modules/
+/libraries/*/node_modules/
