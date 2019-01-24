@@ -67,9 +67,11 @@ describe('Test DateTime', () => {
         'parse_timestamp',
         timestamp
       )
-      const decodedWithdraw = await callWithdraw
+      const result = await callWithdraw
         .decode('(int, int, int, int, int, int, int, int, int, int)')
-        .then(item => item.value.map(el => el.value))
+
+      const decodedWithdraw = result.value.map(item => item.value)
+
       assert.deepEqual(decodedWithdraw.slice(0,-2), [
         year,
         month,
