@@ -359,14 +359,14 @@ describe('DateTime', () => {
         const second = 7
         const timestamp = 1152006187
 
-        const callWithdraw = await deployedContract
-          .call('to_timestamp', {
-            args: `(${year}, ${month}, ${day}, ${hour}, ${minute}, ${second})`,
-            options: { ttl: config.ttl },
-            abi: 'sophia'
-          })
-          .then(async item => item.decode('int'))
-        assert.equal(callWithdraw.value, timestamp)
+        const result = await deployedContract.call('to_timestamp', {
+          args: `(${year}, ${month}, ${day}, ${hour}, ${minute}, ${second})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia'
+        })
+
+        const decoded = await result.decode('int')
+        assert.equal(decoded.value, timestamp)
       })
 
       it('should convert date to_timestamp', async () => {
@@ -381,14 +381,14 @@ describe('DateTime', () => {
 
         timestamp = parseInt(timestamp / 1000)
 
-        const callWithdraw = await deployedContract
-          .call('to_timestamp', {
-            args: `(${year}, ${month}, ${day}, ${hour}, ${minute}, ${second})`,
-            options: { ttl: config.ttl },
-            abi: 'sophia'
-          })
-          .then(async item => item.decode('int'))
-        assert.equal(callWithdraw.value, timestamp)
+        const result = await deployedContract.call('to_timestamp', {
+          args: `(${year}, ${month}, ${day}, ${hour}, ${minute}, ${second})`,
+          options: { ttl: config.ttl },
+          abi: 'sophia'
+        })
+
+        const decoded = await result.decode('int')
+        assert.equal(decoded.value, timestamp)
       })
     })
   })
