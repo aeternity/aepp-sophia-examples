@@ -1,0 +1,16 @@
+.DS_Store
+dist
+node_modules
+.nyc_output
+.etherlime-store
+.testcases
+build
+docs/build
+.idea/
+.outputParameter
+nonce.txt
+erc721.aes.deploy*
+package-lock.json
+.vscode
+.aeproject-store
+.forgae-store
