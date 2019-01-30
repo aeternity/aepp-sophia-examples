@@ -1,0 +1,237 @@
+contract DateTime =
+  /*
+   Date and Time utilities for sophia contracts
+  */
+
+// Define used structures
+  record state = 
+    {
+      origin_year : int, 
+      day_in_seconds : int,
+      year_in_seconds : int,
+      leap_year_in_seconds : int,
+      hour_in_seconds : int,
+      minute_in_seconds : int
+    }
+
+  record date_time = 
+    {
+      year : int,
+      month : int,
+      day : int,
+      hour : int,
+      minute : int,
+      second : int,
+      weekday : int,
+      timestamp : int,
+      leap_years_before : int,
+      seconds_accounted_for : int
+    }              
+
+// Public function (API)
+  public function init() : state =
+    {
+      origin_year = 1970, 
+      day_in_seconds = 86400,
+      year_in_seconds = 31536000,
+      leap_year_in_seconds = 31622400,
+      hour_in_seconds = 3600,
+      minute_in_seconds = 60
+      }
+
+  public function parse_timestamp(timestamp : int) : date_time = 
+    let dt : date_time = init_date_time(timestamp)
+
+    // calculate year by given timestamp
+    let dt : date_time = p_get_year(dt)
+
+    // calculate month by given timestamp
+    let dt : date_time = p_get_month(dt)
+
+    // calculate day by given timestamp
+    let dt : date_time = p_get_day(dt)
+
+    // calculate hour by given timestamp
+    let dt : date_time = dt{hour = rest(timestamp / 60 /60, 24)}
+
+    // calculate minute by given timestamp
+    let dt : date_time = dt{minute = rest(timestamp / 60, 60)}
+
+    // calculate second by given timestamp
+    let dt : date_time = dt{second = rest(timestamp, 60)}
+
+    // calculate weekday by given timestamp
+    let wd : int = rest(timestamp / state.day_in_seconds + 4, 7)
+    let dt : date_time = dt{weekday = wd}
+    dt
+
+  public function get_year(timestamp : int) : int =
+    get_year'(timestamp).year
+
+  public function get_month(timestamp : int) : int =
+    get_month'(timestamp).month
+
+  public function get_day(timestamp : int) : int =
+    get_day'(timestamp).day
+
+  public function get_hour(timestamp : int) : int =
+    rest(timestamp / 60 /60, 24)
+
+  public function get_minute(timestamp :  int) : int =
+    rest(timestamp / 60, 60)
+
+  public function get_second(timestamp : int) : int =
+    rest(timestamp, 60)
+
+  public function get_weekday(timestamp : int) : int =
+    rest(timestamp / state.day_in_seconds + 4, 7)
+  
+  public function to_timestamp(year : int,
+                               month : int,
+                               day : int,
+                               hour : int,
+                               minute : int,
+                               second : int) : int =
+    // calculate timestamp by given year
+    let leap_years_in_sec = leap_years_before(year, state.origin_year) * state.leap_year_in_seconds
+    let years_in_sec = 
+      ((year - state.origin_year) - leap_years_before(year, state.origin_year)) * state.year_in_seconds
+    let timestamp = leap_years_in_sec + years_in_sec
+
+    // calculate timestamp by given month
+    let timestamp = month_to_timestamp(1, year, month - 1, timestamp)
+
+    // calculate timestamp by given day
+    let timestamp = timestamp + (day - 1) * state.day_in_seconds
+
+    // calculate timestamp by given hour
+    let timestamp = timestamp + hour * state.hour_in_seconds
+
+    // calculate timestamp by given minute
+    let timestamp = timestamp + minute * state.minute_in_seconds
+
+    // calculate timestamp by given second
+    let timestamp = timestamp + second  
+    timestamp
+
+// Private functions and internal logic
+
+  private function init_date_time(timestamp : int) : date_time =
+    let year = state.origin_year + timestamp / state.year_in_seconds
+    let total_leap_years_before = leap_years_before(year, state.origin_year)
+    let seconds_accounted_for = state.leap_year_in_seconds * total_leap_years_before
+
+    {
+      year = year,
+      month = 0,
+      day = 0,
+      hour = 0,
+      minute = 0,
+      second = 0,
+      weekday = 0,
+      leap_years_before = total_leap_years_before,
+      seconds_accounted_for = 
+        seconds_accounted_for + state.year_in_seconds * 
+        (year - state.origin_year - total_leap_years_before),
+      timestamp = timestamp
+      }
+
+  private function p_get_year(dt) : date_time =
+    if(dt.seconds_accounted_for > dt.timestamp)
+      let dt : date_time = dt{
+        seconds_accounted_for =
+        if(is_leap_year(dt.year - 1))
+          dt.seconds_accounted_for - state.leap_year_in_seconds
+        else
+          dt.seconds_accounted_for - state.year_in_seconds,
+        year = dt.year - 1 }
+      p_get_year(dt)
+    else
+      dt
+
+  private function get_year'(timestamp : int) : date_time =
+    let dt : date_time = init_date_time(timestamp)
+    p_get_year(dt)
+
+  private function p_get_month(dt : date_time) : date_time =
+    let dt : date_time = p_get_month'(1, 12, dt)
+    dt
+
+  private function p_get_month'(begin : int, end : int, dt : date_time) : date_time =
+    let seconds_in_month = state.day_in_seconds * get_days_in_month(begin, dt.year)
+    if((begin >= end) || (seconds_in_month + dt.seconds_accounted_for > dt.timestamp))
+      let dt = dt{month = begin}
+      dt
+    else
+      let dt : date_time = 
+        dt{seconds_accounted_for = dt.seconds_accounted_for + seconds_in_month}
+      p_get_month'(begin + 1, end, dt)
+
+  private function get_month'(timestamp : int) : date_time =
+    let dt : date_time = get_year'(timestamp)
+    p_get_month(dt)
+
+  private function p_get_day(dt : date_time) : date_time =
+    p_get_day'(1, get_days_in_month(dt.month, dt.year), dt)
+  
+  private function p_get_day'(from : int, to : int, dt : date_time) : date_time =
+    if(state.day_in_seconds + dt.seconds_accounted_for > dt.timestamp || from >= to)
+      let dt : date_time = dt{day = from}
+      dt
+    else
+      let dt : date_time = dt{seconds_accounted_for = dt.seconds_accounted_for + state.day_in_seconds}
+      p_get_day'(from + 1, to, dt)
+
+  private function get_day'(timestamp : int) : date_time =
+    let dt : date_time =  get_month'(timestamp)
+    p_get_day(dt)
+
+  private function month_to_timestamp(from : int, year : int, month : int, timestamp : int) : int =
+    let day_in_month = {[1] = 31,
+                        [2] = if(is_leap_year(year)) 29
+                              else 28,
+                        [3] = 31,
+                        [4] = 30,
+                        [5] = 31,
+                        [6] = 30,
+                        [7] = 31,
+                        [8] = 31,
+                        [9] = 30,
+                        [10] = 31,
+                        [11] = 30,
+                        [12] = 31}
+
+    if(from =< month)
+      month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * state.day_in_seconds)
+    else
+      timestamp
+
+  private function leap_years_before(year1 : int, year2 : int) : int  =
+    let y1 = year1 - 1
+    let y2 = year2 - 1
+    let yy1 = (y1 / 4) - (y1 / 100) + (y1 / 400)
+    let yy2 = (y2 / 4) - (y2 / 100) + (y2 / 400)
+    yy1 - yy2
+
+  private function is_leap_year(year : int) : bool =
+    if(rest(year, 4) != 0)
+      false
+    elif(rest(year, 100) != 0)
+      true
+    elif(rest(year, 400) != 0)
+      false
+    else
+      true
+
+  private function get_days_in_month(month : int,year : int) : int =
+    if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
+      31
+    elif (month == 4 || month == 6 || month == 9 || month == 11)
+      30
+    elif (is_leap_year(year))
+      29
+    else
+      28
+
+  private function rest(year : int, div : int) : int =
+    year - div * (year / div)
