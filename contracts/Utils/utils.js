@@ -133,7 +133,7 @@ const getAEClient = async function (Ae, clientConfig, keyPair) {
 }
 
 function publicKeyToHex(publicKey) {
-	let byteArray = Crypto.decodeBase58Check(publicKey.split('_')[1]); // const Crypto = require('@aeternity/aepp-sdk').Crypto
+	let byteArray = Crypto.decodeBase58Check(publicKey.split('_')[1]);
 	let asHex = '0x' + byteArray.toString('hex');
 	return asHex;
 }

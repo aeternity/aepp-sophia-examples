@@ -53,6 +53,9 @@ contract NonFungibleFull =
     
     put(state{tokenApprovals[tokenId] = to})
 
+  public function get() : address =
+      Call.caller
+
   public stateful function transferFrom(from : address, to : address, tokenId : token_id) =
     require(isApprovedOrOwner(Call.caller, tokenId), "Caller isn't approved or owner")
     

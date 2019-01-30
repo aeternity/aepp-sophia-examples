@@ -2,22 +2,29 @@ const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
-const utils = require('./utils');
+const path = require('path');
+
+const config = require("./constants/config.json")
+const utils = require('./../../Utils/utils');
+const errorMessages = require('./constants/error-messages.json');
+
 const bytes = require('@aeternity/aepp-sdk/es/utils/bytes');
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
 const crypto = AeSDK.Crypto;
-const config = require("./config.json")
-const sourceFile = './contracts/erc721/erc721_full.aes';
+
+const contractFilePath = './../contracts/non-fungible-full-token.aes';
+
 const tokenName = "AE Token";
 const tokenSymbol = "NFT";
-const firstTokenId = 0;
+const firstTokenId = 1;
+
 
 describe('Non-fungible token', () => {
 
 	let firstClient;
 	let secondClient;
-	let erc721Source;
+	let contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding); ;
 
 	before(async () => {
 		firstClient = await Universal({
@@ -36,18 +43,15 @@ describe('Non-fungible token', () => {
 			networkId: 'ae_devnet'
 		});
 
-		
 		firstClient.setKeypair(config.ownerKeyPair)
 		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
-
-		erc721Source = utils.readFileRelative(sourceFile, config.filesEncoding);
 	})
 
 	describe('Deploy contract', () => {
 
 		it('deploying successfully', async () => {
 			//Arrange
-			const compiledContract = await firstClient.contractCompile(erc721Source, {})
+			const compiledContract = await firstClient.contractCompile(contentOfContract, {})
 
 			//Act
 			const deployPromise = compiledContract.deploy({
@@ -63,7 +67,6 @@ describe('Non-fungible token', () => {
 
 			assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
 		})
-
 	})
 
 	describe('Interact with contract', () => {
@@ -71,7 +74,7 @@ describe('Non-fungible token', () => {
 		let compiledContract;
 
 		beforeEach(async () => {
-			compiledContract = await firstClient.contractCompile(erc721Source, {
+			compiledContract = await firstClient.contractCompile(contentOfContract, {
 				gas: config.gas
 			})
 			deployedContract = await compiledContract.deploy({
@@ -116,7 +119,7 @@ describe('Non-fungible token', () => {
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
 				const deployContractPromise = deployedContract.call('mint', {
-					args: `(${firstTokenId}, ${config.pubKeyHex})`,
+					args: `(${firstTokenId}, ${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 					options: {
 						ttl: config.ttl
 					},
@@ -168,7 +171,7 @@ describe('Non-fungible token', () => {
 							ttl: config.ttl
 						}
 					})
-					await assert.isRejected(unauthorisedPromise, 'bad_call_data');
+					await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
 				})
 
 				it('should not mint token with id that already exist', async () => {
@@ -183,7 +186,7 @@ describe('Non-fungible token', () => {
 					})
 
 					//Assert
-					await assert.isRejected(secondDeployContractPromise, 'bad_call_data');
+					await assert.isRejected(secondDeployContractPromise, errorMessages.CANNOT_OVERRIDE_TOKEN);
 				})
 			})
 
@@ -228,19 +231,51 @@ describe('Non-fungible token', () => {
 					})
 
 					//Assert
-					await assert.isRejected(unauthorizedBurnPromise, 'bad_call_data');
+					await assert.isRejected(unauthorizedBurnPromise, errorMessages.ONLY_OWNER_CAN_TRANSFER);
 				})
 			})
 
 			describe('Transfer', () => {
-				it('should transfer token successfully', async () => {
+				let testContract;
+				before(async () => {
+					let a = await utils.getDeployedContractInstance(Universal, config, utils.readFile(path.resolve(__dirname, './../contracts/wtest.aes'), 'utf-8'))
+					testContract = a.deployedContract;
+				})
+
+				async function getAddress(info) {
+					const addressAsHex = (await info.decode("address")).value;
+					return utils.decodedHexAddressToPublicAddress(addressAsHex);
+				}
+
+				it.only('should transfer token successfully', async () => {
 					//Arrange
 					const expectedBalanceOfNotOwner = 1;
 					const expectedBalanceOfOwner = 0;
 
+					// ----------------
+					const resultOfCalledFunction = await deployedContract.call('get', {
+						args: `(${1})`,
+						options: {
+							ttl: config.ttl
+						}
+					});
+					
+					let aaa = await getAddress(await utils.executeSmartContractFunction(testContract, 'get', `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`))
+					console.log('aaa');
+					console.log(aaa);
+					console.log();
+
+					const addressAsHex = (await resultOfCalledFunction.decode("address")).value;
+					let asPublicKey = utils.decodedHexAddressToPublicAddress(addressAsHex);
+					console.log('public key get');
+					console.log(asPublicKey);
+					console.log();
+
+					// ------------------
+
 					//Act
 					const setApprovalForAllPromise = deployedContract.call('setApprovalForAll', {
-						args: `(${config.pubKeyHex},${true})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)},${true})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -249,7 +284,7 @@ describe('Non-fungible token', () => {
 					await setApprovalForAllPromise;
 
 					const approvePromise = deployedContract.call('approve', {
-						args: `(${firstTokenId}, ${config.notOwnerPubKeyHex})`,
+						args: `(${firstTokenId}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -258,7 +293,7 @@ describe('Non-fungible token', () => {
 					await approvePromise;
 
 					const transferFromPromise = deployedContract.call('transferFrom', {
-						args: `(${config.pubKeyHex}, ${config.notOwnerPubKeyHex}, ${firstTokenId})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${firstTokenId})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -267,7 +302,7 @@ describe('Non-fungible token', () => {
 					await transferFromPromise;
 
 					const balanceOfNotOwnerPromise = deployedContract.call('balanceOf', {
-						args: `(${config.notOwnerPubKeyHex})`,
+						args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -276,7 +311,7 @@ describe('Non-fungible token', () => {
 					const balanceOfNotOwnerResult = await balanceOfNotOwnerPromise;
 
 					const balanceOwnerPromise = deployedContract.call('balanceOf', {
-						args: `(${config.pubKeyHex})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -292,15 +327,23 @@ describe('Non-fungible token', () => {
 					});
 					
 					const ownerOfResult = await ownerOfPromise;
+					console.log(ownerOfResult);
 
 					//Assert
 					const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode("int");
 					const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode("int");
-					const decodedOwnerOfResult = ownerOfResult.result.returnValue.toLowerCase()
+					const decodedOwnerOfResult = (await ownerOfResult.decode("address")).value;
+					console.log(decodedOwnerOfResult);
+					let r = utils.decodedHexAddressToPublicAddress(decodedOwnerOfResult);
+					console.log();
+					console.log('r');
+					console.log(r);
+					console.log(config.notOwnerKeyPair.publicKey);
+					console.log();
 
-					assert.equal(decodedBalanceOfNotOwnerResult.value, expectedBalanceOfNotOwner)
-					assert.equal(decodedBalanceOfOwnerResult.value, expectedBalanceOfOwner)
-					assert.equal(decodedOwnerOfResult.split('_')[1], config.notOwnerKeyPair.publicKey.split('_')[1].toLocaleLowerCase())
+					// assert.equal(decodedBalanceOfNotOwnerResult.value, expectedBalanceOfNotOwner)
+					// assert.equal(decodedBalanceOfOwnerResult.value, expectedBalanceOfOwner)
+					// assert.equal(decodedOwnerOfResult.split('_')[1], config.notOwnerKeyPair.publicKey.split('_')[1].toLocaleLowerCase())
 				})
 
 				it('non-owner of token shouldn`t be able to call approve', async () => {
