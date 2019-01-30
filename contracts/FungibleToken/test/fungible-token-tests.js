@@ -252,7 +252,7 @@ describe('Fungible token', () => {
 				})
 			})
 
-			describe.only('Transfer', async () => {
+			describe('Transfer', async () => {
 
 				it('should transfer token successfully', async () => {
 					//Arrange
