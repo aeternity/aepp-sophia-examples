@@ -5,7 +5,7 @@ const assert = chai.assert;
 const path = require('path');
 
 const config = require("./constants/config.json")
-const utils = require('./../../Utils/utils');
+const utils = require('../utils/utils');
 const errorMessages = require('./constants/error-messages.json');
 
 const bytes = require('@aeternity/aepp-sdk/es/utils/bytes');
@@ -19,14 +19,19 @@ const tokenName = "AE Token";
 const tokenSymbol = "NFT";
 const firstTokenId = 1;
 
+async function getAddress(info) {
+	const addressAsHex = (await info.decode("address")).value;
+	return utils.decodedHexAddressToPublicAddress(addressAsHex);
+}
 
 describe('Non-fungible token', () => {
 
 	let firstClient;
 	let secondClient;
-	let contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding); ;
+	let contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 
 	before(async () => {
+
 		firstClient = await Universal({
 			url: config.host,
 			internalUrl: config.internalHost,
@@ -236,42 +241,10 @@ describe('Non-fungible token', () => {
 			})
 
 			describe('Transfer', () => {
-				let testContract;
-				before(async () => {
-					let a = await utils.getDeployedContractInstance(Universal, config, utils.readFile(path.resolve(__dirname, './../contracts/wtest.aes'), 'utf-8'))
-					testContract = a.deployedContract;
-				})
-
-				async function getAddress(info) {
-					const addressAsHex = (await info.decode("address")).value;
-					return utils.decodedHexAddressToPublicAddress(addressAsHex);
-				}
-
-				it.only('should transfer token successfully', async () => {
+				it('should transfer token successfully', async () => {
 					//Arrange
 					const expectedBalanceOfNotOwner = 1;
 					const expectedBalanceOfOwner = 0;
-
-					// ----------------
-					const resultOfCalledFunction = await deployedContract.call('get', {
-						args: `(${1})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					let aaa = await getAddress(await utils.executeSmartContractFunction(testContract, 'get', `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`))
-					console.log('aaa');
-					console.log(aaa);
-					console.log();
-
-					const addressAsHex = (await resultOfCalledFunction.decode("address")).value;
-					let asPublicKey = utils.decodedHexAddressToPublicAddress(addressAsHex);
-					console.log('public key get');
-					console.log(asPublicKey);
-					console.log();
-
-					// ------------------
 
 					//Act
 					const setApprovalForAllPromise = deployedContract.call('setApprovalForAll', {
@@ -327,23 +300,15 @@ describe('Non-fungible token', () => {
 					});
 					
 					const ownerOfResult = await ownerOfPromise;
-					console.log(ownerOfResult);
 
-					//Assert
+					// //Assert
 					const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode("int");
 					const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode("int");
-					const decodedOwnerOfResult = (await ownerOfResult.decode("address")).value;
-					console.log(decodedOwnerOfResult);
-					let r = utils.decodedHexAddressToPublicAddress(decodedOwnerOfResult);
-					console.log();
-					console.log('r');
-					console.log(r);
-					console.log(config.notOwnerKeyPair.publicKey);
-					console.log();
+					const publicKey = await getAddress(ownerOfResult);
 
-					// assert.equal(decodedBalanceOfNotOwnerResult.value, expectedBalanceOfNotOwner)
-					// assert.equal(decodedBalanceOfOwnerResult.value, expectedBalanceOfOwner)
-					// assert.equal(decodedOwnerOfResult.split('_')[1], config.notOwnerKeyPair.publicKey.split('_')[1].toLocaleLowerCase())
+					assert.equal(decodedBalanceOfNotOwnerResult.value, expectedBalanceOfNotOwner)
+					assert.equal(decodedBalanceOfOwnerResult.value, expectedBalanceOfOwner)
+					assert.equal(publicKey, config.notOwnerKeyPair.publicKey)
 				})
 
 				it('non-owner of token shouldn`t be able to call approve', async () => {

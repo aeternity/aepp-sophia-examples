@@ -7,7 +7,7 @@ const bytes = require('@aeternity/aepp-sdk/es/utils/bytes');
 const Universal = AeSDK.Universal;
 const crypto = AeSDK.Crypto;
 
-const utils = require('./../../Utils/utils');
+const utils = require('./../utils/utils');
 const config = require('./constants/config.json');
 const sourceFile = './contracts/Ownable.aes';
 

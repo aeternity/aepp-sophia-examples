@@ -7,7 +7,7 @@ const assert = chai.assert;
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
 const config = require("./constants/config.json")
-const utils = require('./../../Utils/utils');
+const utils = require('./../utils/utils');
 const errorMessages = require('./constants/error-messages.json');
 
 const CONTRACT_FILE_PATH =  "./../contracts/crypto-hamsters.aes";

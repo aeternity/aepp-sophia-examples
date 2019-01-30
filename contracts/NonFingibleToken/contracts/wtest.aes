@@ -1,3 +1,0 @@
-contract Test =
-    public function get(addr: address) : address =
-        addr
