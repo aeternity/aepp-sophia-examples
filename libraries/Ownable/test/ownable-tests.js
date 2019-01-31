@@ -209,7 +209,7 @@ describe('Ownable', () => {
 
 		it('should throw if not owner tries to change the ownership of the contract', async () => {
 			const unauthorizedTransferOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "transferOwnership", {
-				args: `(${config.notOwnerPubKeyHex})`,
+				args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
 				options: {
 					ttl: config.ttl
 				},

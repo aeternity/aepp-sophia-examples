@@ -16,7 +16,6 @@ contract CryptoHamster =
     public function createHamster(hamsterName: string) =
         require(!nameExists(hamsterName), "Name is already taken")
 
-        // let randDna = generateRandomDNA(name)
         createHamsterByNameDNA(hamsterName, generateRandomDNA())
 
     public function nameExists(name: string) : bool =
@@ -32,9 +31,6 @@ contract CryptoHamster =
         neededHamster.dna
 
     private function createHamsterByNameDNA(_name: string, _dna: int) =
-        // I need smth like this: uint id = hamsters.push(Hamster(_name, _dna)) - 1;
-        // How to do a push to the map right?
-        // fire an event here: emit NewHamster(id, _name, _dna);
         let newHamster : hamster = {
             id = state.index,
             name = _name,
@@ -44,7 +40,6 @@ contract CryptoHamster =
         put(state{index = (state.index + 1)})
 
     private function generateRandomDNA() : int =
-        // I want to create a hash of the input str like: let rand = int(str_hash))
         Chain.block_hash(Chain.block_height - 1) - Chain.timestamp + state.index
 
     private function require(expression : bool, err : string) =

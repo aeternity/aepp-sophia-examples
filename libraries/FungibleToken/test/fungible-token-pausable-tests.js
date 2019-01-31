@@ -186,7 +186,7 @@ describe('Fungible Pauseable Token', () => {
 					await pausePromise;
 
 					const approvePromise = deployedContract.call('approve', {
-						args: `(${config.notOwnerPubKeyHex}, ${transferAmount})`,
+						args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${transferAmount})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -202,7 +202,7 @@ describe('Fungible Pauseable Token', () => {
 
 					//Act
 					const approvePromise = deployedContract.call('approve', {
-						args: `(${config.notOwnerPubKeyHex}, ${transferAmount})`,
+						args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${transferAmount})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -219,7 +219,7 @@ describe('Fungible Pauseable Token', () => {
 					await pausePromise;
 
 					const transferFromPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "transferFrom", {
-						args: `(${config.pubKeyHex}, ${config.notOwnerPubKeyHex}, ${transferAmount})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${transferAmount})`,
 						options: {
 							ttl: config.ttl
 						}

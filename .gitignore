@@ -4,7 +4,6 @@
 dist
 node_modules
 .nyc_output
-.etherlime-store
 .testcases
 build
 docs/build
@@ -14,6 +13,5 @@ nonce.txt
 erc721.aes.deploy*
 package-lock.json
 .vscode
-.aeproject-store
 .forgae-store
 
