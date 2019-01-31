@@ -6,3 +6,6 @@ The provided sophia examples or library functions are only tested to the extend 
 
 ## Libraries
 [**Sophia DateTime**](/libraries/DateTime/README.md) library
+
+## Examples
+[**Sophia SmartRealEstate**](/examples/SmartRealEstate/README.md) example.
