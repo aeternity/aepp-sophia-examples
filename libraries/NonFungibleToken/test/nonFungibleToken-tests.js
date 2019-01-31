@@ -150,7 +150,7 @@ describe('Non-fungible token', () => {
 					const ownerOfResult = await ownerOfPromise;
 
 					const balanceOfPromise = deployedContract.call('balanceOf', {
-						args: `(${config.pubKeyHex})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -171,7 +171,7 @@ describe('Non-fungible token', () => {
 
 				it('should not mint from non-owner', async () => {
 					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "mint", {
-						args: `(${firstTokenId}, ${config.pubKeyHex})`,
+						args: `(${firstTokenId}, ${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -184,7 +184,7 @@ describe('Non-fungible token', () => {
 
 					//Act
 					const secondDeployContractPromise = deployedContract.call('mint', {
-						args: `(${firstTokenId}, ${config.pubKeyHex})`,
+						args: `(${firstTokenId}, ${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -211,7 +211,7 @@ describe('Non-fungible token', () => {
 					await ownerOfPromise;
 
 					const balanceOfPromise = deployedContract.call('balanceOf', {
-						args: `(${config.pubKeyHex})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}

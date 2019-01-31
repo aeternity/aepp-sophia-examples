@@ -11,7 +11,7 @@ const contractFilePath = "./../contracts/fungible-token-pausable.aes";
 const path = require('path');
 const errorMessages = require('./constants/error-messages.json');
 
-describe('Fungible Pauseable Token', () => {
+describe.only('Fungible Pauseable Token', () => {
 
 	let firstClient;
 	let secondClient;
@@ -42,7 +42,7 @@ describe('Fungible Pauseable Token', () => {
 
 	describe('Deploy contract', () => {
 
-		it('deploying successfully', async () => {
+		it('deploying successfully ', async () => {
 			//Arrange
 			const compiledContract = await firstClient.contractCompile(contentOfContract, {})
 
@@ -77,7 +77,7 @@ describe('Fungible Pauseable Token', () => {
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
 				const mintPromise = deployedContract.call('mint', {
-					args: `(${config.pubKeyHex}, 1000)`,
+					args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1000)`,
 					options: {
 						ttl: config.ttl
 					},
@@ -136,7 +136,7 @@ describe('Fungible Pauseable Token', () => {
 					await pausePromise;
 
 					const mintPromise = deployedContract.call('mint', {
-						args: `(${config.pubKeyHex}, 1)`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1)`,
 						options: {
 							ttl: config.ttl
 						},

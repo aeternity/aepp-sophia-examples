@@ -84,7 +84,7 @@ describe('Fungible Capped Token', () => {
 			const deployedContract = await deployPromise;
 
 			const mintPromise = deployedContract.call('mint', {
-				args: `(${config.pubKeyHex}, 1000)`,
+				args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1000)`,
 				options: {
 					ttl: config.ttl,
 				},

@@ -78,7 +78,7 @@ describe('Fungible token', () => {
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
 				const mintPromise = deployedContract.call('mint', {
-					args: `(${config.pubKeyHex}, 1000)`,
+					args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1000)`,
 					options: {
 						ttl: config.ttl
 					},
@@ -95,7 +95,7 @@ describe('Fungible token', () => {
 
 					//Act
 					const balanceOfPromise = deployedContract.call('balanceOf', {
-						args: `(${config.pubKeyHex})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -110,7 +110,7 @@ describe('Fungible token', () => {
 
 				it('should not mint from non-owner', async () => {
 					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "mint", {
-						args: `(${config.pubKeyHex}, 123)`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 123)`,
 						options: {
 							ttl: config.ttl
 						}
@@ -125,7 +125,7 @@ describe('Fungible token', () => {
 					//Act
 					//1000 tokens are already minted
 					const deployContractPromise1 = deployedContract.call('mint', {
-						args: `(${config.pubKeyHex}, 1)`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1)`,
 						options: {
 							ttl: config.ttl
 						},
@@ -135,7 +135,7 @@ describe('Fungible token', () => {
 					await deployContractPromise1;
 
 					const deployContractPromise2 = deployedContract.call('mint', {
-						args: `(${config.pubKeyHex}, 1)`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1)`,
 						options: {
 							ttl: config.ttl
 						},
@@ -145,7 +145,7 @@ describe('Fungible token', () => {
 					await deployContractPromise2;
 
 					const deployContractPromise3 = deployedContract.call('mint', {
-						args: `(${config.pubKeyHex}, 1)`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1)`,
 						options: {
 							ttl: config.ttl
 						},
@@ -185,7 +185,7 @@ describe('Fungible token', () => {
 					await ownerOfPromise;
 
 					const balanceOfPromise = deployedContract.call('balanceOf', {
-						args: `(${config.pubKeyHex})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -414,7 +414,7 @@ describe('Fungible token', () => {
 					await decreaseAllowancePromise;
 
 					const allowancePromise = deployedContract.call('allowance', {
-						args: `(${config.pubKeyHex}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
+						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
 						options: {
 							ttl: config.ttl
 						}
