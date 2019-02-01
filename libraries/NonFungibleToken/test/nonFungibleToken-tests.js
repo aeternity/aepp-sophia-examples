@@ -19,6 +19,11 @@ const tokenName = "AE Token";
 const tokenSymbol = "NFT";
 const firstTokenId = 1;
 
+const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
+const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
+
+const nonFungibleFunctions = require('./constants/smartContractFunctions.json');
+
 async function getAddress(info) {
 	const addressAsHex = (await info.decode("address")).value;
 	return utils.decodedHexAddressToPublicAddress(addressAsHex);
@@ -37,7 +42,7 @@ describe('Non-fungible token', () => {
 			internalUrl: config.internalHost,
 			keypair: config.ownerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 
 		secondClient = await Universal({
@@ -45,7 +50,7 @@ describe('Non-fungible token', () => {
 			internalUrl: config.internalHost,
 			keypair: config.notOwnerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 
 		firstClient.setKeypair(config.ownerKeyPair)
@@ -64,7 +69,7 @@ describe('Non-fungible token', () => {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 			
 			//Assert
@@ -87,7 +92,7 @@ describe('Non-fungible token', () => {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 		})
 
@@ -96,7 +101,7 @@ describe('Non-fungible token', () => {
 				//Arrange
 
 				//Act
-				const callNamePromise = deployedContract.call('name', {
+				const callNamePromise = deployedContract.call(nonFungibleFunctions.NAME, {
 					options: {
 						ttl: config.ttl
 					}
@@ -104,7 +109,7 @@ describe('Non-fungible token', () => {
 				
 				const callNameResult = await callNamePromise;
 
-				const callSymbolPromise = deployedContract.call('symbol', {
+				const callSymbolPromise = deployedContract.call(nonFungibleFunctions.SYMBOL, {
 					options: {
 						ttl: config.ttl
 					}
@@ -123,12 +128,12 @@ describe('Non-fungible token', () => {
 
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
-				const deployContractPromise = deployedContract.call('mint', {
-					args: `(${firstTokenId}, ${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
+				const deployContractPromise = deployedContract.call(nonFungibleFunctions.MINT, {
+					args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
 					options: {
 						ttl: config.ttl
 					},
-					abi: "sophia"
+					abi: config.abiType
 				})
 				
 				await deployContractPromise;
@@ -140,7 +145,7 @@ describe('Non-fungible token', () => {
 					const expectedBalance = 1;
 
 					//Act
-					const ownerOfPromise = deployedContract.call('ownerOf', {
+					const ownerOfPromise = deployedContract.call(nonFungibleFunctions.OWNER_OF, {
 						args: `(${firstTokenId})`,
 						options: {
 							ttl: config.ttl
@@ -149,8 +154,8 @@ describe('Non-fungible token', () => {
 					
 					const ownerOfResult = await ownerOfPromise;
 
-					const balanceOfPromise = deployedContract.call('balanceOf', {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
+					const balanceOfPromise = deployedContract.call(nonFungibleFunctions.BALANCE_OF, {
+						args: `(${ownerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -170,8 +175,8 @@ describe('Non-fungible token', () => {
 				})
 
 				it('should not mint from non-owner', async () => {
-					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "mint", {
-						args: `(${firstTokenId}, ${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
+					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, nonFungibleFunctions.MINT, {
+						args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -183,8 +188,8 @@ describe('Non-fungible token', () => {
 					//Arrange
 
 					//Act
-					const secondDeployContractPromise = deployedContract.call('mint', {
-						args: `(${firstTokenId}, ${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
+					const secondDeployContractPromise = deployedContract.call(nonFungibleFunctions.MINT, {
+						args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -201,7 +206,7 @@ describe('Non-fungible token', () => {
 					const expectedBalance = 0;
 
 					//Act
-					const ownerOfPromise = deployedContract.call('burn', {
+					const ownerOfPromise = deployedContract.call(nonFungibleFunctions.BURN, {
 						args: `(${firstTokenId})`,
 						options: {
 							ttl: config.ttl
@@ -210,8 +215,8 @@ describe('Non-fungible token', () => {
 					
 					await ownerOfPromise;
 
-					const balanceOfPromise = deployedContract.call('balanceOf', {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
+					const balanceOfPromise = deployedContract.call(nonFungibleFunctions.BALANCE_OF, {
+						args: `(${ownerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -228,7 +233,7 @@ describe('Non-fungible token', () => {
 					//Arrange
 
 					//Act
-					const unauthorizedBurnPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "burn", {
+					const unauthorizedBurnPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, nonFungibleFunctions.BURN, {
 						args: `(${firstTokenId})`,
 						options: {
 							ttl: config.ttl
@@ -247,8 +252,8 @@ describe('Non-fungible token', () => {
 					const expectedBalanceOfOwner = 0;
 
 					//Act
-					const setApprovalForAllPromise = deployedContract.call('setApprovalForAll', {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)},${true})`,
+					const setApprovalForAllPromise = deployedContract.call(nonFungibleFunctions.SET_APPROVAL_FOR_ALL, {
+						args: `(${ownerPublicKeyAsHex},${true})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -256,8 +261,8 @@ describe('Non-fungible token', () => {
 					
 					await setApprovalForAllPromise;
 
-					const approvePromise = deployedContract.call('approve', {
-						args: `(${firstTokenId}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
+					const approvePromise = deployedContract.call(nonFungibleFunctions.APPROVE, {
+						args: `(${firstTokenId}, ${notOwnerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -265,8 +270,8 @@ describe('Non-fungible token', () => {
 					
 					await approvePromise;
 
-					const transferFromPromise = deployedContract.call('transferFrom', {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${firstTokenId})`,
+					const transferFromPromise = deployedContract.call(nonFungibleFunctions.TRANSFER_FROM, {
+						args: `(${ownerPublicKeyAsHex}, ${notOwnerPublicKeyAsHex}, ${firstTokenId})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -274,8 +279,8 @@ describe('Non-fungible token', () => {
 					
 					await transferFromPromise;
 
-					const balanceOfNotOwnerPromise = deployedContract.call('balanceOf', {
-						args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
+					const balanceOfNotOwnerPromise = deployedContract.call(nonFungibleFunctions.BALANCE_OF, {
+						args: `(${notOwnerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -283,8 +288,8 @@ describe('Non-fungible token', () => {
 					
 					const balanceOfNotOwnerResult = await balanceOfNotOwnerPromise;
 
-					const balanceOwnerPromise = deployedContract.call('balanceOf', {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)})`,
+					const balanceOwnerPromise = deployedContract.call(nonFungibleFunctions.BALANCE_OF, {
+						args: `(${ownerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -292,7 +297,7 @@ describe('Non-fungible token', () => {
 					
 					const balanceOfOwnerResult = await balanceOwnerPromise;
 
-					const ownerOfPromise = deployedContract.call('ownerOf', {
+					const ownerOfPromise = deployedContract.call(nonFungibleFunctions.OWNER_OF, {
 						args: `(${firstTokenId})`,
 						options: {
 							ttl: config.ttl
@@ -315,54 +320,58 @@ describe('Non-fungible token', () => {
 					//Arrange
 
 					//Act
-					const unauthorizedApprovePromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "approve", {
-						args: `(${firstTokenId})`,
+					const unauthorizedApprovePromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, nonFungibleFunctions.APPROVE, {
+						args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
 						options: {
 							ttl: config.ttl
 						}
 					})
 
 					//Assert
-					await assert.isRejected(unauthorizedApprovePromise, 'bad_call_data');
+					await assert.isRejected(unauthorizedApprovePromise, errorMessages.NOT_AN_OWNER_OR_NOT_APPROVED);
 				})
 
 				it('non-owner of token shouldn`t be able to call transferFrom', async () => {
 					//Arrange
 
 					//Act
-					const unauthorizedTransferPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "transferFrom", {
-						args: `(${firstTokenId})`,
+					const unauthorizedTransferPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, nonFungibleFunctions.TRANSFER_FROM, {
+						args: `(${notOwnerPublicKeyAsHex}, ${ownerPublicKeyAsHex}, ${firstTokenId})`,
 						options: {
 							ttl: config.ttl
 						}
 					})
 
 					//Assert
-					await assert.isRejected(unauthorizedTransferPromise, 'bad_call_data');
+					await assert.isRejected(unauthorizedTransferPromise, errorMessages.NOT_AN_OWNER_OR_NOT_APPROVED);
 				})
 			})
 
-			//TODO fix this test
-			// describe('Metadata', () => {	
-			// 	it('should write/read token metadata successfully', async () => {	
-			// 		//Arrange	
-			// 		const expectedTokenURI = "Token";	
+			describe('Metadata', () => {	
+				it('should write/read token metadata successfully', async () => {	
+					//Arrange	
+					const expectedTokenURI = "Token";	
 
-			// 		//Act	
-			// 		const setURIPromise = deployedContract.call('setTokenURI', { args: `(${firstTokenId}, "Token")`, options: { ttl: config.ttl, gas: config.gas } });	
-			// 		assert.isFulfilled(setURIPromise, 'Could not call setTokenURI');	
-			// 		await setURIPromise;	
+					//Act	
+					await deployedContract.call(nonFungibleFunctions.SET_TOKEN_URI, { 
+						args: `(${firstTokenId}, "Token")`, 
+						options: { 
+							ttl: config.ttl 
+						}});
 
-			// 		const tokenURIPromise = deployedContract.call('tokenURI', { args: `(${firstTokenId}`, options: { ttl: config.ttl, gas: config.gas } });	
-			// 		assert.isFulfilled(tokenURIPromise, 'Could not call approve');	
-			// 		const tokenURIResult = await tokenURIPromise;	
+					const tokenURIPromise = deployedContract.call(nonFungibleFunctions.GET_TOKEN_URI, { 
+						args: `(${firstTokenId})`, 
+						options: { ttl: config.ttl
+						}});
 
-			// 		//Assert	
-			// 		const decodedTokenURIResult = await tokenURIResult.decode("string");	
+					const tokenURIResult = await tokenURIPromise;	
 
-			// 		assert.equal(decodedTokenURIResult, expectedTokenURI)	
-			// 	})	
-			// })
+					//Assert	
+					const decodedTokenURIResult = await tokenURIResult.decode("string");	
+
+					assert.equal(decodedTokenURIResult.value, expectedTokenURI)	
+				})	
+			})
 		})
 	})
 })

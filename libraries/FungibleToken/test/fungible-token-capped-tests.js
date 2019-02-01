@@ -11,6 +11,10 @@ const contractFilePath = "./../contracts/fungible-token-capped.aes";
 const path = require('path');
 const errorMessages = require('./constants/error-messages.json');
 
+const fungibleTokenFunctions = require('./constants/fungible-token-functions'); 
+
+const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
+
 describe('Fungible Capped Token', () => {
 
 	let firstClient;
@@ -22,7 +26,7 @@ describe('Fungible Capped Token', () => {
 			internalUrl: config.internalHost,
 			keypair: config.ownerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 
 		firstClient.setKeypair(config.ownerKeyPair)
@@ -44,12 +48,12 @@ describe('Fungible Capped Token', () => {
 				options: {
 					ttl: config.ttl,
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 			
 			const deployedContract = await deployPromise;
 
-			const capPromise = deployedContract.call('cap', {
+			const capPromise = deployedContract.call(fungibleTokenFunctions.CAP, {
 				options: {
 					ttl: config.ttl,
 				}
@@ -78,17 +82,17 @@ describe('Fungible Capped Token', () => {
 				options: {
 					ttl: config.ttl,
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 
 			const deployedContract = await deployPromise;
 
-			const mintPromise = deployedContract.call('mint', {
-				args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1000)`,
+			const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
+				args: `(${ownerPublicKeyAsHex}, 1000)`,
 				options: {
 					ttl: config.ttl,
 				},
-				abi: "sophia"
+				abi: config.abiType
 			})
 
 			//Assert

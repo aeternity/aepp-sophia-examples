@@ -11,5 +11,7 @@
 	},
 	"filesEncoding": "utf-8",
 	"gas": 20000000,
-	"ttl": 123
+	"ttl": 123,
+	"networkId": "ae_devnet",
+	"abiType": "sophia"
 }	

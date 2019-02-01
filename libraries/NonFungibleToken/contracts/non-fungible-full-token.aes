@@ -25,8 +25,14 @@ contract NonFungibleFull =
   public function balanceOf(tokenOwner : address) : int = lookupByAddress(tokenOwner, state.ownedTokensCount, 0)
   public function ownerOf(tokenId : token_id) : address = lookupById(tokenId, state.tokenOwner, #0)
   public function getApproved(tokenId : token_id) : address = lookupById(tokenId, state.tokenApprovals, #0)
-  public function isApprovedForAll(owner : address, operator : address) : bool = state.operatorApprovals[owner][operator]
-  public function tokenURI(tokenId : token_id) : string = lookupById(tokenId, state.tokenURIs, "")
+
+  public function isApprovedForAll(_owner: address, operator : address) : bool =
+    let x : map(address, bool) = isOperatorApprovals(_owner)
+    switch(Map.lookup(operator, x))
+      None => false
+      Some(x) => x
+
+  public function getTokenURI(tokenId : token_id) : string = lookupById(tokenId, state.tokenURIs, "")
 
   public stateful function setTokenURI(tokenId : token_id, uri : string) =
     onlyTokenOwner(Call.caller, tokenId)
@@ -46,10 +52,10 @@ contract NonFungibleFull =
     removeTokenMetadata(tokenId)
 
   public stateful function approve(tokenId : int, to : address) =
-    let owner : address = ownerOf(tokenId)
+    let _owner : address = ownerOf(tokenId)
     
     require(to != Call.caller, "Receiver can't be same as sender")
-    require(Call.caller == owner || isApprovedForAll(owner, Call.caller), "Not owner or not approved")
+    require(Call.caller == _owner || isApprovedForAll(_owner, Call.caller), "Not owner or not approved")
     
     put(state{tokenApprovals[tokenId] = to})
 
@@ -57,7 +63,7 @@ contract NonFungibleFull =
       Call.caller
 
   public stateful function transferFrom(from : address, to : address, tokenId : token_id) =
-    require(isApprovedOrOwner(Call.caller, tokenId), "Caller isn't approved or owner")
+    require(isApprovedOrOwner(Call.caller, tokenId), "Not owner or not approved")
     
     clearApproval(from, tokenId)
     removeTokenFrom(from, tokenId)
@@ -66,6 +72,11 @@ contract NonFungibleFull =
   public stateful function setApprovalForAll(to : address, approved : bool) =
     ensureAllowed(Call.caller)
     put(state{operatorApprovals[Call.caller][to] = approved})
+
+  private function isOperatorApprovals(_owner: address) : map(address, bool) =
+    switch(Map.lookup(_owner, state.operatorApprovals))
+      None => {}
+      Some(x) => x
   
   private function checkTokenExists(tokenId : token_id) : bool =
     switch(Map.lookup(tokenId, state.tokenOwner))
@@ -122,7 +133,12 @@ contract NonFungibleFull =
     require(owner == state.owner, "Only owner can mint!")
 
   private function onlyTokenOwner(owner : address, tokenId : token_id) =
-    require(owner == state.tokenOwner[tokenId], "Only token owner can transfer!")
+    require(owner == getTokenOwner(tokenId), "Only token owner can transfer!")
+
+  private function getTokenOwner(tokenId: token_id) : address =
+    switch(Map.lookup(tokenId, state.tokenOwner))
+      None => #0
+      Some(x) => x
 
   private function isApprovedOrOwner(spender : address, tokenId : token_id) : bool = 
     let owner : address = ownerOf(tokenId)

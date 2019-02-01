@@ -10,6 +10,8 @@ const contractFilePath = "./../contracts/fungible-token-detailed.aes";
 
 const path = require('path');
 
+const fungibleTokenFunctions = require('./constants/fungible-token-functions');
+
 describe('Fungible Detailed Token', () => {
 
     let firstClient;
@@ -21,7 +23,7 @@ describe('Fungible Detailed Token', () => {
             internalUrl: config.internalHost,
             keypair: config.ownerKeyPair,
             nativeMode: true,
-            networkId: 'ae_devnet'
+            networkId: config.networkId
         });
 
         firstClient.setKeypair(config.ownerKeyPair)
@@ -45,12 +47,12 @@ describe('Fungible Detailed Token', () => {
                 options: {
                     ttl: config.ttl
                 },
-                abi: "sophia"
+                abi: config.abiType
             });
             
             const deployedContract = await deployPromise;
 
-            const namePromise = deployedContract.call('name', {
+            const namePromise = deployedContract.call(fungibleTokenFunctions.NAME, {
                 options: {
                     ttl: config.ttl
                 }
@@ -58,7 +60,7 @@ describe('Fungible Detailed Token', () => {
             
             const namePromiseResult = await namePromise;
 
-            const symbolPromise = deployedContract.call('symbol', {
+            const symbolPromise = deployedContract.call(fungibleTokenFunctions.SYMBOL, {
                 options: {
                     ttl: config.ttl
                 }
@@ -66,7 +68,7 @@ describe('Fungible Detailed Token', () => {
             
             const symbolPromiseResult = await symbolPromise;
 
-            const decimalsPromise = deployedContract.call('decimals', {
+            const decimalsPromise = deployedContract.call(fungibleTokenFunctions.DECIMALS, {
                 options: {
                     ttl: config.ttl
                 }

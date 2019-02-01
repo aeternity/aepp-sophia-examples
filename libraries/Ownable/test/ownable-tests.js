@@ -13,6 +13,10 @@ const sourceFile = './contracts/Ownable.aes';
 
 const errorMessages = require('./constants/error-messages.json');
 
+const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
+
+const ownableFunctions = require('./constants/smartContractFunctions.json')
+
 describe('Ownable', () => {
 
 	let firstClient;
@@ -27,14 +31,14 @@ describe('Ownable', () => {
 			internalUrl: config.internalHost,
 			keypair: config.ownerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 		secondClient = await Universal({
 			url: config.host,
 			internalUrl: config.internalHost,
 			keypair: config.notOwnerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 
 		firstClient.setKeypair(config.ownerKeyPair)
@@ -58,12 +62,10 @@ describe('Ownable', () => {
 				}
 			});
 
-			await assert.isFulfilled(deployPromise, 'Could not deploy the Ownable Smart Contract');
 			//Assert
 			const deployedContract = await deployPromise;
 			assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
 		})
-
 	})
 
 	describe('Smart contract tests', () => {
@@ -80,20 +82,19 @@ describe('Ownable', () => {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 		})
 
 		it('should set the proper owner to the smart contract', async () => {
 
-			const callOwnerPromise = deployedContract.call('owner', {
+			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 
-			await assert.isFulfilled(callOwnerPromise, 'Calling the owner function failed');
 			const callOwnerResult = await callOwnerPromise;
 			let encodedData = await callOwnerResult.decode('address')
 			const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
@@ -103,11 +104,11 @@ describe('Ownable', () => {
 		})
 
 		it('should return true if owner calls onlyOwner', async () => {
-			const callOnlyOwnerPromise = deployedContract.call('onlyOwner', {
+			const callOnlyOwnerPromise = deployedContract.call(ownableFunctions.ONLY_OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 
 			const callOnlyOwnerResult = await callOnlyOwnerPromise;
@@ -118,11 +119,11 @@ describe('Ownable', () => {
 
 		it('should return true if the caller is the owner, check function', async () => {
 
-			const callIsOwnerPromise = deployedContract.call('isOwner', {
+			const callIsOwnerPromise = deployedContract.call(ownableFunctions.IS_OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 			
 			const callIsOwnerResult = await callIsOwnerPromise;
@@ -133,11 +134,11 @@ describe('Ownable', () => {
 
 		it('should change the owner to #0 address', async () => {
 
-			const callRenounceOwnershipPromise = deployedContract.call('renounceOwnership', {
+			const callRenounceOwnershipPromise = deployedContract.call(ownableFunctions.RENOUNCE_OWNERSHIP, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 			
 			const callRenounceOwnershipResult = await callRenounceOwnershipPromise;
@@ -149,20 +150,20 @@ describe('Ownable', () => {
 
 		it('should transfer ownership of the contract', async () => {
 
-			const callTransferOwnershipPromise = deployedContract.call('transferOwnership', {
-				args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
+			const callTransferOwnershipPromise = deployedContract.call(ownableFunctions.TRANSFER_OWNERSHIP, {
+				args: `(${notOwnerPublicKeyAsHex})`,
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			})
 			await assert.isFulfilled(callTransferOwnershipPromise, 'Calling transfer ownership function failed');
 
-			const callOwnerPromise = deployedContract.call('owner', {
+			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 
 			const callOwnerResult = await callOwnerPromise;
@@ -173,33 +174,33 @@ describe('Ownable', () => {
 		})
 
 		it('should throw if not owner call function onlyOwner', async () => {
-			const unauthorizedOnlyOwnerPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "onlyOwner", {
+			const unauthorizedOnlyOwnerPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, ownableFunctions.ONLY_OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			})
 
 			await assert.isRejected(unauthorizedOnlyOwnerPromise, errorMessages.NOT_AN_OWNER);
 		})
 
 		it('should throw if not owner tries to renounce ownership', async () => {
-			const unauthorizedRenounceOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "renounceOwnership", {
+			const unauthorizedRenounceOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, ownableFunctions.RENOUNCE_OWNERSHIP, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			})
 
 			await assert.isRejected(unauthorizedRenounceOwnershipPromise, errorMessages.NOT_AN_OWNER)
 
-			const callOwnerPromise = deployedContract.call('owner', {
+			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
-			await assert.isFulfilled(callOwnerPromise, 'Calling the owner function failed');
+			
 			const callOwnerResult = await callOwnerPromise;
 			let encodedData = await callOwnerResult.decode('address')
 			const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
@@ -208,20 +209,20 @@ describe('Ownable', () => {
 		})
 
 		it('should throw if not owner tries to change the ownership of the contract', async () => {
-			const unauthorizedTransferOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "transferOwnership", {
-				args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)})`,
+			const unauthorizedTransferOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, ownableFunctions.TRANSFER_OWNERSHIP, {
+				args: `(${notOwnerPublicKeyAsHex})`,
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			})
 
 			await assert.isRejected(unauthorizedTransferOwnershipPromise, errorMessages.NOT_AN_OWNER)
-			const callOwnerPromise = deployedContract.call('owner', {
+			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 			
 			const callOwnerResult = await callOwnerPromise;

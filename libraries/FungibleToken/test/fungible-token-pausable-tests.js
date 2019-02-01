@@ -11,7 +11,12 @@ const contractFilePath = "./../contracts/fungible-token-pausable.aes";
 const path = require('path');
 const errorMessages = require('./constants/error-messages.json');
 
-describe.only('Fungible Pauseable Token', () => {
+const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
+const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
+
+const fungibleTokenFunctions = require('./constants/fungible-token-functions');
+
+describe('Fungible Pauseable Token', () => {
 
 	let firstClient;
 	let secondClient;
@@ -23,7 +28,7 @@ describe.only('Fungible Pauseable Token', () => {
 			internalUrl: config.internalHost,
 			keypair: config.ownerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 
 		secondClient = await Universal({
@@ -31,11 +36,11 @@ describe.only('Fungible Pauseable Token', () => {
 			internalUrl: config.internalHost,
 			keypair: config.notOwnerKeyPair,
 			nativeMode: true,
-			networkId: 'ae_devnet'
+			networkId: config.networkId
 		});
 
 		firstClient.setKeypair(config.ownerKeyPair)
-		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
+		await firstClient.spend(1, config.notOwnerKeyPair.publicKey);
 
 		contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 	})
@@ -51,7 +56,7 @@ describe.only('Fungible Pauseable Token', () => {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 			
 			//Assert
@@ -70,18 +75,18 @@ describe.only('Fungible Pauseable Token', () => {
 				options: {
 					ttl: config.ttl
 				},
-				abi: "sophia"
+				abi: config.abiType
 			});
 		})
 
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
-				const mintPromise = deployedContract.call('mint', {
-					args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1000)`,
+				const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
+					args: `(${ownerPublicKeyAsHex}, 1000)`,
 					options: {
 						ttl: config.ttl
 					},
-					abi: "sophia"
+					abi: config.abiType
 				})
 				
 				await mintPromise;
@@ -93,7 +98,7 @@ describe.only('Fungible Pauseable Token', () => {
 					const expectedValue = true;
 
 					//Act
-					const pausePromise = deployedContract.call('pause', {
+					const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
 						options: {
 							ttl: config.ttl
 						}
@@ -101,7 +106,7 @@ describe.only('Fungible Pauseable Token', () => {
 					
 					await pausePromise;
 
-					const pausedPromise = deployedContract.call('paused', {
+					const pausedPromise = deployedContract.call(fungibleTokenFunctions.PAUSED, {
 						options: {
 							ttl: config.ttl
 						}
@@ -115,7 +120,7 @@ describe.only('Fungible Pauseable Token', () => {
 				})
 
 				it('should not pause contract from non-owner', async () => {
-					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "pause", {
+					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.PAUSE, {
 						options: {
 							ttl: config.ttl
 						}
@@ -127,7 +132,7 @@ describe.only('Fungible Pauseable Token', () => {
 				it('shouldn`t mint when contract is paused', async () => {
 
 					//Act
-					const pausePromise = deployedContract.call('pause', {
+					const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
 						options: {
 							ttl: config.ttl
 						}
@@ -135,12 +140,12 @@ describe.only('Fungible Pauseable Token', () => {
 					
 					await pausePromise;
 
-					const mintPromise = deployedContract.call('mint', {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, 1)`,
+					const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
+						args: `(${ownerPublicKeyAsHex}, 1)`,
 						options: {
 							ttl: config.ttl
 						},
-						abi: "sophia"
+						abi: config.abiType
 					})
 
 					//Assert
@@ -152,7 +157,7 @@ describe.only('Fungible Pauseable Token', () => {
 					const burnAmount = 10;
 
 					//Act
-					const pausePromise = deployedContract.call('pause', {
+					const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
 						options: {
 							ttl: config.ttl
 						}
@@ -160,12 +165,12 @@ describe.only('Fungible Pauseable Token', () => {
 					
 					await pausePromise;
 
-					const burnPromise = deployedContract.call('burn', {
+					const burnPromise = deployedContract.call(fungibleTokenFunctions.BURN, {
 						args: `(${burnAmount})`,
 						options: {
 							ttl: config.ttl
 						},
-						abi: "sophia"
+						abi: config.abiType
 					})
 
 					//Assert
@@ -177,7 +182,7 @@ describe.only('Fungible Pauseable Token', () => {
 					const transferAmount = 10;
 
 					//Act
-					const pausePromise = deployedContract.call('pause', {
+					const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
 						options: {
 							ttl: config.ttl
 						}
@@ -185,8 +190,8 @@ describe.only('Fungible Pauseable Token', () => {
 					
 					await pausePromise;
 
-					const approvePromise = deployedContract.call('approve', {
-						args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${transferAmount})`,
+					const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
+						args: `(${notOwnerPublicKeyAsHex}, ${transferAmount})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -201,8 +206,8 @@ describe.only('Fungible Pauseable Token', () => {
 					const transferAmount = 10;
 
 					//Act
-					const approvePromise = deployedContract.call('approve', {
-						args: `(${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${transferAmount})`,
+					const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
+						args: `(${notOwnerPublicKeyAsHex}, ${transferAmount})`,
 						options: {
 							ttl: config.ttl
 						}
@@ -210,7 +215,7 @@ describe.only('Fungible Pauseable Token', () => {
 					
 					await approvePromise;
 
-					const pausePromise = deployedContract.call('pause', {
+					const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
 						options: {
 							ttl: config.ttl
 						}
@@ -218,8 +223,8 @@ describe.only('Fungible Pauseable Token', () => {
 					
 					await pausePromise;
 
-					const transferFromPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, "transferFrom", {
-						args: `(${utils.publicKeyToHex(config.ownerKeyPair.publicKey)}, ${utils.publicKeyToHex(config.notOwnerKeyPair.publicKey)}, ${transferAmount})`,
+					const transferFromPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.TRANSFER_FROM, {
+						args: `(${ownerPublicKeyAsHex}, ${notOwnerPublicKeyAsHex}, ${transferAmount})`,
 						options: {
 							ttl: config.ttl
 						}
