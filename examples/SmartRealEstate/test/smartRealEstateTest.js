@@ -169,7 +169,10 @@ describe('SmartRealEstate Contract', () => {
         args,
         'address'
       )
-      assert.equal(result, 39519965516565108473327470053407124751867067078530473195651550649472681599133)
+      assert.equal(
+        result,
+        39519965516565108473327470053407124751867067078530473195651550649472681599133
+      )
     })
 
     it('should get price of the property', async () => {
@@ -258,7 +261,7 @@ describe('SmartRealEstate Contract', () => {
       assert.equal(result, [])
     })
 
-    it("should get the new tenant of the property", async () => {
+    it('should get the new tenant of the property', async () => {
       const args = {
         args: `(${ownerAddress}, "Artur apartment")`,
         options: { ttl: 55 },
@@ -270,7 +273,10 @@ describe('SmartRealEstate Contract', () => {
         args,
         'address'
       )
-      assert.equal(result, 52902161269465828228432141313057486257183400825031599431469406173824055923730)
+      assert.equal(
+        result,
+        52902161269465828228432141313057486257183400825031599431469406173824055923730
+      )
     })
 
     it('should pay the rent', async () => {
