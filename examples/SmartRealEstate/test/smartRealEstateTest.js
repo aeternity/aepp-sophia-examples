@@ -80,10 +80,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'delete_owner',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should create owner', async () => {
@@ -95,10 +94,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'add_owner',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should delete property', async () => {
@@ -110,10 +108,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'delete_property',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should add property', async () => {
@@ -125,10 +122,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'add_property',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should get property address', async () => {
@@ -199,10 +195,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'change_price',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should get the new price of the property', async () => {
@@ -228,10 +223,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'change_address',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should get the new address of the property', async () => {
@@ -259,10 +253,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'change_tenant',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it("should get the new tenant of the property", async () => {
@@ -289,10 +282,9 @@ describe('SmartRealEstate Contract', () => {
       const result = await callContract(
         SmartRealEstateContract,
         'pay_rent',
-        args,
-        'bool'
+        args
       )
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it("should get property's paymentstatus after it was paid", async () => {
