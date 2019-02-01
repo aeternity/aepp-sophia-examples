@@ -1,4 +1,4 @@
-contract FungiableMintable =
+contract FungibleMintable =
   record state = {
     _owner            : address,
     _totalSupply      : int,

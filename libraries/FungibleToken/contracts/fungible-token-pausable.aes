@@ -1,4 +1,4 @@
-contract FungiablePausable =
+contract FungiblePausable =
   record state = {
     _owner            : address, 
     _totalSupply      : int,

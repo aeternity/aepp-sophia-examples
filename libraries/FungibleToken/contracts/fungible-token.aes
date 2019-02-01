@@ -1,4 +1,4 @@
-contract FungiableToken =
+contract FungibleToken =
   record state = {
     _owner            : address, 
     _totalSupply      : int,

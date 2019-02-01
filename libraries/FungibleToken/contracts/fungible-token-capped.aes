@@ -1,4 +1,4 @@
-contract FungiableCapped =
+contract FungibleCapped =
   record state = {
     _owner            : address,
     _cap              : int,
