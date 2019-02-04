@@ -18,10 +18,13 @@ const Ae = require('@aeternity/aepp-sdk').Universal;
 const Deployer = require('forgae').Deployer;
 const gasLimit = 1000000;
 
+const path = require('path');
+
 const deploy = async (network, privateKey) => {
 	let deployer = new Deployer(network, privateKey)
 
-	let result = await deployer.deploy("./contracts/ExampleContract.aes")
+	await deployer.deploy(path.resolve(__dirname, "./../contracts/MultisigWallet.aes"));
+	await deployer.deploy(path.resolve(__dirname, "./../contracts/Voting-test.aes"));
 };
 
 module.exports = {

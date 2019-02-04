@@ -18,10 +18,12 @@ const Ae = require('@aeternity/aepp-sdk').Universal;
 const Deployer = require('forgae').Deployer;
 const gasLimit = 1000000;
 
+const path = require('path');
+
 const deploy = async (network, privateKey) => {
 	let deployer = new Deployer(network, privateKey)
 
-	let result = await deployer.deploy("./contracts/ExampleContract.aes")
+	let result = await deployer.deploy(path.resolve(__dirname, "./../contracts/fungible-token-capped.aes"), 1000000, '(1000000)');
 };
 
 module.exports = {
