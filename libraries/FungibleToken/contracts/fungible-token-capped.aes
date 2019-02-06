@@ -1,0 +1,108 @@
+contract FungibleCapped =
+  record state = {
+    _owner            : address,
+    _cap              : int,
+    _totalSupply      : int,
+    _balances         : map(address, int),
+    _allowed          : map((address,address), int)}
+
+  public stateful function init(cap : int) : state = 
+    require(cap > 0, "Cap can't be less than a zero")
+    { _owner       = Call.caller,
+      _cap         = cap,
+      _totalSupply = 0,
+      _balances    = {},
+      _allowed     = {}}
+
+  private function lookupByAddress(k : address, m, v) =
+  	switch(Map.lookup(k, m))
+	    None    => v
+	    Some(x) => x
+
+  public function totalSupply() : int = state._totalSupply
+
+  public function cap() : int = state._cap
+
+  public function balanceOf(who: address) : int = lookupByAddress(who, state._balances, 0)
+
+  public function allowance(owner: address, spender: address) : int = 
+    switch(Map.lookup((owner, spender), state._allowed))
+	    None    => 0
+	    Some(x) => x
+
+  public stateful function transfer(to: address, value: int) : bool =
+    _transfer(Call.caller, to, value)
+
+  public stateful function approve(spender: address, value: int) : bool = 
+    require(value > 0, "Value is sub zero")
+    require(spender != #0, "Invalid spender address")
+
+    put(state{_allowed[(Call.caller,spender)] = value})
+
+    true
+
+  private stateful function _transfer(from: address, to: address, value: int) : bool =
+    require(value =< state._cap, "Value is bigger than the cap.")
+    require(value > 0, "Value is sub zero")
+    require(value =< balanceOf(from), "Not enough balance")
+    require(to != #0, "Invalid address")
+
+    put(state{
+      _balances[from] = sub(balanceOf(from), value),
+      _balances[to] = add(balanceOf(to), value)})
+
+    true
+
+  public stateful function transferFrom(from: address, to: address, value: int) : bool =
+    require(state._allowed[(from, Call.caller)] >= value, "Value is bigger than allowed")
+      
+    put(state{_allowed[(from,Call.caller)] = sub(state._allowed[(from,Call.caller)], value)})
+    _transfer(from, to, value)
+
+    true
+
+  public stateful function increaseAllowance(spender: address, addedValue: int) : bool =
+    require(spender != #0, "Invalid address")
+    put(state{_allowed[(Call.caller, spender)] = add(state._allowed[(Call.caller,spender)], addedValue)})
+
+    true
+
+  public stateful function decreaseAllowance(spender: address, subtractedValue: int) : bool =
+    require(spender != #0, "Invalid address")
+    put(state{_allowed[(Call.caller,spender)] = sub(state._allowed[(Call.caller,spender)], subtractedValue)})
+
+    true
+
+  public stateful function mint(account: address, value: int) : bool =
+    onlyOwner()
+    require(add(state._totalSupply, value) =< state._cap, "Total supply exceeds cap")
+    require(account != #0, "Invalid address")
+
+    put(state{_totalSupply = add(state._totalSupply, value),
+          _balances[account] = add(balanceOf(Call.caller), value)})
+
+    true
+
+  public stateful function burn(value: int) : bool =
+    require(state._balances[Call.caller] >= value, "Burned amount is less than account balance")
+
+    put(state{_totalSupply = sub(state._totalSupply, value),
+          _balances[Call.caller] = sub(balanceOf(Call.caller), value)})
+
+    true
+
+  private function add(_a : int, _b : int) : int =
+    let c : int = _a + _b
+    require(c >= _a, "Error")
+    c
+
+  private function sub(_a : int, _b : int) : int =
+    require(_b =< _a, "Error")
+    _a - _b
+
+  private function require(b : bool, err : string) =
+    if(!b) 
+      abort(err)
+
+  private function onlyOwner() =
+      require(Call.caller == state._owner, "Only owner can mint!")

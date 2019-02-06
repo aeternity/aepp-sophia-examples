@@ -1,0 +1,145 @@
+contract NonFungibleFull =
+  type token_id = int
+  record state = { 
+    name              : string,
+    symbol            : string,
+    owner             : address,
+    ownedTokensCount  : map(address, int),
+    tokenOwner        : map(token_id, address),
+    tokenApprovals    : map(token_id, address),
+    operatorApprovals : map(address, map(address, bool)),
+    tokenURIs         : map(token_id, string)}
+
+  public stateful function  init(name : string, symbol : string) = {
+  	name = name,
+  	symbol = symbol,
+    owner = Call.caller,
+  	ownedTokensCount = {},
+  	tokenOwner = {},
+  	tokenApprovals = {},
+    operatorApprovals = {},
+    tokenURIs = {}}
+
+  public function name() : string = state.name
+  public function symbol() : string = state.symbol
+  public function balanceOf(tokenOwner : address) : int = lookupByAddress(tokenOwner, state.ownedTokensCount, 0)
+  public function ownerOf(tokenId : token_id) : address = lookupById(tokenId, state.tokenOwner, #0)
+  public function getApproved(tokenId : token_id) : address = lookupById(tokenId, state.tokenApprovals, #0)
+
+  public function isApprovedForAll(_owner: address, operator : address) : bool =
+    let x : map(address, bool) = isOperatorApprovals(_owner)
+    switch(Map.lookup(operator, x))
+      None => false
+      Some(x) => x
+
+  public function getTokenURI(tokenId : token_id) : string = lookupById(tokenId, state.tokenURIs, "")
+
+  public stateful function setTokenURI(tokenId : token_id, uri : string) =
+    onlyTokenOwner(Call.caller, tokenId)
+    put(state{ tokenURIs[tokenId] = uri })
+
+  public stateful function mint(tokenId : token_id, to : address) = 
+    onlyOwner(Call.caller)
+    require(!checkTokenExists(tokenId), "Token can't be overrided")
+
+    put(state{ 
+      tokenOwner[tokenId] = to,
+      ownedTokensCount[to] = add(lookupByAddress(to, state.ownedTokensCount, 0), 1)})
+
+  public stateful function burn(tokenId : token_id) = 
+    onlyTokenOwner(Call.caller, tokenId) 
+    removeTokenFrom(Call.caller, tokenId)
+    removeTokenMetadata(tokenId)
+
+  public stateful function approve(tokenId : int, to : address) =
+    let _owner : address = ownerOf(tokenId)
+    
+    require(to != Call.caller, "Receiver can't be same as sender")
+    require(Call.caller == _owner || isApprovedForAll(_owner, Call.caller), "Not owner or not approved")
+    
+    put(state{tokenApprovals[tokenId] = to})
+
+  public function get() : address =
+      Call.caller
+
+  public stateful function transferFrom(from : address, to : address, tokenId : token_id) =
+    require(isApprovedOrOwner(Call.caller, tokenId), "Not owner or not approved")
+    
+    clearApproval(from, tokenId)
+    removeTokenFrom(from, tokenId)
+    addTokenTo(to, tokenId)
+
+  public stateful function setApprovalForAll(to : address, approved : bool) =
+    ensureAllowed(Call.caller)
+    put(state{operatorApprovals[Call.caller][to] = approved})
+
+  private function isOperatorApprovals(_owner: address) : map(address, bool) =
+    switch(Map.lookup(_owner, state.operatorApprovals))
+      None => {}
+      Some(x) => x
+  
+  private function checkTokenExists(tokenId : token_id) : bool =
+    switch(Map.lookup(tokenId, state.tokenOwner))
+      None    => false
+      Some(x) => true
+
+  private function ensureAllowed(key : address) =
+    switch(Map.lookup(key, state.operatorApprovals))
+      None => put(state{operatorApprovals[key] = {}})
+      Some(_) => ()
+
+  private stateful function addTokenTo(to : address, tokenId : token_id) = 
+    put(state{
+      tokenOwner[tokenId] = to,
+      ownedTokensCount[to] = add(lookupByAddress(to, state.ownedTokensCount, 0), 1)})
+
+  private stateful function removeTokenFrom(from : address, tokenId : token_id) =
+    onlyTokenOwner(from, tokenId)
+    put(state{
+      tokenOwner[tokenId] = #0,
+      ownedTokensCount[from] = sub(lookupByAddress(from, state.ownedTokensCount, 0), 1)})
+
+  private stateful function clearApproval(owner : address, tokenId : token_id) =
+    onlyTokenOwner(owner, tokenId)
+    Map.delete(tokenId, state.tokenApprovals)
+
+  private stateful function removeTokenMetadata(tokenId : token_id) = 
+    Map.delete(tokenId, state.tokenURIs)
+
+  private function lookupByAddress(k : address, m, v) =
+  	switch(Map.lookup(k, m))
+	    None    => v
+	    Some(x) => x
+
+  private function lookupById(k : int, m, v) =
+  	switch(Map.lookup(k, m))
+	    None    => v
+	    Some(x) => x
+
+  private function add(_a : int, _b : int) : int =
+    let c : int = _a + _b
+    require(c >= _a, "Error")
+    c
+
+  private function sub(_a : int, _b : int) : int =
+    require(_b =< _a, "Error")
+    _a - _b
+
+  private function require(b : bool, err : string) =
+    if(!b) 
+      abort(err)
+
+  private function onlyOwner(owner : address) =
+    require(owner == state.owner, "Only owner can mint!")
+
+  private function onlyTokenOwner(owner : address, tokenId : token_id) =
+    require(owner == getTokenOwner(tokenId), "Only token owner can transfer!")
+
+  private function getTokenOwner(tokenId: token_id) : address =
+    switch(Map.lookup(tokenId, state.tokenOwner))
+      None => #0
+      Some(x) => x
+
+  private function isApprovedOrOwner(spender : address, tokenId : token_id) : bool = 
+    let owner : address = ownerOf(tokenId)
+    getApproved(tokenId) == spender || owner == spender || isApprovedForAll(owner, spender)

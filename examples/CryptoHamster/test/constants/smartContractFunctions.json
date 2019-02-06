@@ -1,0 +1,5 @@
+{
+    "CREATE_HAMSTER": "createHamster",
+    "NAME_EXISTS": "nameExists",
+    "GET_HAMSTER_DNA": "getHamsterDNA"
+}

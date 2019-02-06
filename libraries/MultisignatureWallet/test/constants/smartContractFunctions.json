@@ -1,0 +1,10 @@
+{
+	"INIT_OWNER": "initOwner",
+	"CONFIGURE": "configure",
+	"GET_CONFIRMATIONS": "getConfirmations",
+	"APPROVE": "approve",
+	"ADD_TRANSACTION": "addTransaction",
+	"VOTE_REMOVE_OWNER": "voteRemoveOwner",
+	"VOTE_ADD_OWNER": "voteAddOwner",
+	"VOTE_CHANGE_REQUIREMENT": "voteChangeRequirement"
+}
