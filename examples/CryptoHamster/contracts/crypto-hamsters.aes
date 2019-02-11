@@ -1,0 +1,47 @@
+contract CryptoHamster =
+
+    record state = {
+        index : int,
+        hamsters : map(string, hamster)}
+
+    record hamster = {
+        id: int,
+        name: string,
+        dna: int}
+
+    public stateful function init() = 
+        { index = 1,
+          hamsters = {}}
+
+    public function createHamster(hamsterName: string) =
+        require(!nameExists(hamsterName), "Name is already taken")
+
+        createHamsterByNameDNA(hamsterName, generateRandomDNA())
+
+    public function nameExists(name: string) : bool =
+        switch(Map.lookup(name, state.hamsters))
+            None    => false
+            Some(x) => true
+
+    public function getHamsterDNA(_name: string) : int =
+        require(nameExists(_name), "There is no hamster with that name!")
+
+        let neededHamster : hamster = state.hamsters[_name]
+
+        neededHamster.dna
+
+    private function createHamsterByNameDNA(_name: string, _dna: int) =
+        let newHamster : hamster = {
+            id = state.index,
+            name = _name,
+            dna = _dna}
+
+        put(state{hamsters[_name] = newHamster})
+        put(state{index = (state.index + 1)})
+
+    private function generateRandomDNA() : int =
+        Chain.block_hash(Chain.block_height - 1) - Chain.timestamp + state.index
+
+    private function require(expression : bool, err : string) =
+        if(!expression) 
+            abort(err)

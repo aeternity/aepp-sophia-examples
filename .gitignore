@@ -1,3 +1,17 @@
 # Ignore node_modules
 /*/*/node_modules/
-/*/*/.forgae-store/
+.DS_Store
+dist
+node_modules
+.nyc_output
+.testcases
+build
+docs/build
+.idea/
+.outputParameter
+nonce.txt
+erc721.aes.deploy*
+package-lock.json
+.vscode
+.forgae-store
+

@@ -1,0 +1,7 @@
+{
+	"OWNER": "owner",
+	"ONLY_OWNER": "onlyOwner",
+	"IS_OWNER": "isOwner",
+	"RENOUNCE_OWNERSHIP": "renounceOwnership",
+	"TRANSFER_OWNERSHIP": "transferOwnership"
+}
