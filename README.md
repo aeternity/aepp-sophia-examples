@@ -15,8 +15,11 @@ The provided sophia examples or library functions are only tested to the extend 
 
 [**Sophia Muiltisignature wallet**](/libraries/MultisignatureWallet/README.md) library
 
+[**Sophia Base Converter**](/examples/Converter/README.md) library.
 
 ## Examples
 [**Sophia SmartShop**](/examples/SmartShop/README.md) example.
 
 [**Sophia Crypto Hamster**](/examples/CryptoHamster/README.md) example.
+
+[**Sophia Base Converter**](/examples/CryptoHamster/README.md) example.
