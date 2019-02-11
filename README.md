@@ -20,3 +20,5 @@ The provided sophia examples or library functions are only tested to the extend 
 [**Sophia SmartShop**](/examples/SmartShop/README.md) example.
 
 [**Sophia Crypto Hamster**](/examples/CryptoHamster/README.md) example.
+
+[**Sophia Data Provider**](/examples/SmartDataProvider/README.md) example.
