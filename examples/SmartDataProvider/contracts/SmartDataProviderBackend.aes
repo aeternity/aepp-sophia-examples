@@ -1,0 +1,26 @@
+//EXCHANGE RATE  DATA CONTRACT BACKEND IMPLEMENTATION()
+
+contract SmartDataProviderBackend =
+  record state = 
+    {exchange_oracle : oracle(string, string),
+     exchange_rate : map(string, string)}
+     
+  public function init() : state = 
+    let exchange_oracle : oracle(string, string) = Oracle.register(Contract.address, 10, RelativeTTL(200))
+    {exchange_oracle = exchange_oracle, exchange_rate = {["USD"] = "1", ["EUR"] = "2"}}
+       
+  public function get_oracle_address() :  oracle(string, string) = 
+    state.exchange_oracle
+    
+  public function process_response(oracle : oracle(string, string), query : oracle_query(string, string))=
+    require(oracle == state.exchange_oracle, "Incorrect address")
+    let question : string = Oracle.get_question(oracle, query)
+    let response : string = 
+      switch(Map.lookup(question, state.exchange_rate))
+       Some(e) => e
+       None => String.concat(String.concat("Given rate :" , question), "does not exist")  
+    Oracle.respond(oracle, query, response)
+      
+  private function require(condition, error) = 
+    if(!condition)
+      abort(error)
