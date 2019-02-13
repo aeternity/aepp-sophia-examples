@@ -4,7 +4,7 @@
 Fungible token is a technical standard used for smart contracts on the blockchain for implementing tokens. Fungible token defines a common list of rules for tokens to follow within the larger ecosystem, allowing developers to accurately predict interaction between tokens. These rules include how the tokens are transferred between addresses and how data within each token is accessed. Fungible tokens are interchangeable, divisible, and identical tokens that are useful as money.
 
 ## How it works?
-Upon deployment, the token sets its owner - the Call.caller (deployer). The owner has special privilege - the ability to create (mint) new tokens. When token is created it is associate with a user - the `account` parameter.
+Upon deployment, the token sets its owner - the Call.caller (deployer). The owner has special privilege - the ability to create (mint) new tokens. When token is created it is associated with a user - the `account` parameter.
 The token owner can act upon their tokens in various ways. They can set transfer it, allow it to be transfered on his/her behalf or completely destroy it.
 
 In addition, the smart contract keeps track of important statistical data - who owns a given token, how many tokens given user possess and how many tokens are there in general.
