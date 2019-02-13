@@ -1,1 +1,19 @@
-Multisignature (multi-signature) is a digital signature scheme which allows a group of users to sign a single document. Usually, a multisignature algorithm produces a joint signature that is more compact than a collection of distinct signatures from all users. Multisignature can be considered as generalization of both group and ring signatures. Multisignature (often called multisig) is a form of technology used to add additional security for cryptocurrency transactions. Multisignature addresses require another user or users sign a transaction before it can be broadcast onto the blockchain. The required number of signatures is agreed at the start once people agree to create the address.
+# Multi-signature wallet example
+Multi-signature wallets are a common design pattern in the blockchain world. It allows for multiple parties to be jointly in control of a smart contract and execute it functions - be it sending tokens or calling other contracts methods.
+
+## How it works?
+Upon deployment, the wallet sets its owner - the Call.caller (deployer). The owner has special privileges - he/she can add new owners, vote for the addition of new owner, change the required votes and configuration of the wallet, propose transactions and vote to approve/reject such transactions.
+
+The owner sets the minimum required votes in order for execution to go through. For example if there are 5 owners (the original owner and 4 more), the original owner might set the required votes to 3. If 3 of the 5 owners approve a transaction execution - it goes through.
+
+Much like execution of transactions, the addition of owners is also subject of vote.
+
+## Methods description
+- `function initOwner(owner : address)` - function used before wallet is set to configured in order to add additional owners by the deployer.
+- `function configure()` - marks the wallet as set and functional. Further additions of owners can only be done through voting
+- `function voteChangeRequirement(_newRequired: int, _vote: bool)` - changes how many votes of the owners are needed for transaction to go through
+- `function voteAddOwner(owner : address)` - Votes for addition of the `owner` address as owner of this multisig wallet. Callable only by current owners.
+- `function voteRemoveOwner(owner : address)` - Votes for removal of the `owner` address from this multisig wallet. Callable only by current owners.
+- `function addTransaction(method : string)` - Proposes a certain transaction method to be called by the multisig wallet. Returns txId that needs to be passed to the approve function. Only executable by an owner.
+- `function approve(txId : int, votingContract : Voting)` - votes for the execution of transaction identified by this txId. If the required votes are reached the transaction is executed.
+- `function getConfirmations(txId : int)` - gets the votes gathered in regards with transaction execution proposal.
