@@ -7,6 +7,8 @@ The provided sophia examples or library functions are only tested to the extend 
 ## Libraries
 [**Sophia DateTime**](/libraries/DateTime/README.md) library
 
+[**Sophia DateTime**](/libraries/List/README.md) library
+
 [**Sophia Ownable**](/libraries/Ownable/README.md) library
 
 [**Sophia Fungible tokens**](/libraries/FungibleToken/README.md) library
