@@ -102,6 +102,17 @@ async function responderSign(tag, tx) {
             return account.signTransaction(tx);
         }
     }
+
+    if (tag === 'shutdown_sign_ack') {
+
+        console.log(txData);
+
+        if (
+            txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX'
+        ) {
+            return account.signTransaction(tx);
+        }
+    }
 }
 
 function isTxValid (txData) {
