@@ -1,12 +1,14 @@
-# Tic Tac Toe Sophia example
+# TicTacToe Sophia example
 
-## Sophia Tic Tac Toe example overview
-Tic Tac Toe is a game with 2 players. There is a board which looks like something like this:
-| []() | []()| []()|
-|---|---|---|
+## Sophia TicTacToe example overview
+TicTacToe is a game with 2 players. There is a board which looks like something like this:
+
+|[]()|[]()|[]()|
+|----|----|----|
 | 11 | 12 | 13 |
 | 21 | 22 | 23 |
 | 31 | 32 | 33 |
+
 *Figure 1*
 
 The player who succeeds in placing three of their marks in a horizontal, vertical, or diagonal row wins the game.
