@@ -1,0 +1,30 @@
+<div class="row hide-me history-wrapper">
+    <div class="col col-xs-offset-1">
+        <div class="row">
+            <div class="col-sm-12">
+
+                <fieldset>
+                    <legend>History</legend>
+                    <ul id="bought-products">
+
+                    </ul>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let showHistory;
+    let hideHistory;
+
+    window.addEventListener('load', async function () {
+        showHistory = function () {
+            $('.history-wrapper').show();
+        }
+
+        hideHistory = function () {
+            $('.history-wrapper').hide();
+        }
+    })
+</script>

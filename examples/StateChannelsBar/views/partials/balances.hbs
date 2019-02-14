@@ -1,0 +1,47 @@
+<div class="row form-group">
+
+    <label for="current-amount" class="col-sm-2">On-chain Balance</label>
+
+    <div class="col col-sm-2">
+        <input type="text" id="current-balance" class="form-control" readonly>
+    </div>
+</div>
+
+<div class="row form-group">
+
+    <label for="off-chain-balance" class="col-sm-2">Off-chain balance</label>
+
+    <div class="col col-sm-2">
+        <input type="text" id="off-chain-balance" class="form-control" readonly>
+    </div>
+</div>
+
+<script>
+    let showBalance;
+    let showOffChainBalances;
+    
+    window.addEventListener('load', async function () {
+        showBalance = async function () {
+
+            let tempAccount = await createAccount(initiatorKeyPair);
+            let result = await tempAccount.api.getAccountByPubkey(initiatorKeyPair.publicKey);
+
+            $('#current-balance').val(result.balance);
+
+            $('.balance-wrapper').show();
+        }
+
+        showOffChainBalances = async function (channel, initiatorAddress) {
+
+                let tempResult = await channel.balances([
+                    initiatorAddress
+                ])
+
+                console.log(tempResult)
+
+                let offChainBalance = $('#off-chain-balance').val(tempResult[initiatorAddress]);
+
+                console.log('off chain initiator balance:', tempResult[initiatorAddress])
+            }
+    })
+</script>
