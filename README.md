@@ -25,4 +25,4 @@ The provided sophia examples or library functions are only tested to the extend 
 
 [**Sophia Data Provider**](/examples/SmartDataProvider/README.md) example.
 
-[**Sophia Data Provider**](/examples/SmartBank/README.md) example.
+[**Sophia Smart Bank**](/examples/SmartBank/README.md) example.
