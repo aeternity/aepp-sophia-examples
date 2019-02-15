@@ -1,4 +1,5 @@
 const Ae = require('@aeternity/aepp-sdk').Universal
+const Crypto = require('@aeternity/aepp-sdk').Crypto
 
 const config = {
   host: 'http://localhost:3001/',
@@ -18,6 +19,13 @@ async function deployContract (contractName, ...params) {
   return deployPromiseContract
 }
 
+function decodeContractAddress (contract) {
+  const decoded58addres = Crypto.decodeBase58Check(
+    contract.address.split('_')[1]
+  ).toString('hex')
+  return `0x${decoded58addres}`
+}
+
 async function callContract (
   contract,
   functionName,
@@ -29,10 +37,9 @@ async function callContract (
   return decodedResult.value
 }
 
-describe('Smart Provider Contract', () => {
+describe('TicTacToe Contract', () => {
   let owner
   let TicTacToeContract
-
 
   before(async () => {
     const ownerKeyPair = wallets[0]
@@ -45,7 +52,7 @@ describe('Smart Provider Contract', () => {
     })
   })
 
-  describe('Deploy contracts', () => {
+  describe('Deploy contract', () => {
     it('should deploy TicTacToe contract', async () => {
       const gas = { gas: config.gas }
       const deployObj = { options: { ttl: config.ttl } }
@@ -57,6 +64,116 @@ describe('Smart Provider Contract', () => {
       )
       assert(TicTacToeContract.hasOwnProperty('address'))
       assert(TicTacToeContract.hasOwnProperty('owner'))
+    })
+  })
+
+  describe('Interact with the contract', () => {
+    before(() => {
+      addressTicTacToe = decodeContractAddress(TicTacToeContract)
+    })
+
+    it('should set player 1 ', async () => {
+      const args = {
+        args: `11`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_1',
+        args,
+        'string'
+      )
+      assert.equal(result, "Game continues. The other player's turn.")
+    })
+
+    it('should set player 2 ', async () => {
+      const args = {
+        args: `12`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_2',
+        args,
+        'string'
+      )
+      assert.equal(result, "Game continues. The other player's turn.")
+    })
+    it('should set player 1 ', async () => {
+      const args = {
+        args: `33`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_1',
+        args,
+        'string'
+      )
+      assert.equal(result, "Game continues. The other player's turn.")
+    })
+
+    it('should set player 2 ', async () => {
+      const args = {
+        args: `23`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_2',
+        args,
+        'string'
+      )
+      assert.equal(result, "Game continues. The other player's turn.")
+    })
+
+    it('should set player 1 ', async () => {
+      const args = {
+        args: `31`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_1',
+        args,
+        'string'
+      )
+      assert.equal(result, "Game continues. The other player's turn.")
+    })
+
+    it('should set player 2 ', async () => {
+      const args = {
+        args: `21`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_2',
+        args,
+        'string'
+      )
+      assert.equal(result, "Game continues. The other player's turn.")
+    })
+
+    it('should win player 1 ', async () => {
+      const args = {
+        args: `32`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        TicTacToeContract,
+        'player_1',
+        args,
+        'string'
+      )
+      assert.equal(result, 'You are the winer! Congratulations player 1')
     })
   })
 })
