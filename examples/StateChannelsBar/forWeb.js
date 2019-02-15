@@ -3,7 +3,8 @@ const {
     Channel,
     Crypto,
     Universal,
-    Wallet
+    Wallet,
+    TxBuilder
 } = require('@aeternity/aepp-sdk');
 
 const {
@@ -23,6 +24,7 @@ const aeWeb = {
     universal: Universal,
     wallet: Wallet,
     memoryAccount: MemoryAccount,
+    //txBuilder: TxBuilder,
     config: {
         responderAddress: publicKey,
         node: {

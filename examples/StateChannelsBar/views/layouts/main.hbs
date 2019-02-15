@@ -78,7 +78,8 @@
         let Channel = aeWeb.channel;
         let Universal = aeWeb.universal;
         let Wallet = aeWeb.wallet;
-        let MemoryAccount = aeWeb.memoryAccount
+        let MemoryAccount = aeWeb.memoryAccount;
+        //let TxBuilder = aeWeb.txBuilder;
 
         let initiatorAddress = initiatorKeyPair.publicKey;
         let account;
@@ -119,13 +120,15 @@
                 params.channelReserve = parseInt(depositAmount * 0.25);
                 params.initiatorId = initiatorKeyPair.publicKey;
 
+                console.log('init params:', params);
+
                 channel = await connectAsInitiator(params, sign);
+
+                console.log(channel);
 
                 channelActions(channel);
 
                 showBalance();
-                showHistory();
-                // await showOffChainBalances(channel.__proto__, initiatorKeyPair.publicKey);
 
                 let data = {
                     params: params
@@ -136,8 +139,7 @@
                     url: '/channel',
                     data: data,
                     success: function (response) {
-                        console.log('channel creation response')
-                        console.log(response)
+                        console.log('channel creation response: ', response);
                     }
                 });
             }
@@ -176,12 +178,17 @@
                     //console.log();
                 })
 
-                channel.on('message', (msg) => {
+                channel.on('message', async (msg) => {
 
                     if (msg.info.indexOf('successfully created') >= 0) {
-                        $('.bar-menu').show();
                         getProducts()
+                        $('.bar-menu').show();
                         $('.close-wrapper').show();
+                        showHistory();
+                        
+                        //getOffChainBalances1(channel);
+                        //await getOffChainBalances2(channel);
+
                     }
 
                     let history = $('#bought-products');
@@ -191,6 +198,23 @@
 
                     history.append(li);
                 });
+            }
+
+            function getOffChainBalances1(channel) {
+                 // off chain balances
+                channel.balances(
+                    [initiatorKeyPair.publicKey]
+                    ).then(function (balances) {
+                        console.log('-=-=>> off chain balance 1')
+                        console.log(balances[initiatorKeyPair.publicKey])
+                    }).catch(e => console.log(e))
+            }
+
+            async function getOffChainBalances2(channel) {
+                 // off chain balances
+                let balances = await channel.balances([initiatorKeyPair.publicKey]);
+                console.log('-=-=>> off chain balance 2')
+                console.log(balances[initiatorKeyPair.publicKey])
             }
 
             updateState = async function (channel, senderAddress, recipientAddress, amount) {
@@ -283,10 +307,10 @@
                         }
                     })],
                     address: keyPair.publicKey,
-                    onTx: onEvent,
-                    onChain: onEvent,
-                    onAccount: onEvent,
-                    onContract: onEvent,
+                    onTx: true,
+                    onChain: true,
+                    onAccount: true,
+                    onContract: true,
                     networkId: networkId
                 });
 
@@ -298,7 +322,7 @@
                     type: "GET",
                     url: '/config/params'
                 });
-
+                console.log(result);
                 return result;
             }
 

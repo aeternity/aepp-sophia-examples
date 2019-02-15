@@ -2,7 +2,8 @@ const {
     MemoryAccount,
     Channel,
     Crypto,
-    Universal
+    Universal,
+    TxBuilder
 } = require('@aeternity/aepp-sdk');
 
 const {
@@ -33,6 +34,9 @@ let createAccount = async function (keyPair) {
     return tempAccount;
 }
 
+// console.log('TxBuilder');
+// console.log(TxBuilder);
+
 let account;
 
 (async function() { 
@@ -43,6 +47,8 @@ async function createChannel(req, res) {
 
     let params = req.body.params;
     params.channelReserve = parseInt(params.initiatorAmount * 0.25);
+
+    //console.log('init params:', params);
 
     let channel = await connectAsResponder(params);
     let data = {
@@ -79,9 +85,21 @@ async function responderSign(tag, tx) {
     }
 
     // Deserialize binary transaction so we can inspect it
-    const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
-        prettyTags: true
-    });
+    //const txData = Crypto.decodeTx(tx);
+    // console.log('=====> aa');
+    // console.log(Crypto);
+    // console.log();
+    // console.log(txData);
+
+    
+    //const txData = Crypto.decode(Crypto.decodeTx(tx));
+    const txData = TxBuilder.unpackTx(tx);
+
+    console.log();
+    console.log();
+    console.log();
+    console.log('----> txData');
+    console.log(txData);
 
     //console.log('==> txData <==')
     //console.log(txData);
@@ -105,7 +123,7 @@ async function responderSign(tag, tx) {
 
     if (tag === 'shutdown_sign_ack') {
 
-        console.log(txData);
+        //console.log(txData);
 
         if (
             txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX'

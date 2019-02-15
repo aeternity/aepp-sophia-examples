@@ -2,7 +2,8 @@ const {
     MemoryAccount,
     Channel,
     Crypto,
-    Universal
+    Universal,
+    TxBuilder
 } = require('@aeternity/aepp-sdk')
 
 const {
@@ -31,6 +32,8 @@ const responderAddress = responderKeyPair.publicKey;
 let initiatorAccount;
 let responderAccount;
 
+console.log('------------------ STATE CHANNEL DEMO -----------------------')
+
 
 async function createAccounts() {
     initiatorAccount = await Universal({
@@ -54,27 +57,34 @@ async function createAccounts() {
 
 // (async function(){
 //     await createAccounts();
-    
+
 //     let aa = responderAccount.signTransaction('tx_+HcyAaEB6bv2BOYRtUYKOzmZ6Xcbb2BBfXPOfFUZ4S9+EnoSJcqCw1ChAVdfgf+wope3cl3GcdoLF2mx/Fy+RThce1rR/C6vHWCdgsNQgpxACgCCTiDAoAAQgI1ZAPpXMi6/bkGIMNO+WjPcZZ92aix8iJGet+YkC6RUXYo=');
 //     console.log(await aa);
 // })()
 
 async function initiatorSign(tag, tx) {
+    console.log('==> initiatorSign initiator_sign:', tx);
     if (tag === 'initiator_sign') {
-        console.log('==> initiatorSign initiator_sign:', tx);
-        console.log();
+        console.log('==> initiator_sign:');
+        //console.log();
 
         return initiatorAccount.signTransaction(tx)
     }
 
     // Deserialize binary transaction so we can inspect it
-    const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
-        prettyTags: true
-    })
+    // const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
+    //     prettyTags: true
+    // })
 
-    console.log('==> initiatorSign txData');
-    console.log(txData);
+    const txData = deserializeTx(tx);
+
     console.log();
+    console.log('----> txData');
+    console.log(txData);
+
+    // console.log('==> initiatorSign txData');
+    // console.log(txData);
+    // console.log();
 
     if (tag === 'shutdown_sign_ack') {
         if (
@@ -89,26 +99,39 @@ async function initiatorSign(tag, tx) {
     }
 }
 
+function deserializeTx(tx) {
+    console.log('tyk');
+    // const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
+    //     prettyTags: true
+    // })
+
+    const txData = TxBuilder.unpackTx(tx);
+    
+    return txData;
+}
+
 async function responderSign(tag, tx) {
-    console.log('==> tag:');
-    console.log(tag);
-    console.log();
+    console.log('==> responderSign');
+    // console.log(tag);
+    // console.log();
 
     if (tag === 'responder_sign') {
         return responderAccount.signTransaction(tx)
     }
 
     // Deserialize binary transaction so we can inspect it
-    const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
-        prettyTags: true
-    })
+    const txData = deserializeTx(tx);
+    console.log();
+    console.log('----> txData');
+    console.log(txData);
+
     // When someone wants to transfer a tokens we will receive
     // a sign request with `update_ack` tag
     if (tag === 'update_ack') {
 
-        console.log('==> txData');
-        console.log(txData);
-        console.log();
+        // console.log('==> txData');
+        // console.log(txData);
+        // console.log();
 
         // Check if update contains only one offchain transaction
         // and sender is initiator
@@ -167,30 +190,37 @@ const params = {
 
 createAccounts().then(() => {
 
-    
-
     // initiator connects to state channels endpoint
     connectAsInitiator(params).then(initiatorChannel => {
 
-        //openChannels.set(params.responderId, initiatorChannel)
-
-        console.log('=====> initiatorChannel <=====', initiatorChannel);
-        console.log();
+        // console.log('=====> initiatorChannel <=====');
+        // console.log(initiatorChannel.__proto__);
+//        console.log('tyk');
 
         initiatorChannel.on('statusChanged', (status) => {
-            console.log('==> status: ', status);
+            //console.log('==> status: ', status);
             if (status === 'open') {
-                console.log('==> State channel has been opened!')
+                //console.log('==> State channel has been opened!')
             }
         })
 
         initiatorChannel.on('onChainTx', (tx) => {
-            console.log('==> channel_create_tx:', tx)
-            console.log();
+            //console.log('==> channel_create_tx:', tx)
         })
 
+        // off chain balances
+        if (false) {
+            initiatorChannel.balances(
+                [initiatorKeyPair.publicKey],
+            ).then(function (balances) {
+                console.log('-=-=>> off chain balance')
+                console.log(balances[initiatorKeyPair.publicKey])
+            }).catch(e => console.log(e))
+        }
 
-        initiatorChannel.sendMessage('hello world', responderAddress)
+
+
+        //initiatorChannel.sendMessage('hello world', responderAddress)
 
         initiatorChannel.update(
             // Sender account
@@ -203,13 +233,10 @@ createAccounts().then(() => {
             // and sign it with initiator's private key
             async (tx) => initiatorAccount.signTransaction(tx)
         ).then((result) => {
-            console.log('==> update result:');
             if (result.accepted) {
-                console.log('==> Succesfully transfered 10 tokens!')
-                console.log('==> Current state:', result);
-                console.log();
+                //console.log('==> Succesfully transfered 10 tokens!', result)
             } else {
-                console.log('=====> Transfer has been rejected')
+                //console.log('=====> Transfer has been rejected')
             }
         }).catch(e => {
             console.log('==> Error:', e);
@@ -217,14 +244,14 @@ createAccounts().then(() => {
 
         initiatorChannel.on('error', err => console.log(err))
 
-        setTimeout(() => {
-            // this work
-            // initiatorChannel.leave().then(({channelId, state}) => {
-            //     console.log('=*=> leaving the channel');
-            //     console.log(channelId);
-            //     console.log(state);
-            // })
-        }, 15000)
+        // setTimeout(() => {
+        //     // this work
+        //     // initiatorChannel.leave().then(({channelId, state}) => {
+        //     //     console.log('=*=> leaving the channel');
+        //     //     console.log(channelId);
+        //     //     console.log(state);
+        //     // })
+        // }, 15000)
     }).catch(err => {
         console.log('==> Initiator failed to connect')
         console.log(err)
@@ -243,12 +270,11 @@ createAccounts().then(() => {
                 // and sign it with responder's secret key 
                 async (tx) => responderAccount.signTransaction(tx)
             ).then((tx) => {
-                console.log('==> State channel has been closed')
-                console.log('==> You can track this transaction onchain', tx)
+                console.log('==> State channel has been closed. You can track this transaction onchain', tx)
             }).catch(e => {
                 console.log('==> Error:', e);
             })
-        }, 15000)
+        }, 30000)
 
         responderChannel.on('error', err => console.log(err))
     }).catch(err => {
