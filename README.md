@@ -22,4 +22,3 @@ The provided sophia examples or library functions are only tested to the extend 
 
 [**Sophia Crypto Hamster**](/examples/CryptoHamster/README.md) example.
 
-[**Sophia Base Converter**](/examples/CryptoHamster/README.md) example.
