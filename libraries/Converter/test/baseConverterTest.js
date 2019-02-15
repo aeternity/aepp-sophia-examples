@@ -1,4 +1,5 @@
 const Ae = require('@aeternity/aepp-sdk').Universal
+const Crypto = require('@aeternity/aepp-sdk').Crypto
 
 const config = {
   host: 'http://localhost:3001/',
@@ -16,6 +17,13 @@ async function deployContract (contractName, ...params) {
   const compileContract = await owner.contractCompile(contractSource, gas)
   const deployPromiseContract = await compileContract.deploy(deployObj)
   return deployPromiseContract
+}
+
+function decodeContractAddress (contract) {
+  const decoded58addres = Crypto.decodeBase58Check(
+    contract.address.split('_')[1]
+  ).toString('hex')
+  return `0x${decoded58addres}`
 }
 
 async function callContract (contract, functionName, args, decodeType = 'int') {
@@ -45,7 +53,7 @@ describe('BaseConverter Contract', () => {
       const deployObj = {
         options: { ttl: config.ttl }
       }
-      SmartRealEstateContract = await deployContract(
+      BaseConverterContract = await deployContract(
         'BaseConverter',
         owner,
         gas,
@@ -58,7 +66,7 @@ describe('BaseConverter Contract', () => {
 
   describe('Interact with the contract', () => {
     before(() => {
-      ownerAddress = decodeAddress(wallets[0].publicKey)
+      addressBaseConverter = decodeContractAddress(BaseConverterContract)
     })
 
     it('should convert decimal to binary', async () => {
@@ -68,7 +76,7 @@ describe('BaseConverter Contract', () => {
         abi: 'sophia'
       }
       const result = await callContract(
-        SmartRealEstateContract,
+        BaseConverterContract,
         'dec_to_binary',
         args,
         'string'
@@ -83,7 +91,7 @@ describe('BaseConverter Contract', () => {
         abi: 'sophia'
       }
       const result = await callContract(
-        SmartRealEstateContract,
+        BaseConverterContract,
         'dec_to_oct',
         args,
         'string'
@@ -98,7 +106,7 @@ describe('BaseConverter Contract', () => {
         abi: 'sophia'
       }
       const result = await callContract(
-        SmartRealEstateContract,
+        BaseConverterContract,
         'dec_to_hex',
         args,
         'string'
@@ -113,8 +121,8 @@ describe('BaseConverter Contract', () => {
         abi: 'sophia'
       }
       const result = await callContract(
-        SmartRealEstateContract,
-        'dec_to_hex',
+        BaseConverterContract,
+        'binary_to_dec',
         args,
         'int'
       )
@@ -128,8 +136,8 @@ describe('BaseConverter Contract', () => {
         abi: 'sophia'
       }
       const result = await callContract(
-        SmartRealEstateContract,
-        'dec_to_hex',
+        BaseConverterContract,
+        'oct_to_dec',
         args,
         'int'
       )
