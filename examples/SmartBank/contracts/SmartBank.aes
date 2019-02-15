@@ -30,8 +30,8 @@ contract SmartBank =
     Chain.spend(address, amount)
 
   // Remove caller from state
-  public function remove_self() =
-    remove_user_by_address(Call.caller)
+  public function remove_self(password : string) =
+    remove_user_by_address(Call.caller, password)
 
   // Check if user exists
   public function user_exists(user : address) : bool =
@@ -48,7 +48,7 @@ contract SmartBank =
   private function hash_pwd(pwd : string) : string = 
     Int.to_str(String.sha3(pwd)) // hashing algorithm can be changed at any time 
      
-  private function remove_user_by_address(address : address) = 
+  private function remove_user_by_address(address : address, password : string) = 
     require(user_exists(address),String.concat("User does not exist: ", Address.to_str(address)))
     Chain.spend(address, state[address].amount)
     put(Map.delete(address, state))

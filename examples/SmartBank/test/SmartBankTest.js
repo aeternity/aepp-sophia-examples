@@ -1,4 +1,5 @@
 const Ae = require('@aeternity/aepp-sdk').Universal
+const Crypto = require('@aeternity/aepp-sdk').Crypto 
 
 const config = {
   host: 'http://localhost:3001/',
@@ -23,11 +24,11 @@ async function callContract (contract, functionName, args, decodeType = 'int') {
   const decodedResult = await result.decode(decodeType)
   return decodedResult.value
 }
-function decodeContractAddress (contract) {
-  const decoded58addres = Crypto.decodeBase58Check(contract.address.split('_')[1]).toString(
+function decodeContractAddress (key) {
+  const decoded58address = Crypto.decodeBase58Check(key.split('_')[1]).toString(
     'hex'
   )
-  return `0x${decoded58addres}`
+  return `0x${decoded58address}`
 }
 
 describe('SmartBank Contract', () => {
@@ -57,8 +58,8 @@ describe('SmartBank Contract', () => {
         gas,
         deployObj
       )
-      assert(BaseConverterContract.hasOwnProperty('address'))
-      assert(BaseConverterContract.hasOwnProperty('owner'))
+      assert(SmartBankContract.hasOwnProperty('address'))
+      assert(SmartBankContract.hasOwnProperty('owner'))
     })
   })
 
@@ -66,7 +67,7 @@ describe('SmartBank Contract', () => {
 
     it('should deposit tokens', async () => {
       const args = {
-        args : '"12345"',
+        args : '("12345")',
         options: { ttl: 55 , amount: 1000},
         abi: 'sophia'
       }
@@ -74,79 +75,94 @@ describe('SmartBank Contract', () => {
         SmartBankContract,
         'deposit',
         args,
-        'bool'
+        '()'
       )
-      assert.equal(result, true)
+      assert.deepEqual(result, [])
+
     })
     it('should check if user is registered in state', async () => {
-      const key = decodeContractAddress(ownerKeyPair[0])
+      const key = decodeContractAddress(wallets[0].publicKey)
       const args = {
         args : key, // pass the address of the caller
         options: {ttl: 55},
         abi: 'sophia'
       }
+      wallets[0].publicKey
       const result = await callContract(
         SmartBankContract,
         'user_exists',
         args,
         'bool'
       )
-      assert.equal(result, true)
+      assert.equal(result, '1')
     })
 
 
     it('should transfer tokens to its owner (withdrawal)', async () => {
       const args = {
-        args: `500`,
+        args: `("12345", 500)`,
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        SmartBankContract,
+        'withdraw',
+        args,
+        '()'
+         // return type?
+      )
+      assert.deepEqual(result, [])
+    })
+
+    it('should check new balance after withdrawal', async () => {
+      const args = {
+        options: { ttl: 55 },
+        abi: 'sophia'
+      }
+      const result = await callContract(
+        SmartBankContract,
+        'check_self_balance',
+        args,
+        )
+      assert.equal(result, 500)
+    })
+
+    it('should transfer tokens', async () => {
+      const key = decodeContractAddress(wallets[0].publicKey)
+      const args = {
+        args: `(${key}, 250, "12345")`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         SmartBankContract,
         'transfer',
-        args
-         // return type?
-      )
-      assert.equal(result, [])
+        args)
+      assert.equal(result,  [])
     })
 
-    it('should check new balance', async () => {
+    it('should check new balance after transfer', async () => {
       const args = {
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         SmartBankContract,
-        'check_balance',
+        'check_self_balance',
         args,
-        'string'
-      )
-      assert.equal(result, "500")
+        )
+      assert.equal(result, 250)
     })
 
-    it('should transfer tokens', async () => {
-
+    it("should remove owner's account from the state", async () => {
       const args = {
-        args: `0x0bb4ed7927f97b51e1bcb5e1340d12335b2a2b12c8bc5221d63c4bcb39d41e61, 250, "12345"`,
+        args: `"12345"`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
-        SmartRealEstateContract,
-        '',
-        args)
-      assert.equal(result,  [])
-    })
-
-    it('should remove an account from the state', async () => {
-      const args = {
-        args: `"123456"`,
-        options: { ttl: 55 },
-        abi: 'sophia'
-      }
-      const result = await callContract(
-        SmartRealEstateContract,
-        'remove_user',
+        SmartBankContract,
+        'remove_self',
         args
       )
       assert.equal(result, [])
