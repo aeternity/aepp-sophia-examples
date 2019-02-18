@@ -22,7 +22,7 @@ contract SmartBank =
 
   // Transfer to another key 
   public function transfer(address : address, amount : int, pass : string) = 
-    require(user_exists(address), "User does not exist")
+    require(user_exists(address), "Invalid user or password!")
     require(hash_pwd(pass) == state[Call.caller].password, "Wrong password")
     require(amount =< state[Call.caller].amount, "Not enough money")
     let old_record = state[address]
@@ -42,14 +42,15 @@ contract SmartBank =
       
   // Check caller balance
   public function check_self_balance() : int =
-    require(user_exists(Call.caller),String.concat("User does not exist: ", Address.to_str(Call.caller)))
+    require(user_exists(Call.caller), "Invalid user or password!")
     state[Call.caller].amount
     
   private function hash_pwd(pwd : string) : string = 
     Int.to_str(String.sha3(pwd)) // hashing algorithm can be changed at any time 
      
   private function remove_user_by_address(address : address, password : string) = 
-    require(user_exists(address),String.concat("User does not exist: ", Address.to_str(address)))
+    require(user_exists(address), "Invalid user or password!")
+    require(hash_pwd(password) == state[Call.caller].password, "Invalid user or password!")
     Chain.spend(address, state[address].amount)
     put(Map.delete(address, state))
   

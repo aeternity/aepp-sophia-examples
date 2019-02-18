@@ -25,6 +25,6 @@ All tests should be passing.
 1. `deposit(pass)` - the function takes an argument `pass` as a string. There is no return type of the function.
 2. `withdraw(pass, amount)` - the function takes 2 arguments - `pass` as a string and `amount` as an integer. The function will transfer the given amount of tokens to the owner of the account. There is no return type of the function.
 3. `transfer(address, pass, amount)` - the function takes 3 arguments - `address` as the public key of the account in hexadecimal format, where the tokens should be sent to, `pass` as a string and `amount` as an integer. The function will try to transfer the given amount of tokens from the caller's account.
-4. `remove_self()` - the function takes no arguments. It will try to remove caller's account from the state, but before that, it will try to send the amount of tokens held in the state, to its owner. There is no return type of the function.
+4. `remove_self(password : string)` - the function takes no arguments. It will try to remove caller's account from the state, but before that, it will try to send the amount of tokens held in the state, to its owner. There is no return type of the function.
 5. `user_exists(user)` - the function takes `user` argument, which is account's address in hexadecimal format. It will check if the given address exists in the state. The return type is `boolean`.
-6. `check_self_balance(password)` - the function takes a `password` as an argument. It checks the caller's account balance. The return type is `integer`. 
+6. `check_self_balance()` - the function takes no arguments. It checks the caller's account balance. The return type is `integer`. 
