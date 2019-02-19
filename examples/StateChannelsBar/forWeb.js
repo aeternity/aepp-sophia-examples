@@ -24,7 +24,7 @@ const aeWeb = {
     universal: Universal,
     wallet: Wallet,
     memoryAccount: MemoryAccount,
-    //txBuilder: TxBuilder,
+    txBuilder: TxBuilder,
     config: {
         responderAddress: publicKey,
         node: {

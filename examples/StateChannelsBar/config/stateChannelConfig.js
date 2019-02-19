@@ -2,7 +2,7 @@
 const keyPair = require('./keyPair');
 const nodeConfig = require('./nodeConfig');
 
-const MINIMUM_DEPOSIT = 30000;
+const MINIMUM_DEPOSIT = 50000;
 const channelReserve = parseInt(MINIMUM_DEPOSIT * 0.25);
 
 module.exports = {
@@ -29,6 +29,7 @@ module.exports = {
         host: nodeConfig.RESPONDER_HOST,
         // Port of the responders node
         port: nodeConfig.RESPONDER_PORT,
-        fee: 1000
+        //fee: 1000,
+        //nonce: 1000
     }
 }

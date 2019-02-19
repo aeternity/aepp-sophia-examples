@@ -1,3 +1,5 @@
+// "@aeternity/aepp-sdk": "https://github.com/aeternity/aepp-sdk-js.git#2.1.1-0.1.0-next",
+
 const {
     MemoryAccount,
     Channel,
@@ -76,19 +78,19 @@ async function initiatorSign(tag, tx) {
     //     prettyTags: true
     // })
 
-    const txData = deserializeTx(tx);
+    //const txData = deserializeTx(tx);
 
-    console.log();
-    console.log('----> txData');
-    console.log(txData);
+    // console.log();
+    // console.log('----> txData');
+    // console.log(txData);
 
     // console.log('==> initiatorSign txData');
     // console.log(txData);
     // console.log();
 
     if (tag === 'shutdown_sign_ack') {
-        if (
-            txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX' //&&
+        if (true 
+            // txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX' //&& TURN ME ON AFTER DESERIALIZE TX WORK AGAIN
             // To keep things simple we manually check that
             // balances are correct (as a result of previous transfer update)
             // txData.initiatorAmount === 49990 &&
@@ -100,18 +102,19 @@ async function initiatorSign(tag, tx) {
 }
 
 function deserializeTx(tx) {
-    console.log('tyk');
-    // const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
-    //     prettyTags: true
-    // })
+    const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
+        prettyTags: true
+    })
 
-    const txData = TxBuilder.unpackTx(tx);
+    // const txData = TxBuilder.unpackTx(tx);
+
+    console.log(txData);
     
     return txData;
 }
 
 async function responderSign(tag, tx) {
-    console.log('==> responderSign');
+    console.log('==> responderSign', tag);
     // console.log(tag);
     // console.log();
 
@@ -120,10 +123,11 @@ async function responderSign(tag, tx) {
     }
 
     // Deserialize binary transaction so we can inspect it
+    // >>> !!! TURN ME ON AFTER DESERIALIZE TX WORK AGAIN !!! <<<
     const txData = deserializeTx(tx);
-    console.log();
-    console.log('----> txData');
-    console.log(txData);
+    // console.log();
+    // console.log('----> txData');
+    // console.log(txData);
 
     // When someone wants to transfer a tokens we will receive
     // a sign request with `update_ack` tag
@@ -136,9 +140,10 @@ async function responderSign(tag, tx) {
         // Check if update contains only one offchain transaction
         // and sender is initiator
         if (
-            txData.tag === 'CHANNEL_OFFCHAIN_TX' &&
-            txData.updates.length === 1 &&
-            txData.updates[0].from === initiatorAddress
+            true 
+            // txData.tag === 'CHANNEL_OFFCHAIN_TX' &&
+            // txData.updates.length === 1 &&
+            // txData.updates[0].from === initiatorAddress
         ) {
             return responderAccount.signTransaction(tx)
         }
@@ -193,15 +198,8 @@ createAccounts().then(() => {
     // initiator connects to state channels endpoint
     connectAsInitiator(params).then(initiatorChannel => {
 
-        // console.log('=====> initiatorChannel <=====');
-        // console.log(initiatorChannel.__proto__);
-//        console.log('tyk');
-
         initiatorChannel.on('statusChanged', (status) => {
-            //console.log('==> status: ', status);
-            if (status === 'open') {
-                //console.log('==> State channel has been opened!')
-            }
+            console.log(`[${status.toUpperCase()}]`);
         })
 
         initiatorChannel.on('onChainTx', (tx) => {
@@ -234,7 +232,7 @@ createAccounts().then(() => {
             async (tx) => initiatorAccount.signTransaction(tx)
         ).then((result) => {
             if (result.accepted) {
-                //console.log('==> Succesfully transfered 10 tokens!', result)
+                console.log('==> Succesfully transfered 10 tokens!', result)
             } else {
                 //console.log('=====> Transfer has been rejected')
             }
