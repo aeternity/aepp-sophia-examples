@@ -207,6 +207,8 @@ createAccounts().then(() => {
         })
 
         // off chain balances
+        getOffChainBalances1(initiatorChannel)
+        
         if (false) {
             initiatorChannel.balances(
                 [initiatorKeyPair.publicKey],
@@ -217,7 +219,7 @@ createAccounts().then(() => {
         }
 
 
-
+        getOffChainBalances1(initiatorChannel)
         //initiatorChannel.sendMessage('hello world', responderAddress)
 
         initiatorChannel.update(
@@ -232,7 +234,7 @@ createAccounts().then(() => {
             async (tx) => initiatorAccount.signTransaction(tx)
         ).then((result) => {
             if (result.accepted) {
-                console.log('==> Succesfully transfered 10 tokens!', result)
+                console.log('==> Successfully transfered 10 tokens!', result)
             } else {
                 //console.log('=====> Transfer has been rejected')
             }
@@ -250,6 +252,7 @@ createAccounts().then(() => {
         //     //     console.log(state);
         //     // })
         // }, 15000)
+
     }).catch(err => {
         console.log('==> Initiator failed to connect')
         console.log(err)
@@ -278,5 +281,25 @@ createAccounts().then(() => {
     }).catch(err => {
         console.log('==> Responder failed to connect')
         console.log(err)
-    })
+    });
+
+    async function getOffChainBalances2(channel) {
+        // off chain balances
+       let balances = await channel.balances([ initiatorKeyPair.publicKey, responderKeyPair.publicKey]);
+       console.log('-=-=>> off chain balance 2')
+       console.log(balances[initiatorKeyPair.publicKey])
+       console.log(balances[responderKeyPair.publicKey])
+   }
+
+    function getOffChainBalances1(channel) {
+        // off chain balances
+        channel.balances([
+            initiatorKeyPair.publicKey, 
+            responderKeyPair.publicKey])
+            .then(function (balances) {
+                console.log('-=-=>> off chain balance 1')
+                console.log(balances[initiatorKeyPair.publicKey])
+                    console.log(balances[responderKeyPair.publicKey])
+            }).catch(e => console.log(e))
+    }
 })

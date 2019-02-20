@@ -57,7 +57,15 @@
                     data: data
                 });
 
-                await updateState(channel, initiatorKeyPair.publicKey, responderId, result.price);
+                let currentBalance = await getOffChainBalance();
+
+                if(currentBalance - channelReserve >= result.price) { 
+                    await updateState(channel, initiatorKeyPair.publicKey, responderId, result.price);
+                    
+                    updateOffChainBalance(currentBalance - result.price);
+                } else {
+                    alert(`Insufficient funds. Product price: ${result.price} ae. Current balance:${currentBalance} - channelReserve: ${channelReserve} = ${currentBalance - channelReserve} ae. Please close the channel!`);
+                }
             }
         })
     </script>

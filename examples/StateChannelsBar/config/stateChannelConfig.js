@@ -2,8 +2,8 @@
 const keyPair = require('./keyPair');
 const nodeConfig = require('./nodeConfig');
 
-const MINIMUM_DEPOSIT = 50000;
-const channelReserve = parseInt(MINIMUM_DEPOSIT * 0.25);
+const MINIMUM_DEPOSIT = 100000;
+const channelReserve = 30000;    // parseInt(MINIMUM_DEPOSIT * 0.25);
 
 module.exports = {
     params: {

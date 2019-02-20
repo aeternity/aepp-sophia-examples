@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
         crossorigin="anonymous">
 
+    <link rel="stylesheet" href="/styles/sample-loader.css">
+    <link rel="stylesheet" href="/styles/common.css">
+
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
@@ -54,6 +57,8 @@
         </div>
     </div>
 
+    {{>loader}}
+
     {{>menu}}
 
     {{>history}}
@@ -85,8 +90,12 @@
         let account;
         let channel;
 
+        let channelReserve;
+
         let createAccount;
         let updateState;
+        let getAndUpdateOffChainBalance;
+        let getOffChainBalance;
 
         (async function () {
 
@@ -95,6 +104,8 @@
             btnStartStateChannel.click(startStateChannel);
 
             async function startStateChannel() {
+
+                showLoader();
 
                 let depositAmountValue = $('#deposit-amount').val();
                 let depositAmount = parseInt(depositAmountValue) || 0;
@@ -113,17 +124,21 @@
                 if (depositAmount < params.responderAmount) {
                     alert(`Deposit should be equal or greater than ${params.responderAmount}!`);
                     $('.start-wrapper').show();    
+                    hideLoader();
                     return;
                 }
 
                 params.responderAmount = depositAmount;
                 params.initiatorAmount = depositAmount;
-                params.channelReserve = parseInt(depositAmount * 0.25);
+                // params.channelReserve = parseInt(depositAmount * 0.25);
                 params.initiatorId = initiatorKeyPair.publicKey;
+                channelReserve = params.channelReserve;
 
                 channel = await connectAsInitiator(params, sign);
-
                 channelActions(channel);
+
+                showBalance(false);
+                updateOffChainBalance(depositAmount);
 
                 let data = {
                     params: params
@@ -167,7 +182,7 @@
                 }
             }
 
-            function channelActions(channel) {
+            async function channelActions(channel) {
 
                 channel.on('statusChanged', (status) => {
                     console.log(`[${status.toUpperCase()}]`);
@@ -184,9 +199,21 @@
                         $('.bar-menu').show();
                         $('.close-wrapper').show();
                         showHistory();
+                        hideLoader();
+
+                        //console.log('account');
+                        //console.log(account);
+
+                        //console.log('state');
+                        //console.log(channel.state());
+
+                        console.log('status');
+                        //console.log(channel.status());
                         
-                        //getOffChainBalances1(channel);
-                        //await getOffChainBalances2(channel);
+                    }
+
+                    if(msg.info.indexOf('update successfully signed') >= 0) {
+                        //getAndUpdateOffChainBalance();
                     }
 
                     // UI
@@ -197,21 +224,17 @@
                 });
             }
 
-            function getOffChainBalances1(channel) {
-                 // off chain balances
-                channel.balances(
-                    [initiatorKeyPair.publicKey]
-                    ).then(function (balances) {
-                        console.log('-=-=>> off chain balance 1')
-                        console.log(balances[initiatorKeyPair.publicKey])
-                    }).catch(e => console.log(e))
+            getAndUpdateOffChainBalance = async function () {
+                let balance = await getOffChainBalance();
+                updateOffChainBalance(balance);
             }
-
-            async function getOffChainBalances2(channel) {
+            
+            getOffChainBalance = async function () {
                  // off chain balances
-                let balances = await channel.balances([initiatorKeyPair.publicKey]);
-                console.log('-=-=>> off chain balance 2')
-                console.log(balances[initiatorKeyPair.publicKey])
+                let balances = await channel.balances([ initiatorKeyPair.publicKey]);
+                let offChainBalance = balances[initiatorKeyPair.publicKey];
+
+                return offChainBalance;
             }
 
             updateState = async function (channel, senderAddress, recipientAddress, amount) {
@@ -227,7 +250,6 @@
                         // and sign it with initiator's private key
                         async (tx) => account.signTransaction(tx)
                     );
-
                 } catch (e) {
                     alert('Something went wrong! Invalid Tx!');
                     console.log(e);
@@ -246,10 +268,6 @@
                 }
 
                 try {
-                    //channel.shutdown(async (tx) => account.signTransaction(tx)).then(x => {
-                        //console.log('x')
-                        //console.log(x)
-                    //}).catch(e => console.log('err',e));
                     
                     let shutDownResult = await channel.shutdown(async (tx) => {
                         //  let txData = deserializeTx(tx);
@@ -266,7 +284,9 @@
                     $('.close-wrapper').hide();
                     $('.start-wrapper').show();
                     $('.bar-menu').hide();
-                    hideHistory()
+                    hideHistory();
+                    resetBalances();
+                    showBalance();
 
                 } catch (e) {
                     console.log('Error occurred while closing the channel.')

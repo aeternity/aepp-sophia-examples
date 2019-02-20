@@ -45,7 +45,7 @@ async function createChannel(req, res) {
     let params = req.body.params;
     params.channelReserve = parseInt(params.initiatorAmount * 0.25);
 
-    //console.log('init params:', params);
+    console.log('init params:', params);
 
     let channel = await connectAsResponder(params);
     let data = {
@@ -81,6 +81,9 @@ async function buyProduct(req, res) {
         }
         data.isSigned = false;
 
+        //data.channel.sendMessage('update successfully signed', initiatorAddress);
+        getOffChainBalances(data.channel);
+
         openChannels[initiatorAddress] = data;
 
         res.send({
@@ -95,16 +98,6 @@ async function buyProduct(req, res) {
 function stopChannel(req, res) {
 
     let initiatorAddress = req.body.initiatorAddress;
-    // if (!openChannels.has(initiatorAddress)) {
-    //     console.log('[ERROR] invalid initiator address');
-    //     res.send(false);
-    //     return;
-    // }
-
-    // let channel = openChannels.get(initiatorAddress).channel;
-    // console.log(666);
-    // channel.shutdown(async (tx) => account.signTransaction(tx));
-    // console.log(777);
 
     let result = openChannels.delete(initiatorAddress);
 
@@ -150,6 +143,7 @@ async function responderSign(tag, tx) {
 
     if (tag === 'shutdown_sign_ack') { // && txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX'
         console.log('txData');
+        console.log('...maybe this data is INCORRECT, shows some strange responder amount....');
         console.log(txData);
         return account.signTransaction(tx);
     }
@@ -196,6 +190,16 @@ function deserializeTx(tx) {
     //const txData = TxBuilder.unpackTx(tx);
 
     return txData;
+}
+
+function getOffChainBalances(channel) {
+    // off chain balances
+    channel.balances([ keyPair.publicKey ])
+        .then(function (balances) {
+            console.log('==> off chain balance');
+            console.log('=== host:', balances[keyPair.publicKey]);
+            console.log();
+        }).catch(e => console.log(e))
 }
 
 module.exports = {

@@ -1,0 +1,21 @@
+<div id="sample-loader" class="loader-container hide-me" >
+    <div class="loader loader-center"></div>
+</div>
+
+<script>
+
+    let showLoader;
+    let hideLoader;
+
+    window.addEventListener('load', function () {
+
+        showLoader = function () {
+            $('#sample-loader').show();
+        };
+
+        hideLoader = function () {
+            $('#sample-loader').hide();
+        }
+        
+    })
+</script>
