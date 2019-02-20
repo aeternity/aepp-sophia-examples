@@ -2,7 +2,7 @@
 STATE CHANNEL DEMO
 
 То run this demo you should update your docker image 
-```docker pull aeternity/aeternity```
+```docker pull aeternity/aeternity:latest```
 
 also you should install "Allow CORS: Access-Control-Allow-origin" browser extension and allow CORS for localhost.
 
@@ -28,12 +28,3 @@ If there is no off chain transaction for less than a minute channel close itself
 There are some logs in the browser and terminal.
 
 !!! PS: if you cannot shutdown/close the state channel (throw an error), you should RESTART the node :)
-
-
-
-
-
-
-
-
-
