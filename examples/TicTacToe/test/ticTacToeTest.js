@@ -74,13 +74,13 @@ describe('TicTacToe Contract', () => {
 
     it('should set player 1 ', async () => {
       const args = {
-        args: `11`,
+        args: `(11,1)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_1',
+        'make_move',
         args,
         'string'
       )
@@ -89,13 +89,13 @@ describe('TicTacToe Contract', () => {
 
     it('should set player 2 ', async () => {
       const args = {
-        args: `12`,
+        args: `(12, 2)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_2',
+        'make_move',
         args,
         'string'
       )
@@ -103,13 +103,13 @@ describe('TicTacToe Contract', () => {
     })
     it('should set player 1 ', async () => {
       const args = {
-        args: `33`,
+        args: `(33,1)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_1',
+        'make_move',
         args,
         'string'
       )
@@ -118,13 +118,13 @@ describe('TicTacToe Contract', () => {
 
     it('should set player 2 ', async () => {
       const args = {
-        args: `23`,
+        args: `(23,2)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_2',
+        'make_move',
         args,
         'string'
       )
@@ -133,13 +133,13 @@ describe('TicTacToe Contract', () => {
 
     it('should set player 1 ', async () => {
       const args = {
-        args: `31`,
+        args: `(31, 1)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_1',
+        'make_move',
         args,
         'string'
       )
@@ -148,13 +148,13 @@ describe('TicTacToe Contract', () => {
 
     it('should set player 2 ', async () => {
       const args = {
-        args: `21`,
+        args: `(21,2)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_2',
+        'make_move',
         args,
         'string'
       )
@@ -163,17 +163,17 @@ describe('TicTacToe Contract', () => {
 
     it('should win player 1 ', async () => {
       const args = {
-        args: `32`,
+        args: `(32,1)`,
         options: { ttl: 55 },
         abi: 'sophia'
       }
       const result = await callContract(
         TicTacToeContract,
-        'player_1',
+        'make_move',
         args,
         'string'
       )
-      assert.equal(result, 'You are the winer! Congratulations player 1')
+      assert.equal(result, 'You are the winner! Congratulations player 1')
     })
   })
 })

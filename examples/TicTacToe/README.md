@@ -14,8 +14,8 @@ TicTacToe is a game with 2 players. There is a board which looks like something 
 The player who succeeds in placing three of their marks in a horizontal, vertical, or diagonal row wins the game.
 
 ## Gameplay
-- First player calls function `player_1(position)` with `position` which is one of the coordinates from *Figure 1*. Then, the given position will be binded to player 1 and will return message `Game continues. The other player's turn`.
-- Second player calls function `player_2(position)` with `position` which is one of the coordinates from *Figure 1*. Then, the given position will be binded to player 2 and will return message `Game continues. The other player's turn`.
+- First player calls function `make_move(position,player)` with `player` which is player's digit -> `1` and `position`  which is one of the coordinates from *Figure 1*. Then, the given position will be binded to player 1 and will return message `Game continues. The other player's turn`.
+- Second player calls function `make_move(position,player)` with  which is player's digit -> `2` and`position` which is one of the coordinates from *Figure 1*. Then, the given position will be binded to player 2 and will return message `Game continues. The other player's turn`.
 - If the given coordinate is already taken, the code will throw an error `Place is already taken!`.
 - If the given coodrinate does not exist or not allowed, the code will throw an error `Incorrect position!`.
 - If the player 1 will try to make another consequtive turn, the code will throw an error ` It's not your turn. Player 2 have to play now!`, same applies for player 2.
