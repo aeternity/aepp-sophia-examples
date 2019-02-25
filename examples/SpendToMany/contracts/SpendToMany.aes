@@ -1,40 +1,41 @@
 contract SpendToMany =
-  // {[publicKey1_in_hex] = some_tokens , ... [publicKeyN_in_hex] = some_tokens}
-  function spend_to_many(data_map : map(address, int)) =
-    let tuples_list = Map.to_list(data_map) 
-    require(validate_expenses(tuples_list), "The balance given to perform this action is not sufficient")
-    let sent_tokens = spend_to_many'(tuples_list, 0, Call.value)
-    if(Call.value - sent_tokens > 0)
+  // {[publicKey1_in_hex] = some_tokens1 , ... [publicKeyN_in_hex] = some_tokensN}
+  function spend_to_many(recipients_and_tokens : map(address, int)) =
+    let recipients_and_tokens_list = Map.to_list(recipients_and_tokens) // transform incomming map to list of tuples
+    require(validate_expenses(recipients_and_tokens_list), "The balance given to perform this action is not sufficient")
+    let sent_tokens = spend_to_many'(recipients_and_tokens_list, 0, Call.value)
+    if(Call.value - sent_tokens > 0) //check if there are excess tokens
       Chain.spend(Call.caller, Call.value - sent_tokens)   //return excess amount of tokens back to the caller
-    String.concat(Int.to_str(sent_tokens), "  tokens are sent!")
+    sent_tokens
 
   
-  private function spend_to_many'(list, acc, amount_left) : int = 
+  private function spend_to_many'(list, total_tokens_spend, amount_left) : int =   //traverse through list of maps
     switch(list)
-      [] => acc
+      [] => total_tokens_spend
       (address, tokens) :: l' =>
-        require(amount_left >= tokens, "Not enough tokens! Aborting") 
+        require(amount_left >= tokens, "Not enough tokens! Aborting") // if for some reason amount of tokens is not enough, the recursion will be aborted
         Chain.spend(address,tokens) 
-        spend_to_many'(l', acc + tokens, amount_left - tokens)
+        spend_to_many'(l', total_tokens_spend + tokens, amount_left - tokens)
 
 
-  private function validate_expenses(tuples_list) : bool = //comparing possible expenses and given tokens
-    sum((x) => x, preprocess_expenses(tuples_list,[])) =< Call.value 
+  private function validate_expenses(recipients_and_tokens) : bool = //comparing possible expenses and given tokens
+    sum((x) => x, preprocess_expenses(recipients_and_tokens,[])) =< Call.value
 
-  private function preprocess_expenses(tuples_list, acc) : list(int)= 
-    switch(tuples_list)
-      [] => acc
+  private function preprocess_expenses(recipients_and_tokens, expenses) : list(int)= // traversing through values of given list of tuples(in the other words, tokens), returns a list of integers, in order to calculate them later in sum(f,l) private function.
+    switch(recipients_and_tokens)
+      [] => expenses
       (_ , tokens) :: l' =>
-        preprocess_expenses(l', tokens :: acc)
+        preprocess_expenses(l', tokens :: expenses)
  
-  private function sum(f : 'a => int, l : list('a)) : int =
+  private function sum(f : 'a => int, l : list('a)) : int = // traverses through list, returns a sum of elements
     foldr((x, y) => x + y, 0, map(f, l))
 
   private function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
     switch(l)
       [] => z
       e :: l' => f(e, foldr(f, z, l'))
-  function map(f : 'a => 'b, l : list('a)) : list('b) =
+
+  private function map(f : 'a => 'b, l : list('a)) : list('b) =
     switch(l)
      [] => []
      e :: l' => f(e) :: map(f, l')

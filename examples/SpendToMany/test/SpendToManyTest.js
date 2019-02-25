@@ -96,9 +96,9 @@ describe('SpendToMany Contract', () => {
         SpendToMany,
         'spend_to_many',
         args,
-        'string'
+        'int'
       )
-      assert.equal(result.includes(`${totalTokens}`), true)
+      assert.equal(result, totalTokens)
     })
   })
 })
