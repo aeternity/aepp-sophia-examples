@@ -8,7 +8,7 @@ const config = {
   ttl: 55
 }
 
-async function deployContract(contractName, ...params) {
+async function deployContract (contractName, ...params) {
   const [owner, gas, deployObj] = [params[0], params[1], params[2]]
   const contractSource = utils.readFileRelative(
     `./contracts/${contractName}.aes`,
@@ -19,16 +19,14 @@ async function deployContract(contractName, ...params) {
   return deployPromiseContract
 }
 
-function decodeAddress(key) {
-  const decoded58addres = Crypto.decodeBase58Check(
-    key.split('_')[1]
-  ).toString('hex')
+function decodeAddress (key) {
+  const decoded58addres = Crypto.decodeBase58Check(key.split('_')[1]).toString(
+    'hex'
+  )
   return `0x${decoded58addres}`
 }
 
-
-
-async function callContract(
+async function callContract (
   contract,
   functionName,
   args,
@@ -58,40 +56,42 @@ describe('SpendToMany Contract', () => {
     it('should deploy SpendToMany contract', async () => {
       const gas = { gas: config.gas }
       const deployObj = { options: { ttl: config.ttl } }
-      SpendToMany = await deployContract(
-        'SpendToMany',
-        owner,
-        gas,
-        deployObj
-      )
+      SpendToMany = await deployContract('SpendToMany', owner, gas, deployObj)
       assert(SpendToMany.hasOwnProperty('address'))
       assert(SpendToMany.hasOwnProperty('owner'))
     })
   })
 
   describe('Interact with the contract', async () => {
-    let sophiaMap = ""
+    let sophiaMap = ''
     let genRandomTokensAmount
     let totalTokens = 0
+
     for (let i = 0; i < wallets.length; i++) {
       if (i + 1 == wallets.length) {
         genRandomTokensAmount = Math.floor(Math.random() * 1000) + 1
         totalTokens = totalTokens + genRandomTokensAmount
-        sophiaMap = sophiaMap + `[${decodeAddress(wallets[i].publicKey)}] =  ${genRandomTokensAmount}`
-        
-      }
-      else {
+        sophiaMap =
+          sophiaMap +
+          `[${decodeAddress(wallets[i].publicKey)}] =  ${genRandomTokensAmount}`
+      } else {
         genRandomTokensAmount = Math.floor(Math.random() * 1000) + 1
         totalTokens = totalTokens + genRandomTokensAmount
-        sophiaMap = sophiaMap + `[${decodeAddress(wallets[i].publicKey)}] =  ${genRandomTokensAmount}, `
-      }}
+        sophiaMap =
+          sophiaMap +
+          `[${decodeAddress(
+            wallets[i].publicKey
+          )}] =  ${genRandomTokensAmount}, `
+      }
+    }
 
-    it('should spend to multiple addresses', async () => {
+    it('should spend to multiple addresses with valid amount', async () => {
       const args = {
         args: `{${sophiaMap}}`,
         options: { ttl: 55, amount: 10000 },
         abi: 'sophia'
       }
+
       const result = await callContract(
         SpendToMany,
         'spend_to_many',
@@ -99,6 +99,48 @@ describe('SpendToMany Contract', () => {
         'int'
       )
       assert.equal(result, totalTokens)
+    })
+
+    it('should spend and check balance again', async () => {
+      let current_balance = await owner.balance(`${wallets[1].publicKey}`)
+
+      const args_ = {
+        args: `{[${decodeAddress(wallets[1].publicKey)}] = 200}`,
+        options: { ttl: 55, amount: 10000 },
+        abi: 'sophia'
+      }
+      await callContract(SpendToMany, 'spend_to_many', args_, 'int')
+
+      let balance_after_spend = await owner.balance(`${wallets[1].publicKey}`)
+
+      assert.equal(balance_after_spend, parseInt(current_balance, 10) + 200)
+    })
+
+    it('should spend to 0 addresses', async () => {
+      const args = {
+        args: `{}`,
+        options: { ttl: 55, amount: 10000 },
+        abi: 'sophia'
+      }
+
+      const result = await callContract(
+        SpendToMany,
+        'spend_to_many',
+        args,
+        'int'
+      )
+      assert.equal(result, 0)
+    })
+
+    it('should spend to multiple addresses with invalid amount', async () => {
+      const args = {
+        args: `{${sophiaMap}}`,
+        options: { ttl: 55, amount: 1 },
+        abi: 'sophia'
+      }
+
+      const result = callContract(SpendToMany, 'spend_to_many', args, 'int')
+      assert.isRejected(result)
     })
   })
 })
