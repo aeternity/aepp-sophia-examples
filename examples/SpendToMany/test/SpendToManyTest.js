@@ -26,7 +26,7 @@ function decodeAddress (key) {
   return `0x${decoded58addres}`
 }
 
-async function callContract (
+async function callContract(
   contract,
   functionName,
   args,
