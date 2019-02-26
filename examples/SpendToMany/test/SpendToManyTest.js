@@ -140,7 +140,7 @@ describe('SpendToMany Contract', () => {
       }
 
       const result = callContract(SpendToMany, 'spend_to_many', args, 'int')
-      assert.isRejected(result)
+      await assert.isRejected(result)
     })
   })
 })
