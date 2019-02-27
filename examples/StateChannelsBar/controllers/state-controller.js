@@ -116,16 +116,22 @@ async function connectAsResponder(params) {
 async function responderSign(tag, tx) {
     console.log('==> responder sign tag:', tag);
 
-    if (tag === 'responder_sign') {
+    // Deserialize binary transaction so we can inspect it
+    const txData = deserializeTx(tx);
+    console.log(txData);
+
+    tag = txData.tag;
+
+
+    if (tag === 'responder_sign' || tag === 'CHANNEL_CREATE_TX') {
         return account.signTransaction(tx)
     }
 
-    // Deserialize binary transaction so we can inspect it
-    const txData = deserializeTx(tx);
+    
 
     // When someone wants to transfer a tokens we will receive
     // a sign request with `update_ack` tag
-    if (tag === 'update_ack') {
+    if (tag === 'update_ack' || tag === 'CHANNEL_OFFCHAIN_TX') {
 
         let isValid = isTxValid(txData);
         if (!isValid) {
@@ -141,12 +147,14 @@ async function responderSign(tag, tx) {
         }
     }
 
-    if (tag === 'shutdown_sign_ack') { // && txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX'
+    if (tag === 'shutdown_sign_ack' || tag === 'CHANNEL_CLOSE_MUTUAL_TX') { // && txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX'
         console.log('txData');
         console.log('...maybe this data is INCORRECT, shows some strange responder amount....');
         console.log(txData);
         return account.signTransaction(tx);
     }
+
+    console.log('==> THERE IS NO SUITABLE CASE');
 }
 
 function isTxValid(txData) {
