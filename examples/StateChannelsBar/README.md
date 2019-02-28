@@ -12,6 +12,9 @@ clone this repo
 install packages
 ```npm install```
 
+run node
+```docker-compose up -d --force-recreate```
+
 run the demo
 ```npm start```
 

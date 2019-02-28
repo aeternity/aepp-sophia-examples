@@ -9492,6 +9492,7 @@ module.exports = function (regExp, replace) {
 /* 332 */
 /***/ (function(module, exports, __webpack_require__) {
 
+
 const {
     MemoryAccount,
     Channel,
@@ -9500,6 +9501,13 @@ const {
     Wallet,
     TxBuilder
 } = __webpack_require__(333);
+
+// import MemoryAccount from '@aeternity/aepp-sdk/es/account/memory';
+// import Channel from '@aeternity/aepp-sdk/es/channel/index';
+// import Crypto from '@aeternity/aepp-sdk/es/utils/crypto';
+// import Wallet from '@aeternity/aepp-sdk/es/ae/wallet';
+// import Universal from '@aeternity/aepp-sdk/es/ae/universal';
+// import TxBuilder from '@aeternity/aepp-sdk/es/tx/builder/index';
 
 const {
     API_URL,

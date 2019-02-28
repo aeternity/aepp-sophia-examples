@@ -1,5 +1,0 @@
-contract Identity =
-  type state = ()
-  function main(x : int) : int = 
-   let pow = 2 ^ 3
-   pow
