@@ -17,6 +17,7 @@ const {
 
 const keyPair = require('./../config/keyPair');
 const products = require('./../config/products');
+const FUND_AMOUNT = 10000000;
 
 let openChannels = new Map();
 
@@ -102,6 +103,37 @@ function stopChannel(req, res) {
     let result = openChannels.delete(initiatorAddress);
 
     res.send(result);
+}
+
+async function faucet(req, res) {
+
+    let pubKey = req.query.pubKey;
+    if(!pubKey) {
+        res.send({
+            success: false,
+            message: `Invalid public key!`
+        });
+
+        return;
+    }
+
+    try {
+        let result = await account.spend(FUND_AMOUNT, pubKey);
+        console.log('[FAUCET]', result);
+        res.send({
+            success: true,
+            message: `Public key: '${pubKey}' is funded with ${FUND_AMOUNT} aettos.`
+        });
+    } catch (error) {
+        console.log(`[ERROR] [FAUCET]`);
+        console.log(error);
+        console.log();
+
+        res.send({
+            success: false,
+            message: `Something went wrong, cannot fund this public key. For more info look at terminal!`
+        });
+    }
 }
 
 async function connectAsResponder(params) {
@@ -211,6 +243,9 @@ function getOffChainBalances(channel) {
 }
 
 module.exports = {
+    get: {
+        faucet
+    },
     post: {
         createChannel,
         buyProduct,

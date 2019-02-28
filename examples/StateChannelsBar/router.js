@@ -15,4 +15,5 @@ module.exports = app => {
     app.post('/stop', stateController.post.stopChannel);
     app.get('/config/params', configController.get.getParams);
     app.get('/products', configController.get.getProducts);
+    app.get('/faucet', stateController.get.faucet);
 }
