@@ -17,6 +17,7 @@ The provided sophia examples or library functions are only tested to the extend 
 
 [**Sophia Muiltisignature wallet**](/libraries/MultisignatureWallet/README.md) library
 
+[**Sophia Base Converter**](/libraries/Converter/README.md) library.
 
 ## Examples
 [**Sophia SmartShop**](/examples/SmartShop/README.md) example.
@@ -28,3 +29,5 @@ The provided sophia examples or library functions are only tested to the extend 
 [**Sophia Data Provider**](/examples/SmartDataProvider/README.md) example.
 
 [**Sophia Spend-to-Many**](/examples/SpendToMany/README.md) example.
+
+[**Sophia TicTacToe**](/examples/TicTacToe/README.md) example.
