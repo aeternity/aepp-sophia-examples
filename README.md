@@ -28,4 +28,6 @@ The provided sophia examples or library functions are only tested to the extend 
 
 [**Sophia Data Provider**](/examples/SmartDataProvider/README.md) example.
 
+[**Sophia Spend-to-Many**](/examples/SpendToMany/README.md) example.
+
 [**Sophia TicTacToe**](/examples/TicTacToe/README.md) example.
