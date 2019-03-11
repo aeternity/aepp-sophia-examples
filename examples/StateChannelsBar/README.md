@@ -5,6 +5,7 @@ STATE CHANNEL DEMO
 ```docker pull aeternity/aeternity:v1.4.0```
 
 also you should install "Allow CORS: Access-Control-Allow-origin" browser extension and allow CORS for localhost.
+PS: fix for chrome is this extension ```Moesif Orign & CORS Changer: https://chrome.google.com/webstore/detail/moesif-orign-cors-changer/digfbfaphojjndkpccljibejjbppifbc/related```
 
 clone this repo
 ```git clone this_repo```

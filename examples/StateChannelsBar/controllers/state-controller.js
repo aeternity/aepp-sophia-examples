@@ -99,7 +99,6 @@ async function buyProduct(req, res) {
 function stopChannel(req, res) {
 
     let initiatorAddress = req.body.initiatorAddress;
-
     let result = openChannels.delete(initiatorAddress);
 
     res.send(result);
@@ -215,11 +214,10 @@ function isTxValid(txData) {
 
 function sendConfirmMsg(txData) {
 
-    //let from = 'ak_zPoY7cSHy2wBKFsdWJGXM7LnSjVt6cn1TWBDdRBUMC7Tur2NQ';
     let from = txData.updates[txData.updates.length - 1].from;
 
     let data = openChannels.get(from);
-    let msg = `Successfully bought ${data.product.name} for ${data.product.price} ae.`; // 'Successfully bought'; // 
+    let msg = `Successfully bought ${data.product.name} for ${data.product.price} ae.`;
     data.channel.sendMessage(msg, from);
 }
 
@@ -227,7 +225,6 @@ function deserializeTx(tx) {
     const txData = Crypto.deserialize(Crypto.decodeTx(tx), {
         prettyTags: true
     });
-    //const txData = TxBuilder.unpackTx(tx);
 
     return txData;
 }
