@@ -1,0 +1,41 @@
+contract Oracle =
+
+  record state =
+    {exchangeOracle : oracle(string, int),
+    oracleFee : int}
+
+  type queryType  = string
+  type answerType = int
+  type queryId  = oracle_query(queryType, answerType)
+  type oracleId = oracle(queryType, answerType)
+
+
+  public function init(qfee: int, ttl: int) : state =
+    require(qfee > 0 , "Qfee must be passed as an argument and should be greater than zero")
+    require(ttl > 0 , "TTL must be passed as an argument and should be greater than zero")
+    let exchangeOracle : oracle(string, int) = registerOracle(qfee,ttl)
+    {exchangeOracle = exchangeOracle,
+      oracleFee = qfee}
+
+  function registerOracle(qfee : int, ttl  : int) : oracleId =
+    require(qfee >= state.oracleFee, "The fee is too low")
+    require(ttl > 0, "The ttl must be greater than zero")
+    Oracle.register(Contract.address, qfee, RelativeTTL(ttl))
+
+  public function getOracle() : oracleId = state.exchangeOracle
+
+  function respondToQuestion(_queryId : queryId, r : int)  =
+    Oracle.respond(state.exchangeOracle, _queryId, r)
+
+  function createQuery(question: queryType, qfee: int, qttl: int, rttl: int) : queryId =
+    require(question != "", "The question can't be empty")
+    require(qfee > state.oracleFee, "The fee is too low")
+    require(qttl > 0 && rttl > 0, "The TTL params must be greater than zero"  )
+    Oracle.query(state.exchangeOracle, question, qfee, RelativeTTL(qttl), RelativeTTL(rttl))
+
+  function getQuestion(queryId : queryId) : string =
+    Oracle.get_question(state.exchangeOracle, queryId)
+
+  private function require(b : bool, err : string) =
+  	if(!b)
+		  abort(err)

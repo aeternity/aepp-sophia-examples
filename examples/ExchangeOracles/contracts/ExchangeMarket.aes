@@ -1,0 +1,47 @@
+contract ExchangeMarket =
+
+  record state = {
+    aePrice : int,
+    tokenPrice: int}
+
+  type query_type = string
+  type answer_type = int
+  type oracle_id = oracle(query_type, answer_type)
+  type query_id = oracle_query(query_type, answer_type)
+
+  public stateful function init(_aePrice: int, _tokenPrice: int) = 
+    require(_aePrice > 0 , "The price for the AE must be greater than zero ")
+    require(_tokenPrice > 0 , "The price for the token must be greater than zero")
+    {aePrice = _aePrice,
+      tokenPrice = _tokenPrice}
+    
+    
+  public function getAePrice() : int = state.aePrice
+  public function getTokenPrice() : int = state.tokenPrice
+
+  function createQuery(oracle: oracle_id, question: query_type, qfee: int, qttl: int, rttl: int) : query_id =
+    Oracle.query(oracle, question, qfee, RelativeTTL(qttl), RelativeTTL(rttl))
+
+  function createAePriceQuery(oracle: oracle_id, qfee: int, qttl: int, rttl: int) : query_id =
+    Oracle.query(oracle, "Give me the AE price in USD", qfee, RelativeTTL(qttl), RelativeTTL(rttl))
+
+  function createTokenPriceQuery(oracle: oracle_id, qfee: int, qttl: int, rttl: int) : query_id =
+    Oracle.query(oracle, "Give me the Token price in USD", qfee, RelativeTTL(qttl), RelativeTTL(rttl))
+
+  function queryFee(oracle : oracle_id ) : int =
+    Oracle.query_fee(oracle)
+
+  public stateful function getAnswer(oracle: oracle_id, query : query_id) : option(int) =
+    Oracle.get_answer(oracle, query)
+      
+  function updateAePrice(_aePrice: int) =
+    require(_aePrice > 0, "The price must be greater than zero")
+    put(state{aePrice = _aePrice})
+
+  function updateTokenPrice(_tokenPrice: int) =
+    require(_tokenPrice > 0, "The price must be greater than zero")
+    put(state{tokenPrice = _tokenPrice})
+
+  private function require(b : bool, err : string) =
+  	if(!b)
+		  abort(err)
