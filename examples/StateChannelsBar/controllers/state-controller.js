@@ -15,9 +15,11 @@ const {
     RESPONDER_PORT
 } = require('./../config/nodeConfig');
 
+const amounts = require('./../config/stateChannelConfig').amounts;
+
 const keyPair = require('./../config/keyPair');
 const products = require('./../config/products');
-const FUND_AMOUNT = 10000000;
+const FUND_AMOUNT = amounts.deposit * 10;
 
 let openChannels = new Map();
 
@@ -48,6 +50,9 @@ async function createChannel(req, res) {
 
     console.log('init params:', params);
 
+    // params.host = 'wss://sdk-testnet.aepps.com/'
+    // params.port = 'channel'
+
     let channel = await connectAsResponder(params);
     let data = {
         channel,
@@ -73,7 +78,13 @@ async function buyProduct(req, res) {
     let productPrice = products[productName];
     let data = openChannels.get(initiatorAddress);
 
+    console.log(`[BUY] round: ${data.round}, module: ${data.round % 5}`);
+
     if (productPrice && data && data.isSigned) {
+
+        if(data.round % 5 === 0) {
+            productPrice = 0;
+        }
 
         data.round++;
         data.product = {
@@ -106,6 +117,7 @@ function stopChannel(req, res) {
 
 async function faucet(req, res) {
 
+    console.log('[faucet] 1');
     let pubKey = req.query.pubKey;
     if(!pubKey) {
         res.send({
@@ -117,6 +129,7 @@ async function faucet(req, res) {
     }
 
     try {
+        console.log('[faucet] 2');
         let result = await account.spend(FUND_AMOUNT, pubKey);
         console.log('[FAUCET]', result);
         res.send({
@@ -139,6 +152,7 @@ async function connectAsResponder(params) {
     return await Channel({
         ...params,
         url: STATE_CHANNEL_URL,
+        //url: 'wss://sdk-testnet.aepps.com/',
         role: 'responder',
         sign: responderSign
     })
@@ -185,7 +199,7 @@ async function responderSign(tag, tx) {
         return account.signTransaction(tx);
     }
 
-    console.log('==> THERE IS NO SUITABLE CASE');
+    console.log('[ERROR] ==> THERE IS NO SUITABLE CASE TO SIGN');
 }
 
 function isTxValid(txData) {

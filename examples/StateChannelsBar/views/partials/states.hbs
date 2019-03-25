@@ -3,7 +3,7 @@
     <label for="deposit-amount" class="col-sm-2">Enter deposit amount</label>
 
     <div class="col col-sm-2">
-        <input type="number" id="deposit-amount" class="form-control" value="100000">
+        <input type="number" id="deposit-amount" class="form-control">
     </div>
 
     <div class="col col-sm-1">
@@ -18,3 +18,9 @@
 
     </div>
 </div>
+
+<script>
+    window.addEventListener('load', async function () {
+        $('#deposit-amount').val(aeWeb.config.amounts.deposit);
+    })
+</script>

@@ -20,6 +20,9 @@
     <link rel="stylesheet" href="/styles/sample-loader.css">
     <link rel="stylesheet" href="/styles/common.css">
 
+<!--  tailwind CSS  -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
@@ -65,7 +68,7 @@
 
     {{>history}}
 
-
+    {{!-- {{>dario}} --}}
 
     <script>
         console.log(aeWeb);
@@ -136,6 +139,9 @@
                 params.initiatorId = initiatorKeyPair.publicKey;
                 channelReserve = params.channelReserve;
 
+                console.log('[PARAMS]');
+                console.log(params);
+
                 channel = await connectAsInitiator(params, sign);
                 channelActions(channel);
 
@@ -159,7 +165,7 @@
             async function connectAsInitiator(params, sign) {
                 return await Channel({
                     ...params,
-                    url: 'ws://localhost:3001',
+                    url: aeWeb.config.node.STATE_CHANNEL_URL,
                     role: 'initiator',
                     sign: sign
                 })

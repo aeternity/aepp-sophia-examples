@@ -17,6 +17,7 @@ const {
 } = require('./config/nodeConfig');
 
 const publicKey = require('./config/keyPair').publicKey;
+const amounts = require('./config/stateChannelConfig').amounts;
 
 const aeWeb = {
     crypto: Crypto,
@@ -34,7 +35,8 @@ const aeWeb = {
             API_URL,
             INTERNAL_API_URL,
             NETWORK_ID
-        }
+        },
+        amounts: amounts
     }
 }
 

@@ -2,8 +2,9 @@
 const keyPair = require('./keyPair');
 const nodeConfig = require('./nodeConfig');
 
-const MINIMUM_DEPOSIT = 100000;
-const channelReserve = 30000;    // parseInt(MINIMUM_DEPOSIT * 0.25);
+//                  fee 20000000000000     
+const MINIMUM_DEPOSIT = 400000000000100 // 1000000; //'10000000000010000000';
+const channelReserve =  MINIMUM_DEPOSIT / 10; //'1000000000001000000';    // parseInt(MINIMUM_DEPOSIT * 0.25);
 
 module.exports = {
     params: {
@@ -31,5 +32,9 @@ module.exports = {
         port: nodeConfig.RESPONDER_PORT,
         //fee: 1000,
         //nonce: 1000
+    },
+    amounts :{
+        deposit: MINIMUM_DEPOSIT,
+        reserve: channelReserve
     }
 }
