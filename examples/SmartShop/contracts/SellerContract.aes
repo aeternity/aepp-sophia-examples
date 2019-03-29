@@ -4,10 +4,9 @@ contract Seller =
   public stateful function init(bc : address, price : int) : state =
     {seller_key = Call.caller, buyer_contract = bc, status = "undefined", price = price }
     
-  public stateful function send_item() : bool =
+  public stateful function send_item() : () =
     if(check_money())
       put(state{status = "sent_to_transport_courier"})
-      true
     else
       abort("Not enough money")
       
