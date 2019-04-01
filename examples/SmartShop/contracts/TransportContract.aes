@@ -4,13 +4,11 @@ contract Transport =
   public stateful function init(timestamp : int, city : string) : state =
     {location = city, timestamp = timestamp, status = "on_way"}
   
-  public stateful function change_location(timestamp : int, city : string) : bool =
+  public stateful function change_location(timestamp : int, city : string) : () =
     put(state{location = city, timestamp = timestamp})
-    true
     
-  public stateful function delivered_item(timestamp : int, city : string) : bool =
+  public stateful function delivered_item(timestamp : int, city : string) : () =
     put(state{location = city, timestamp = timestamp, status = "delivered"})
-    true
     
   public function check_courier_status() : string =
     state.status

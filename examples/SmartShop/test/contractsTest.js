@@ -91,7 +91,7 @@ describe('Contracts', () => {
         abi: 'sophia'
       }
       const result = await callContract(BuyerContract, 'deposit_to_seller_contract', args)
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it("should check seller's contract balance", async () => {
@@ -100,7 +100,7 @@ describe('Contracts', () => {
         abi: 'sophia'
       }
       const result = await callContract(SellerContract, 'seller_contract_balance', args)
-      assert.equal(result, 2002)
+      assert.equal(result, 2000)
     })
 
     it('should send item', async () => {
@@ -109,7 +109,7 @@ describe('Contracts', () => {
         abi: 'sophia'
       }
       const result = await callContract(SellerContract, 'send_item', args)
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should check item status', async () => {
@@ -128,7 +128,7 @@ describe('Contracts', () => {
         abi: 'sophia'
       }
       const result = await callContract(TransportContract, 'change_location', args, 'bool')
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should check courier status', async () => {
@@ -165,7 +165,7 @@ describe('Contracts', () => {
         abi: 'sophia'
       }
       const result = await callContract(TransportContract, 'delivered_item', args, 'bool')
-      assert.equal(result, true)
+      assert.equal(result, [])
     })
 
     it('should check courier location from Buyer contract', async () => {
@@ -214,7 +214,7 @@ describe('Contracts', () => {
         abi: 'sophia'
       }
       const result = await callContract(SellerContract, 'seller_contract_balance', args)
-      assert.equal(result, 5)
+      assert.equal(result, 0)
     })
   })
 })

@@ -9,9 +9,8 @@ contract TransportInterface =
   function check_courier_timestamp : () => int
   
 contract Buyer =
-  function deposit_to_seller_contract(price : int, key : address) : bool =
+  function deposit_to_seller_contract(price : int, key : address) : () =
     Chain.spend(key, price)
-    true
     
   function received_item(remote : SellerInterface) : bool =
     remote.received_item()
