@@ -11,7 +11,7 @@ const Universal = AeSDK.Universal;
 const crypto = AeSDK.Crypto;
 const assert = chai.assert;
 chai.use(chaiAsPromised);
-const ttl = 100
+const ttl = 1000
 const qfee = 10
 const _aePrice = 1000
 const _tokenPrice = 1500
@@ -64,7 +64,7 @@ describe('ExchangeOracle', () => {
 		// });
 
 
-		firstClient.setKeypair(config.ownerKeyPair)
+		// firstClient.setKeypair(config.ownerKeyPair)
 		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
 
 		oracleSource = utils.readFileRelative(oracleSourceFile, config.filesEncoding);
@@ -72,22 +72,25 @@ describe('ExchangeOracle', () => {
 
 	})
 
-	xit('deploying oracle successfully', async () => {
+	it.only('deploying oracle successfully', async () => {
 		//Arrange
 		const compiledContract = await firstClient.contractCompile(oracleSource, {})
+		let nonce = await firstClient.api.getAccountByPubkey(await firstClient.address())
+		console.log(nonce)
 
 		//Act
 		const deployedContract = await compiledContract.deploy({
 			initState: `(${qfee}, ${ttl})`,
 			options: {
 				ttl: config.ttl,
-
-				verify: true
+				nonce: nonce.nonce + 2
 			}
 		});
 
 		//Assert
-		assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
+		let ownerAddress = await firstClient.address();
+		console.log(deployedContract)
+		assert.equal(ownerAddress, deployedContract.owner)
 	})
 
 	xit('deploying market successfully', async () => {
@@ -132,7 +135,7 @@ describe('ExchangeOracle', () => {
 
 		//Act
 		const deployedContract = await compiledContract.deploy({
-			initState: `(${0}, ${0})`,
+			initState: `(${qfee}, ${0})`,
 			options: {
 				ttl: config.ttl
 			}
@@ -140,7 +143,8 @@ describe('ExchangeOracle', () => {
 
 		//Assert
 		console.log(deployedContract.owner, "TEST")
-		// assert.isRejected(deployedContract, 0, "Deploying oracle contract without zero ttl succeeded")
+
+		assert.isRejected(deployedContract, 0, "Deploying oracle contract without zero ttl succeeded")
 
 	})
 
@@ -156,7 +160,7 @@ describe('ExchangeOracle', () => {
 
 
 			deployedOracleContract = await compiledOracleContract.deploy({
-				initState: `(${qfee}, ${ttl})`,
+				initState: `(${50}, ${500})`,
 				options: {
 					ttl: config.ttl,
 					amount: 100000,
@@ -169,6 +173,8 @@ describe('ExchangeOracle', () => {
 		})
 
 		it('should register an oracle successfully  ', async () => {
+			console.log("TEST2");
+
 			console.log(deployedOracleContract)
 			let oracleAddress = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'getOracle', {})
 			let oralceData = await oracleAddress.decode('int')
@@ -190,6 +196,7 @@ describe('ExchangeOracle', () => {
 				},
 				abi: "sophia"
 			});
+			console.log(createQueryPromise);
 
 			let queryData = await createQueryPromise.decode('int')
 			assert.notEqual(queryData.value, "", 'Querying the oracle has failed');
