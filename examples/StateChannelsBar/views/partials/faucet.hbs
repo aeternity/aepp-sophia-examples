@@ -1,0 +1,49 @@
+<div class="row form-group">
+    <div class="col-xs-offset-1">
+        <div class="row">
+            <h3 class="col-sm-2">Local host faucet</h3>
+        </div>
+        <div class="row">
+            <label for="secretKey" class="col-sm-2">Your public Key</label>
+            <div class="col col-xs-6">
+                <input type="text" id="faucet-pub-key" class="form-control" value='ak_zPoY7cSHy2wBKFsdWJGXM7LnSjVt6cn1TWBDdRBUMC7Tur2NQ' placeholder="fund your account with some aettos :)">
+            </div>
+
+            <div class="col col-xs-1">
+                <button id="btn-faucet" class="btn btn-success">Faucet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+
+<script>
+
+    window.addEventListener('load', async function () {
+        let btnFaucet = $('#btn-faucet');
+        btnFaucet.click(onFaucetClick);
+
+        async function onFaucetClick () {
+            let pubKey = $('#faucet-pub-key');
+            let pubKeyValue = pubKey.val();
+
+            if (!pubKeyValue) {
+                alert('Invalid public key!');
+                return;
+            }
+
+            let result = await $.ajax({
+                    type: "GET",
+                    url: `/faucet?pubKey=${pubKeyValue}`
+            });
+
+            console.log('[FAUCET]');
+            console.log(result);
+
+            alert(result.message);
+
+            pubKey.val('');
+        }
+    })
+</script>

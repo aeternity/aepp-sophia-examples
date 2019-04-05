@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>State channel demo app</title>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous">
+    </script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/styles/sample-loader.css">
+    <link rel="stylesheet" href="/styles/common.css">
+
+<!--  tailwind CSS  -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+
+    <script src="/scripts/main.js"></script>
+
+    <style>
+        .hide-me {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    {{{body}}}
+
+    {{>faucet}}
+
+    <div class="row">
+        <div class="col col-sm-offset-1">
+
+            {{>inputSecretKey}}
+
+            <div class="hide-me balance-wrapper">
+
+                {{>balances}}
+
+                <br>
+
+                {{>states}}
+
+            </div>
+
+
+        </div>
+    </div>
+
+    {{>loader}}
+
+    {{>menu}}
+
+    {{>history}}
+
+    {{!-- {{>dario}} --}}
+
+    <script>
+        console.log(aeWeb);
+
+        let initiatorKeyPair = {
+            publicKey: '',
+            secretKey: ''
+        }
+
+        const url = aeWeb.config.node.API_URL;
+        const internalUrl = aeWeb.config.node.INTERNAL_API_URL; 
+        const networkId = aeWeb.config.node.NETWORK_ID;
+
+        const responderId = aeWeb.config.responderAddress;
+
+        let Crypto = aeWeb.crypto;
+        let Channel = aeWeb.channel;
+        let Universal = aeWeb.universal;
+        let Wallet = aeWeb.wallet;
+        let MemoryAccount = aeWeb.memoryAccount;
+        let TxBuilder = aeWeb.txBuilder;
+
+        let initiatorAddress = initiatorKeyPair.publicKey;
+        let account;
+        let channel;
+
+        let channelReserve;
+
+        let createAccount;
+        let updateState;
+        let getAndUpdateOffChainBalance;
+        let getOffChainBalance;
+
+        (async function () {
+
+            /* Open state channel*/
+            let btnStartStateChannel = $('#btn-start-sc');
+            btnStartStateChannel.click(startStateChannel);
+
+            async function startStateChannel() {
+
+                showLoader();
+
+                let depositAmountValue = $('#deposit-amount').val();
+                let depositAmount = parseInt(depositAmountValue) || 0;
+
+                if (!depositAmount || depositAmount < 1) {
+                    alert('Invalid deposit amount!');
+                    return;
+                }
+
+                $('.start-wrapper').hide();
+
+                account = await createAccount2(initiatorKeyPair);
+
+                let params = await getParams();
+
+                if (depositAmount < params.responderAmount) {
+                    alert(`Deposit should be equal or greater than ${params.responderAmount}!`);
+                    $('.start-wrapper').show();    
+                    hideLoader();
+                    return;
+                }
+
+                params.responderAmount = depositAmount;
+                params.initiatorAmount = depositAmount;
+                // params.channelReserve = parseInt(depositAmount * 0.25);
+                params.initiatorId = initiatorKeyPair.publicKey;
+                channelReserve = params.channelReserve;
+
+                console.log('[PARAMS]');
+                console.log(params);
+
+                channel = await connectAsInitiator(params, sign);
+                channelActions(channel);
+
+                showBalance(false);
+                updateOffChainBalance(depositAmount);
+
+                let data = {
+                    params: params
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '/channel',
+                    data: data,
+                    success: function (response) {
+                        console.log('channel creation response: ', response);
+                    }
+                });
+            }
+
+            async function connectAsInitiator(params, sign) {
+                return await Channel({
+                    ...params,
+                    url: aeWeb.config.node.STATE_CHANNEL_URL,
+                    role: 'initiator',
+                    sign: sign
+                })
+            }
+
+            async function sign(tag, tx) {
+                // Deserialize binary transaction so we can inspect it
+                const txData = deserializeTx(tx);
+
+                console.log('txData');
+                console.log(txData);
+                
+                if (txData.tag === 'CHANNEL_CREATE_TX') {
+                    return account.signTransaction(tx);
+                }
+                if (txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX') {
+                    return account.signTransaction(tx);
+                }
+
+                if (tag === 'shutdown_sign_ack' && txData.tag === 'CHANNEL_CLOSE_MUTUAL_TX') {
+                    return account.signTransaction(tx);
+                }
+            }
+
+            async function channelActions(channel) {
+
+                channel.on('statusChanged', (status) => {
+                    console.log(`[${status.toUpperCase()}]`);
+                });
+
+                channel.on('onChainTx', (tx) => {
+                    console.log('==> channel_create_tx:', tx);
+                })
+
+                channel.on('message', async (msg) => {
+
+                    if (msg.info.indexOf('successfully created') >= 0) {
+                        getProducts()
+                        $('.bar-menu').show();
+                        $('.close-wrapper').show();
+                        showHistory();
+                        hideLoader();
+                    }
+
+                    if(msg.info.indexOf('update successfully signed') >= 0) {
+                        //getAndUpdateOffChainBalance();
+                    }
+
+                    // UI
+                    let history = $('#bought-products');
+                    let li = $('<li>');
+                    li.text(msg.info);
+                    history.append(li);
+                });
+            }
+
+            getAndUpdateOffChainBalance = async function () {
+                let balance = await getOffChainBalance();
+                updateOffChainBalance(balance);
+            }
+            
+            getOffChainBalance = async function () {
+                 // off chain balances
+                let balances = await channel.balances([ initiatorKeyPair.publicKey]);
+                let offChainBalance = balances[initiatorKeyPair.publicKey];
+
+                return offChainBalance;
+            }
+
+            updateState = async function (channel, senderAddress, recipientAddress, amount) {
+                try {
+                    let result = await channel.update(
+                        // Sender account
+                        senderAddress,
+                        // Recipient account
+                        recipientAddress,
+                        // Amount
+                        amount,
+                        // This function should verify offchain transaction
+                        // and sign it with initiator's private key
+                        async (tx) => account.signTransaction(tx)
+                    );
+                } catch (e) {
+                    alert('Something went wrong! Invalid Tx!');
+                    console.log(e);
+                }
+            }
+
+            /* Shutdown state channel*/
+            let btnStopStateChannel = $('#btn-close-sc');
+            btnStopStateChannel.click(stopStateChannel);
+
+            async function stopStateChannel() {
+
+                if (!channel) {
+                    alert('state channel is not open!')
+                    return;
+                }
+
+                try {
+                    
+                    let shutDownResult = await channel.shutdown(async (tx) => {
+
+                        return account.signTransaction(tx);
+                    });
+
+                    console.log('shutDown Result');
+                    console.log(shutDownResult);
+
+                    // UI
+                    $('.close-wrapper').hide();
+                    $('.start-wrapper').show();
+                    $('.bar-menu').hide();
+                    hideHistory();
+                    resetBalances();
+                    showBalance();
+
+                } catch (e) {
+                    console.log('Error occurred while closing the channel.')
+                    console.log(e);
+                }
+
+                let data = {
+                    initiatorAddress: initiatorKeyPair.publicKey
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '/stop',
+                    data: data,
+                    success: function (response) {
+                        console.log('success stop:', response)
+                    },
+                    error: function (response) {
+                        console.log('error stop:', response)
+                    }
+                });
+            }
+
+            /* Utils */
+
+            createAccount = async function (keyPair) {
+                let account = await Universal({
+                    networkId: networkId,
+                    url: url,
+                    internalUrl: internalUrl,
+                    keypair: {
+                        publicKey: keyPair.publicKey,
+                        secretKey: keyPair.secretKey
+                    }
+                })
+
+                return account;
+            }
+
+            async function createAccount2(keyPair) {
+                let account = await Wallet({
+                    url: url,
+                    internalUrl: internalUrl,
+                    accounts: [MemoryAccount({
+                        keypair: {
+                            secretKey: keyPair.secretKey,
+                            publicKey: keyPair.publicKey
+                        }
+                    })],
+                    address: keyPair.publicKey,
+                    onTx: true,
+                    onChain: true,
+                    onAccount: true,
+                    onContract: true,
+                    networkId: networkId
+                });
+
+                return account;
+            }
+
+            async function getParams() {
+                let result = await $.ajax({
+                    type: "GET",
+                    url: '/config/params'
+                });
+                
+                return result;
+            }
+
+            function deserializeTx(tx) {
+                const txData = Crypto.deserialize(Crypto.decodeTx(tx), { prettyTags: true });
+
+                return txData;
+            }
+        })();
+    </script>
+</body>
+
+</html>

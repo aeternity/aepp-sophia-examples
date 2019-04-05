@@ -1,0 +1,71 @@
+    <div class="bar-menu hide-me">
+        <div class="row form-group">
+            <div class="col col-xs-offset-1">
+
+                <fieldset>
+                    <legend>MENU</legend>
+
+                    <div class="product-wrapper">
+                    </div>
+
+                </fieldset>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let getProducts;
+        let buyProduct;
+        window.addEventListener('load', async function () {
+            getProducts = async function () {
+                let products = await $.ajax({
+                    type: "GET",
+                    url: '/products'
+                });
+
+                let productWrapper = $('.product-wrapper');
+                productWrapper.empty();
+
+                for(product of products) {
+                    let productElement = $(`<div class="row">
+                                                <div class="col-sm-12">
+                                                    <button class="btn-buy-product btn btn-success" data-name="${product.name}">Buy</button>
+                                                    <span><b>${product.name}</b>: ${product.price} ae</span>
+                                                </div>
+                                            </div>
+
+                                            <br>`);
+
+                    productWrapper.append(productElement);
+                }
+
+                let btnBuyProduct = $('.btn-buy-product');
+                btnBuyProduct.click(buyProduct);
+            }
+
+            buyProduct = async function () {
+                let productName = $(this).data('name');
+                let data = {
+                    productName: productName,
+                    initiatorAddress: initiatorKeyPair.publicKey
+                }
+                
+                let result = await $.ajax({
+                    type: "POST",
+                    url: '/buy',
+                    data: data
+                });
+
+                let currentBalance = await getOffChainBalance();
+
+                if(currentBalance - channelReserve >= result.price) { 
+                    await updateState(channel, initiatorKeyPair.publicKey, responderId, result.price);
+                    
+                    updateOffChainBalance(currentBalance - result.price);
+                } else {
+                    alert(`Insufficient funds. Product price: ${result.price} ae. Current balance:${currentBalance} - channelReserve: ${channelReserve} = ${currentBalance - channelReserve} ae. Please close the channel!`);
+                }
+            }
+        })
+    </script>

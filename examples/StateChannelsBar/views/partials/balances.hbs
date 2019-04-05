@@ -1,0 +1,68 @@
+<div class="row form-group">
+
+    <label for="current-amount" class="col-sm-2">On-chain Balance</label>
+
+    <div class="col col-sm-2">
+        <input type="text" id="current-balance" class="form-control" readonly>
+    </div>
+</div>
+
+<div class="row form-group">
+
+    <label for="off-chain-balance" class="col-sm-2">Off-chain balance</label>
+
+    <div class="col col-sm-2">
+        <input type="text" id="off-chain-balance" class="form-control" readonly>
+    </div>
+</div>
+
+<script>
+    let showBalance;
+    let updateOffChainBalance;
+    let resetBalances;
+    
+    window.addEventListener('load', async function () {
+        showBalance = async function (shouldHideLoader) {
+
+            let tempAccount = await createAccount(initiatorKeyPair);
+            let result = await tempAccount.api.getAccountByPubkey(initiatorKeyPair.publicKey);
+
+            $('#current-balance').val(result.balance);
+            changeInputColor('#current-balance');
+
+            $('.balance-wrapper').show();
+            if (shouldHideLoader) {
+                hideLoader();
+            }
+        }
+
+        updateOffChainBalance = function (newBalance) {
+            let offChainBalance = $('#off-chain-balance').val(newBalance);
+            changeInputColor('#off-chain-balance');
+        }
+
+        resetBalances = function () {
+            $('#current-balance').val('');
+            $('#off-chain-balance').val('');
+        }
+
+        function changeInputColor(elementId) {
+            let element = $(elementId);
+            const STEP = 200;
+            const colors = [
+                '#33cc33',
+                '#5cd65c',
+                '#85e085',
+                '#adebad',  
+                '#d6f5d6',
+                '#eee'
+            ]
+
+            for (let i = 0; i <= colors.length; i++) {
+                setTimeout(function() {
+                    element.css('background-color', colors[i]);
+                }, i * STEP);
+            }
+        }
+    })
+</script>

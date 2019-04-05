@@ -1,0 +1,26 @@
+<div class="row form-group start-wrapper">
+
+    <label for="deposit-amount" class="col-sm-2">Enter deposit amount</label>
+
+    <div class="col col-sm-2">
+        <input type="number" id="deposit-amount" class="form-control">
+    </div>
+
+    <div class="col col-sm-1">
+        <span class="btn btn-info" id="btn-start-sc">OPEN state channel</span>
+    </div>
+
+</div>
+
+<div class="row form-group close-wrapper hide-me">
+    <div class="col-sm-2">
+        <button class="btn btn-danger" id="btn-close-sc">CLOSE state channel</button>
+
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', async function () {
+        $('#deposit-amount').val(aeWeb.config.amounts.deposit);
+    })
+</script>
