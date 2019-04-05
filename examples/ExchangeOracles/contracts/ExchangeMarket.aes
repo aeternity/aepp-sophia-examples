@@ -20,19 +20,30 @@ contract ExchangeMarket =
   public function getTokenPrice() : int = state.tokenPrice
 
   function createQuery(oracle: oracle_id, question: query_type, qfee: int, qttl: int, rttl: int) : query_id =
+    require(qfee > 0 , "Query fee must be greater than zero")
+    require(qttl > 0 , "Query TTL must be greater than zero")
+    require(rttl > 0 , "Relative TTL must be greater than zero")
     Oracle.query(oracle, question, qfee, RelativeTTL(qttl), RelativeTTL(rttl))
 
   function createAePriceQuery(oracle: oracle_id, qfee: int, qttl: int, rttl: int) : query_id =
+    require(qfee > 0 , "Query fee must be greater than zero")
+    require(qttl > 0 , "Query TTL must be greater than zero")
+    require(rttl > 0 , "Relative TTL must be greater than zero")
     Oracle.query(oracle, "Give me the AE price in USD", qfee, RelativeTTL(qttl), RelativeTTL(rttl))
 
   function createTokenPriceQuery(oracle: oracle_id, qfee: int, qttl: int, rttl: int) : query_id =
+    require(qfee > 0 , "Query fee must be greater than zero")
+    require(qttl > 0 , "Query TTL must be greater than zero")
+    require(rttl > 0 , "Relative TTL must be greater than zero")
     Oracle.query(oracle, "Give me the Token price in USD", qfee, RelativeTTL(qttl), RelativeTTL(rttl))
 
   function queryFee(oracle : oracle_id ) : int =
     Oracle.query_fee(oracle)
 
-  public stateful function getAnswer(oracle: oracle_id, query : query_id) : option(int) =
-    Oracle.get_answer(oracle, query)
+  public function getAnswer(oracle: oracle_id, query : query_id) : int =
+    switch(Oracle.get_answer(oracle, query))
+            None    => 0
+            Some(response) => response
       
   function updateAePrice(_aePrice: int) =
     require(_aePrice > 0, "The price must be greater than zero")

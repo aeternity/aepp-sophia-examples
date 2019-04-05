@@ -18,7 +18,7 @@ contract Oracle =
       oracleFee = qfee}
 
   function registerOracle(qfee : int, ttl  : int) : oracleId =
-    require(qfee >= state.oracleFee, "The fee is too low")
+    require(qfee > 0, "The fee is too low")
     require(ttl > 0, "The ttl must be greater than zero")
     Oracle.register(Contract.address, qfee, RelativeTTL(ttl))
 
