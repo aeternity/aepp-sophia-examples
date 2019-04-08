@@ -111,6 +111,79 @@ describe('ExchangeOracle', () => {
 		assert.equal(ownerAddress, deployedContract.owner)
 	})
 
+	it('should throw when deploying oracle contract with zero qfee', async () => {
+		const compiledContract = await firstClient.contractCompile(oracleSource, {})
+
+		//Act
+		const deployedContract = await compiledContract.deploy({
+			initState: `(${0}, ${ttl})`,
+			options: {
+				ttl: config.ttl,
+				verify: true
+			}
+		});
+
+		//Assert
+		const result = await firstClient.getTxInfo(deployedContract.transaction)
+		assert.equal(result.returnType, "revert")
+	})
+
+	it('should throw when deploying oracle contract with zero ttl', async () => {
+		const compiledContract = await firstClient.contractCompile(oracleSource, {})
+
+		//Act
+		const deployedContract = await compiledContract.deploy({
+			initState: `(${qfee}, ${0})`,
+			options: {
+				ttl: config.ttl,
+				verify: true
+			}
+		});
+
+		//Assert
+		const result = await firstClient.getTxInfo(deployedContract.transaction)
+		assert.equal(result.returnType, "revert")
+	})
+	it('should throw when deploying market contract with zero ae price', async () => {
+		//Arrange
+		const compiledContract = await firstClient.contractCompile(marketSource, {
+			gas: config.gas
+		})
+
+		//Act
+		const deployedContract = await compiledContract.deploy({
+			initState: `(${0}, ${_tokenPrice})`,
+			options: {
+				ttl: config.ttl,
+				verify: true
+			}
+		});
+
+		//Assert
+		const result = await firstClient.getTxInfo(deployedContract.transaction)
+		assert.equal(result.returnType, "revert")
+	})
+
+	it('should throw when deploying market contract with zero token price', async () => {
+		//Arrange
+		const compiledContract = await firstClient.contractCompile(marketSource, {
+			gas: config.gas
+		})
+
+		//Act
+		const deployedContract = await compiledContract.deploy({
+			initState: `(${_aePrice}, ${0})`,
+			options: {
+				ttl: config.ttl,
+				verify: true
+			}
+		});
+
+		//Assert
+		const result = await firstClient.getTxInfo(deployedContract.transaction)
+		assert.equal(result.returnType, "revert")
+	})
+
 	describe('Oracle smart contract tests', () => {
 
 		let deployedOracleContract;
@@ -134,7 +207,7 @@ describe('ExchangeOracle', () => {
 		})
 
 		it('should register an oracle successfully  ', async () => {
-			let oracleAddress = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'getOracle', {})
+			let oracleAddress = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'get_oracle', {})
 			let oralceData = await oracleAddress.decode('int')
 			assert.notEqual(oralceData.value, "", 'Registering the oracle has failed');
 
@@ -146,7 +219,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 70
 
-			let createQueryPromise = await deployedOracleContract.call('createQuery', {
+			let createQueryPromise = await deployedOracleContract.call('create_query', {
 				args: `("${string}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -166,7 +239,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 70
 
-			let createQueryPromise = await deployedOracleContract.call('createQuery', {
+			let createQueryPromise = await deployedOracleContract.call('create_query', {
 				args: `("${question}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl
@@ -175,7 +248,7 @@ describe('ExchangeOracle', () => {
 			});
 			let queryData = await createQueryPromise.decode('int')
 
-			let getQuestionData = await deployedOracleContract.call('getQuestion', {
+			let getQuestionData = await deployedOracleContract.call('get_question', {
 				args: `(${queryData.value})`,
 				options: {
 					ttl: config.ttl
@@ -193,7 +266,7 @@ describe('ExchangeOracle', () => {
 			let queryFee = 70
 			let answer = 100
 
-			let createQueryPromise = await deployedOracleContract.call('createQuery', {
+			let createQueryPromise = await deployedOracleContract.call('create_query', {
 				args: `("${string}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -205,7 +278,7 @@ describe('ExchangeOracle', () => {
 			let queryData = await createQueryPromise.decode('int')
 			let respondToQuestionPromise
 
-			respondToQuestionPromise = deployedOracleContract.call('respondToQuestion', {
+			respondToQuestionPromise = deployedOracleContract.call('respond_to_question', {
 				args: `(${queryData.value}, ${answer})`,
 				options: {
 					ttl: config.ttl,
@@ -225,7 +298,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 70
 
-			let createQueryPromise = await deployedOracleContract.call('createQuery', {
+			let createQueryPromise = await deployedOracleContract.call('create_query', {
 				args: `("${string}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl
@@ -276,16 +349,16 @@ describe('ExchangeOracle', () => {
 				abi: "sophia"
 			});
 
-			let oracleAddress = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'getOracle', {})
+			let oracleAddress = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'get_oracle', {})
 			let oracleData = await oracleAddress.decode('int')
 			oracleId = oracleData.value
 		})
 		it("should get the query_fee", async () => {
 
-			const oracleData = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'getOracle', {})
+			const oracleData = await firstClient.contractCallStatic(deployedOracleContract.address, 'sophia-address', 'get_oracle', {})
 			let oracleID = await oracleData.decode('int')
 
-			const getQueryFeePromise = await deployedMarketContract.call('queryFee', {
+			const getQueryFeePromise = await deployedMarketContract.call('query_fee', {
 				args: `(${oracleID.value})`,
 				options: {
 					ttl: config.ttl
@@ -298,7 +371,7 @@ describe('ExchangeOracle', () => {
 
 		it("should update the ae price", async () => {
 
-			const updatingAePricePromise = await deployedMarketContract.call('updateAePrice', {
+			const updatingAePricePromise = await deployedMarketContract.call('update_ae_price', {
 				args: `(${_updatedAePrice})`,
 				options: {
 					ttl: config.ttl
@@ -306,14 +379,7 @@ describe('ExchangeOracle', () => {
 				abi: "sophia"
 			});
 
-
-			const getAePricePromise = await deployedMarketContract.call('getAePrice', {
-				options: {
-					ttl: config.ttl
-				},
-				abi: "sophia"
-			});
-			let aepPriceData = await firstClient.contractCallStatic(deployedMarketContract.address, 'sophia-address', 'getAePrice', {})
+			let aepPriceData = await firstClient.contractCallStatic(deployedMarketContract.address, 'sophia-address', 'get_ae_price', {})
 			let finalAePrice = await aepPriceData.decode("int")
 
 			assert.equal(finalAePrice.value, _updatedAePrice, "Ae price was not updated properly")
@@ -322,7 +388,7 @@ describe('ExchangeOracle', () => {
 
 		it("should update the token price", async () => {
 
-			const updatingTokenPricePromise = await deployedMarketContract.call('updateTokenPrice', {
+			const updatingTokenPricePromise = await deployedMarketContract.call('update_token_price', {
 				args: `(${_updatedTokenPrice})`,
 				options: {
 					ttl: config.ttl
@@ -330,7 +396,7 @@ describe('ExchangeOracle', () => {
 				abi: "sophia"
 			});
 
-			const getTokenPricePromise = await deployedMarketContract.call('getTokenPrice', {
+			const getTokenPricePromise = await deployedMarketContract.call('get_token_price', {
 				options: {
 					ttl: config.ttl
 				},
@@ -348,7 +414,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 70
 
-			let createQueryPromise = await deployedMarketContract.call('createQuery', {
+			let createQueryPromise = await deployedMarketContract.call('create_query', {
 				args: `(${oracleId},"${string}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -366,7 +432,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 70
 
-			let createQueryPromise = await deployedMarketContract.call('createAePriceQuery', {
+			let createQueryPromise = await deployedMarketContract.call('create_ae_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -383,7 +449,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 70
 
-			let createQueryPromise = await deployedMarketContract.call('createTokenPriceQuery', {
+			let createQueryPromise = await deployedMarketContract.call('create_token_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -403,7 +469,7 @@ describe('ExchangeOracle', () => {
 			let queryFee = 70
 			let answer = 100
 
-			let createQueryPromise = await deployedOracleContract.call('createQuery', {
+			let createQueryPromise = await deployedOracleContract.call('create_query', {
 				args: `("${string}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -414,7 +480,7 @@ describe('ExchangeOracle', () => {
 
 			let queryData = await createQueryPromise.decode('int')
 
-			let respondToQuestionPromise = await deployedOracleContract.call('respondToQuestion', {
+			let respondToQuestionPromise = await deployedOracleContract.call('respond_to_question', {
 				args: `(${queryData.value}, ${answer})`,
 				options: {
 					ttl: config.ttl,
@@ -423,7 +489,7 @@ describe('ExchangeOracle', () => {
 				},
 				abi: "sophia"
 			});
-			let getAnswerResult = await deployedMarketContract.call('getAnswer', {
+			let getAnswerResult = await deployedMarketContract.call('get_answer', {
 				args: `(${oracleId}, ${queryData.value})`,
 				options: {
 					ttl: config.ttl,
@@ -439,7 +505,7 @@ describe('ExchangeOracle', () => {
 
 		it("should throw if the new ae price is not greater than zero", async () => {
 
-			const updatingAePricePromise = deployedMarketContract.call('updateAePrice', {
+			const updatingAePricePromise = deployedMarketContract.call('update_ae_price', {
 				args: `(${_zeroPrice})`,
 				options: {
 					ttl: config.ttl
@@ -453,7 +519,7 @@ describe('ExchangeOracle', () => {
 
 		it("should throw if the new token price is not greater than zero", async () => {
 
-			const updatingAePricePromise = deployedMarketContract.call('updateTokenPrice', {
+			const updatingAePricePromise = deployedMarketContract.call('update_token_price', {
 				args: `(${_zeroPrice})`,
 				options: {
 					ttl: config.ttl
@@ -471,7 +537,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 0
 
-			let createQueryPromise = deployedMarketContract.call('createQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_query', {
 				args: `(${oracleId},"${string}", ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -490,7 +556,7 @@ describe('ExchangeOracle', () => {
 			let rttl = 100
 			let queryFee = 10
 
-			let createQueryPromise = deployedMarketContract.call('createQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_query', {
 				args: `(${oracleId},"${string}", ${queryFee}, ${queryTtl}, ${rttl})`,
 				options: {
 					ttl: config.ttl,
@@ -509,7 +575,7 @@ describe('ExchangeOracle', () => {
 			let rttl = 0
 			let queryFee = 10
 
-			let createQueryPromise = deployedMarketContract.call('createQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_query', {
 				args: `(${oracleId},"${string}", ${queryFee}, ${queryTtl}, ${rttl})`,
 				options: {
 					ttl: config.ttl,
@@ -526,7 +592,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 0
 
-			let createQueryPromise = deployedMarketContract.call('createAePriceQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_ae_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -542,7 +608,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 0
 			let queryFee = 100
 
-			let createQueryPromise = deployedMarketContract.call('createAePriceQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_ae_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -559,7 +625,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 100
 
-			let createQueryPromise = deployedMarketContract.call('createAePriceQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_ae_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${0})`,
 				options: {
 					ttl: config.ttl,
@@ -576,7 +642,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 0
 
-			let createQueryPromise = deployedMarketContract.call('createTokenPriceQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_token_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -592,7 +658,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 0
 			let queryFee = 100
 
-			let createQueryPromise = deployedMarketContract.call('createTokenPriceQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_token_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${queryTtl})`,
 				options: {
 					ttl: config.ttl,
@@ -609,7 +675,7 @@ describe('ExchangeOracle', () => {
 			let queryTtl = 50
 			let queryFee = 100
 
-			let createQueryPromise = deployedMarketContract.call('createTokenPriceQuery', {
+			let createQueryPromise = deployedMarketContract.call('create_token_price_query', {
 				args: `(${oracleId}, ${queryFee}, ${queryTtl}, ${0})`,
 				options: {
 					ttl: config.ttl,
