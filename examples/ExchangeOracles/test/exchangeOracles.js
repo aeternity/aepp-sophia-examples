@@ -63,8 +63,6 @@ describe('ExchangeOracle', () => {
 			networkId: 'ae_devnet'
 		});
 
-
-		// firstClient.setKeypair(config.ownerKeyPair)
 		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
 
 		oracleSource = utils.readFileRelative(oracleSourceFile, config.filesEncoding);
@@ -371,8 +369,8 @@ describe('ExchangeOracle', () => {
 
 		it("should update the ae price", async () => {
 
-			const updatingAePricePromise = await deployedMarketContract.call('update_ae_price', {
-				args: `(${_updatedAePrice})`,
+			const updatingAePricePromise = await deployedMarketContract.call('update_price', {
+				args: `(${_updatedAePrice}, "ae")`,
 				options: {
 					ttl: config.ttl
 				},
@@ -380,16 +378,16 @@ describe('ExchangeOracle', () => {
 			});
 
 			let aepPriceData = await firstClient.contractCallStatic(deployedMarketContract.address, 'sophia-address', 'get_ae_price', {})
-			let finalAePrice = await aepPriceData.decode("int")
 
+			let finalAePrice = await aepPriceData.decode("int")
 			assert.equal(finalAePrice.value, _updatedAePrice, "Ae price was not updated properly")
 
 		})
 
 		it("should update the token price", async () => {
 
-			const updatingTokenPricePromise = await deployedMarketContract.call('update_token_price', {
-				args: `(${_updatedTokenPrice})`,
+			const updatingTokenPricePromise = await deployedMarketContract.call('update_price', {
+				args: `(${_updatedTokenPrice}, "token")`,
 				options: {
 					ttl: config.ttl
 				},
@@ -505,29 +503,43 @@ describe('ExchangeOracle', () => {
 
 		it("should throw if the new ae price is not greater than zero", async () => {
 
-			const updatingAePricePromise = deployedMarketContract.call('update_ae_price', {
-				args: `(${_zeroPrice})`,
+			const updatingAePricePromise = deployedMarketContract.call('update_price', {
+				args: `(${_zeroPrice}, "ae")`,
 				options: {
 					ttl: config.ttl
 				},
 				abi: "sophia"
 			});
 
-			await assert.isRejected(updatingAePricePromise, "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI1RoZSBwcmljZSBtdXN0IGJlIGdyZWF0ZXIgdGhhbiB6ZXJvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACO03Cq", "Update price not failing with zero value")
+			await assert.isRejected(updatingAePricePromise, "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJ1RoZSBuZXcgcHJpY2UgbXVzdCBiZSBncmVhdGVyIHRoYW4gemVybwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACVNSAd", "Update price not failing with zero value")
 
 		})
 
 		it("should throw if the new token price is not greater than zero", async () => {
 
-			const updatingAePricePromise = deployedMarketContract.call('update_token_price', {
-				args: `(${_zeroPrice})`,
+			const updatingAePricePromise = deployedMarketContract.call('update_price', {
+				args: `(${_zeroPrice},"token")`,
 				options: {
 					ttl: config.ttl
 				},
 				abi: "sophia"
 			});
 
-			await assert.isRejected(updatingAePricePromise, "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI1RoZSBwcmljZSBtdXN0IGJlIGdyZWF0ZXIgdGhhbiB6ZXJvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACO03Cq", "Update price not failing with zero value")
+			await assert.isRejected(updatingAePricePromise, "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJ1RoZSBuZXcgcHJpY2UgbXVzdCBiZSBncmVhdGVyIHRoYW4gemVybwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACVNSAd", "Update price not failing with zero value")
+
+		})
+
+		it("should throw if asset is net recognized", async () => {
+
+			const updatingAePricePromise = deployedMarketContract.call('update_price', {
+				args: `(${_aePrice}, "test")`,
+				options: {
+					ttl: config.ttl
+				},
+				abi: "sophia"
+			});
+
+			await assert.isRejected(updatingAePricePromise, "_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAElVucmVjb2duaXplZCBhc3NldAAAAAAAAAAAAAAAAAAAq+UAtg==", "Update price not failing with zero value")
 
 		})
 

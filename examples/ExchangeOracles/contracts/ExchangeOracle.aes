@@ -9,7 +9,6 @@ contract Oracle =
   type query_id  = oracle_query(query_type, answer_type)
   type oracle_id = oracle(query_type, answer_type)
 
-
   public function init(query_fee: int, ttl: int) : state =
     require(query_fee > 0 , "Qfee must be passed as an argument and should be greater than zero")
     require(ttl > 0 , "TTL must be passed as an argument and should be greater than zero")

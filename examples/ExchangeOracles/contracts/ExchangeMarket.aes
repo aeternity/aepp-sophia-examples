@@ -1,8 +1,6 @@
 contract ExchangeMarket =
 
-  record state = {
-    ae_price : int,
-    token_price: int}
+  record state = {assets: map(string, int)}
 
   type query_type = string
   type answer_type = int
@@ -12,10 +10,10 @@ contract ExchangeMarket =
   public stateful function init(ae_price': int, token_price': int) = 
     require(ae_price' > 0 , "The price for the AE must be greater than zero ")
     require(token_price' > 0 , "The price for the token must be greater than zero")
-    {ae_price = ae_price', token_price = token_price'}
+    { assets = { ["ae"] = ae_price', ["token"] = token_price' }}
     
-  public function get_ae_price() : int = state.ae_price
-  public function get_token_price() : int = state.token_price
+  public function get_ae_price() : int = state.assets["ae"]
+  public function get_token_price() : int = state.assets["token"]
 
   function create_query(oracle: oracle_id, question: query_type, query_fee: int, query_ttl: int, relative_ttl: int) : query_id =
     require(query_fee > 0 , "Query fee must be greater than zero")
@@ -42,14 +40,11 @@ contract ExchangeMarket =
     switch(Oracle.get_answer(oracle, query))
       None => 0
       Some(response) => response
-      
-  function update_ae_price(ae_price': int) =
-    require(ae_price' > 0, "The price must be greater than zero")
-    put(state{ae_price = ae_price'})
 
-  function update_token_price(token_price': int) =
-    require(token_price' > 0, "The price must be greater than zero")
-    put(state{token_price = token_price'})
+  function update_price(new_price: int, asset: string) =
+    require(asset == "ae" || asset == "token", "Unrecognized asset")
+    require(new_price > 0, "The new price must be greater than zero")
+    put(state{assets[asset] = new_price})
 
   private function require(expression: bool, err: string) =
   	if(!expression)
