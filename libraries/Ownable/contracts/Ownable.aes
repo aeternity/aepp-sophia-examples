@@ -7,21 +7,21 @@ contract Ownable =
 
 	public function owner() : address = state.owner
 
-	public function onlyOwner() =
+	public function only_owner() =
 		require(state.owner == Call.caller, "The caller is different than the owner")
 
-	public function isOwner() : bool =
+	public function is_owner() : bool =
 		state.owner == Call.caller
 
-	public stateful function renounceOwnership() =
-		onlyOwner()
+	public stateful function renounce_ownership() =
+		only_owner()
 		put(state{ owner = #0 })
 
-	public function transferOwnership(new_owner: address) =
-		onlyOwner()
-		_transferOwnership(new_owner)
+	public function transfer_ownership(new_owner: address) =
+		only_owner()
+		transfer_ownership'(new_owner)
 
-	internal stateful function _transferOwnership(new_owner: address) =
+	internal stateful function transfer_ownership'(new_owner: address) =
 		require(new_owner != #0, "The address of the new owner must be different than #0 ")
 			
 		put(state{owner = new_owner})
