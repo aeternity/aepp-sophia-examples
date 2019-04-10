@@ -1,0 +1,21 @@
+{
+	"host": "http://localhost:3001/",
+	"internalHost": "http://localhost:3001/internal/",
+	"ownerKeyPair": {
+		"secretKey": "bb9f0b01c8c9553cfbaf7ef81a50f977b1326801ebf7294d1c2cbccdedf27476e9bbf604e611b5460a3b3999e9771b6f60417d73ce7c5519e12f7e127a1225ca",
+		"publicKey": "ak_2mwRmUeYmfuW93ti9HMSUJzCk1EYcQEfikVSzgo6k2VghsWhgU"
+	},
+	"ownerKeyPairTest": {
+		"secretKey": "123a422a7d60a14559f65d64e1762cce04706844d8249e9ca708a4f6d99c8aed3c95e234526e2baec1f800ffc979b3fea0e2006a5336aa66fab7f17ec0e3b319",
+		"publicKey": "ak_TgaLnCYN1wtXP9KKQz3apMNzXMuUJa9gXbv4o5uW73tRW8Gue"
+	},
+	"notOwnerKeyPair": {
+		"secretKey": "e37484af730bc798ac10fdce7523dc24a64182dfe88ff139f739c1c7f3475434df473b854e8d78394c20abfcb8fda9d0ed5dff8703d8668dccda9be157a60b6d",
+		"publicKey": "ak_2hLLun8mZQvbEhaDxaWtJBsXLnhyokynwfMDZJ67TbqGoSCtQ9"
+	},
+	"notOwnerPubKeyHex": "0xdf473b854e8d78394c20abfcb8fda9d0ed5dff8703d8668dccda9be157a60b6d",
+	"pubKeyHex": "0xe9bbf604e611b5460a3b3999e9771b6f60417d73ce7c5519e12f7e127a1225ca",
+	"filesEncoding": "utf-8",
+	"gas": 200000,
+	"ttl": 55
+}
