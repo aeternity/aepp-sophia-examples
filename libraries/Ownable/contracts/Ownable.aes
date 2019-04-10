@@ -23,7 +23,6 @@ contract Ownable =
 
 	internal stateful function transfer_ownership'(new_owner: address) =
 		require(new_owner != #0, "The address of the new owner must be different than #0 ")
-			
 		put(state{owner = new_owner})
 
  	private function require(expression : bool, error : string) =
