@@ -2,18 +2,19 @@ const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
-const AeSDK = require('@aeternity/aepp-sdk');
-const bytes = require('@aeternity/aepp-sdk/es/utils/bytes');
-const Universal = AeSDK.Universal;
-const crypto = AeSDK.Crypto;
 
-const utils = require('./../utils/utils');
+const AeSDK = require('@aeternity/aepp-sdk');
+const Universal = AeSDK.Universal;
+
 const config = require('./constants/config.json');
 const sourceFile = './contracts/Ownable.aes';
-
 const errorMessages = require('./constants/error-messages.json');
 
+const utils = require('./../utils/utils');
 const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
+const getClient = utils.getClient;
+const decodedHexAddressToPublicAddress = utils.decodedHexAddressToPublicAddress;
+
 
 const ownableFunctions = require('./constants/smartContractFunctions.json')
 
@@ -26,210 +27,105 @@ describe('Ownable', () => {
 
 	before(async () => {
 
-		firstClient = await Universal({
-			url: config.host,
-			internalUrl: config.internalHost,
-			keypair: config.ownerKeyPair,
-			nativeMode: true,
-			networkId: config.networkId
-		});
-		secondClient = await Universal({
-			url: config.host,
-			internalUrl: config.internalHost,
-			keypair: config.notOwnerKeyPair,
-			nativeMode: true,
-			networkId: config.networkId
-		});
+		firstClient = await getClient(Universal, config, config.ownerKeyPair);
+		secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
 
-		firstClient.setKeypair(config.ownerKeyPair)
-		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
+		await firstClient.spend(1, config.notOwnerKeyPair.publicKey);
 
 		ownableSource = utils.readFileRelative(sourceFile, config.filesEncoding);
-	})
+	});
 
 	describe('Deploy contract', () => {
 
 		it('deploying successfully', async () => {
-			//Arrange
-			const compiledContract = await firstClient.contractCompile(ownableSource, {
-				gas: config.gas
-			})
+			let contractObject = await firstClient.getContractInstance(ownableSource);
+			let deployInfo = (await contractObject.deploy([])).deployInfo;
 
-			//Act
-			const deployPromise = compiledContract.deploy({
-				options: {
-					ttl: config.ttl,
-				}
-			});
-
-			//Assert
-			const deployedContract = await deployPromise;
-			assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
+			assert.equal(config.ownerKeyPair.publicKey, deployInfo.owner);
 		})
 	})
 
 	describe('Smart contract tests', () => {
 
-		let deployedContract;
-		let compiledContract;
+		let contractObject;
 
 		beforeEach(async () => {
-			compiledContract = await firstClient.contractCompile(ownableSource, {
-				gas: config.gas
-			})
 
-			deployedContract = await compiledContract.deploy({
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
+			contractObject = await firstClient.getContractInstance(ownableSource);
+			await contractObject.deploy([]);
 		})
 
 		it('should set the proper owner to the smart contract', async () => {
 
-			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-
-			const callOwnerResult = await callOwnerPromise;
-			let encodedData = await callOwnerResult.decode('address')
-			const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
-
-			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
-
+			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER);
+			let ownerHexPublicKey = await callOwnerResult.decode('address');
+			let ownerPublicKey = decodedHexAddressToPublicAddress(ownerHexPublicKey);
+			
+			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey);
 		})
 
-		it('should return true if owner calls onlyOwner', async () => {
-			const callOnlyOwnerPromise = deployedContract.call(ownableFunctions.ONLY_OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-
-			const callOnlyOwnerResult = await callOnlyOwnerPromise;
-			const decodedData = await callOnlyOwnerResult.decode('bool')
-
-			assert.equal(decodedData.value, 1, 'The owner is different from the caller')
+		it('should execute if owner calls onlyOwner', async () => {
+			await assert.isFulfilled(contractObject.call(ownableFunctions.ONLY_OWNER));
 		})
 
 		it('should return true if the caller is the owner, check function', async () => {
 
-			const callIsOwnerPromise = deployedContract.call(ownableFunctions.IS_OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-			
-			const callIsOwnerResult = await callIsOwnerPromise;
-			const decodedData = await callIsOwnerResult.decode('bool')
+			const callIsOwnerResult = await contractObject.call(ownableFunctions.IS_OWNER);
+			const decodedData = await callIsOwnerResult.decode('bool');
 
-			assert.equal(decodedData.value, 1, 'The owner is different from the caller')
+			assert.equal(decodedData, true, 'The owner is different from the caller')
 		})
 
 		it('should change the owner to #0 address', async () => {
 
-			const callRenounceOwnershipPromise = deployedContract.call(ownableFunctions.RENOUNCE_OWNERSHIP, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
+			await contractObject.call(ownableFunctions.RENOUNCE_OWNERSHIP);
+			const getOwnerResult = await contractObject.call(ownableFunctions.OWNER);
+			let defaultAddress = await getOwnerResult.decode('address');
 			
-			const callRenounceOwnershipResult = await callRenounceOwnershipPromise;
+			// !!! if address is default "#0", there is no need to convert it from hex to "normal"
+			//let address = decodedHexAddressToPublicAddress(ownerHexPublicKey);
 
-			let encodedData = await callRenounceOwnershipResult.decode('address')
-			assert.equal(encodedData.value, 0, 'The owner is different from the caller')
-
+			assert.equal(defaultAddress, 0, 'The owner is different from the caller');
 		})
 
 		it('should transfer ownership of the contract', async () => {
 
-			const callTransferOwnershipPromise = deployedContract.call(ownableFunctions.TRANSFER_OWNERSHIP, {
-				args: `(${notOwnerPublicKeyAsHex})`,
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			})
+			const callTransferOwnershipPromise = contractObject.call(ownableFunctions.TRANSFER_OWNERSHIP, [`${config.notOwnerKeyPair.publicKey}`]);
 			await assert.isFulfilled(callTransferOwnershipPromise, 'Calling transfer ownership function failed');
 
-			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-
-			const callOwnerResult = await callOwnerPromise;
-			let encodedData = await callOwnerResult.decode('address')
-			const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
+			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER);
+			let encodedData = await callOwnerResult.decode('address');
+			const ownerPublicKey = decodedHexAddressToPublicAddress(encodedData);
 			
 			assert.equal(ownerPublicKey, config.notOwnerKeyPair.publicKey)
 		})
 
 		it('should throw if not owner call function onlyOwner', async () => {
-			const unauthorizedOnlyOwnerPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, ownableFunctions.ONLY_OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			})
-
+			const unauthorizedOnlyOwnerPromise = secondClient.contractCall(ownableSource, contractObject.deployInfo.address, ownableFunctions.ONLY_OWNER);
 			await assert.isRejected(unauthorizedOnlyOwnerPromise, errorMessages.NOT_AN_OWNER);
 		})
 
 		it('should throw if not owner tries to renounce ownership', async () => {
-			const unauthorizedRenounceOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, ownableFunctions.RENOUNCE_OWNERSHIP, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			})
+			const unauthorizedRenounceOwnershipPromise = secondClient.contractCall(ownableSource, contractObject.deployInfo.address, ownableFunctions.RENOUNCE_OWNERSHIP);
 
 			await assert.isRejected(unauthorizedRenounceOwnershipPromise, errorMessages.NOT_AN_OWNER)
 
-			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-			
-			const callOwnerResult = await callOwnerPromise;
+			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER);
 			let encodedData = await callOwnerResult.decode('address')
-			const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
+			const ownerPublicKey = decodedHexAddressToPublicAddress(encodedData);
 
 			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
 		})
 
-		it('should throw if not owner tries to change the ownership of the contract', async () => {
-			const unauthorizedTransferOwnershipPromise = secondClient.contractCall(compiledContract.bytecode, 'sophia', deployedContract.address, ownableFunctions.TRANSFER_OWNERSHIP, {
-				args: `(${notOwnerPublicKeyAsHex})`,
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			})
-
-			await assert.isRejected(unauthorizedTransferOwnershipPromise, errorMessages.NOT_AN_OWNER)
-			const callOwnerPromise = deployedContract.call(ownableFunctions.OWNER, {
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
+		it('should throw if not an owner tries to change the ownership of the contract', async () => {
+			const unauthorizedTransferOwnershipPromise = secondClient.contractCall(ownableSource, contractObject.deployInfo.address, ownableFunctions.TRANSFER_OWNERSHIP, [`${notOwnerPublicKeyAsHex}`]);
 			
-			const callOwnerResult = await callOwnerPromise;
-			let encodedData = await callOwnerResult.decode('address')
-			const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
+			await assert.isRejected(unauthorizedTransferOwnershipPromise, errorMessages.NOT_AN_OWNER);
+			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER); 
+			let encodedData = await callOwnerResult.decode('address');
+			const ownerPublicKey = decodedHexAddressToPublicAddress(encodedData);
 
-			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
+			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey);
 		})
 	})
 })

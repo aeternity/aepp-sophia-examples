@@ -3,32 +3,28 @@ contract Ownable =
 		owner : address}
 
 	public stateful function init() = {
-		owner = Call.caller
-		}
+		owner = Call.caller }
 
 	public function owner() : address = state.owner
 
-	public function onlyOwner() : bool =
+	public function only_owner() =
 		require(state.owner == Call.caller, "The caller is different than the owner")
 
-		true
-
-	public function isOwner(): bool =
+	public function is_owner() : bool =
 		state.owner == Call.caller
 
-	public stateful function renounceOwnership() =
-		onlyOwner()
+	public stateful function renounce_ownership() =
+		only_owner()
 		put(state{ owner = #0 })
 
-	public function transferOwnership(newOwner: address) =
-		onlyOwner()
-		_transferOwnership(newOwner)
+	public function transfer_ownership(new_owner: address) =
+		only_owner()
+		transfer_ownership'(new_owner)
 
-	internal stateful function _transferOwnership(newOwner: address) =
-		require(newOwner != #0, "The address of the new owner must be different than #0 ")
-			
-		put(state{owner = newOwner})
+	internal stateful function transfer_ownership'(new_owner: address) =
+		require(new_owner != #0, "The address of the new owner must be different than #0 ")
+		put(state{owner = new_owner})
 
- 	private function require(b : bool, err : string) =
-  		if(!b)
-		   abort(err)
+ 	private function require(expression : bool, error : string) =
+  		if(!expression)
+		   abort(error)
