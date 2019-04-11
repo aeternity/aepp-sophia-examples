@@ -4,28 +4,33 @@ chai.use(chaiAsPromised);
 const assert = chai.assert;
 const path = require('path');
 
-const config = require("./constants/config.json")
-const utils = require('../utils/utils');
-const errorMessages = require('./constants/error-messages.json');
-
 const bytes = require('@aeternity/aepp-sdk/es/utils/bytes');
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
 const crypto = AeSDK.Crypto;
 
+const config = require("./constants/config.json");
+const errorMessages = require('./constants/error-messages.json');
+const nonFungibleFunctions = require('./constants/smartContractFunctions.json');
+
+const utils = require('../utils/utils');
+const getClient = utils.getClient;
+const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
+const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
+
 const contractFilePath = './../contracts/non-fungible-full-token.aes';
+const contractPath = './../contracts/non-fungible-burnable-token.aes';
+
+// this helper is very basic implementation of library resolver  v -0.0.1 :)
+const libHelper = require('./../utils/library-resolver');
+const contractSource =  libHelper.resolveLibraries(path.resolve(__dirname, contractPath));
 
 const tokenName = "AE Token";
 const tokenSymbol = "NFT";
 const firstTokenId = 1;
 
-const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
-const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
-
-const nonFungibleFunctions = require('./constants/smartContractFunctions.json');
-
 async function getAddress(info) {
-	const addressAsHex = (await info.decode("address")).value;
+	const addressAsHex = (await info.decode("address"));
 	return utils.decodedHexAddressToPublicAddress(addressAsHex);
 }
 
@@ -37,150 +42,107 @@ describe('Non-fungible token', () => {
 
 	before(async () => {
 
-		firstClient = await Universal({
-			url: config.host,
-			internalUrl: config.internalHost,
-			keypair: config.ownerKeyPair,
-			nativeMode: true,
-			networkId: config.networkId
-		});
+		firstClient = await getClient(Universal, config, config.ownerKeyPair);
+		secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
 
-		secondClient = await Universal({
-			url: config.host,
-			internalUrl: config.internalHost,
-			keypair: config.notOwnerKeyPair,
-			nativeMode: true,
-			networkId: config.networkId
-		});
-
-		firstClient.setKeypair(config.ownerKeyPair)
 		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
 	})
 
-	describe('Deploy contract', () => {
-
+	describe('Deploy contract', async () => {
 		it('deploying successfully', async () => {
-			//Arrange
-			const compiledContract = await firstClient.contractCompile(contentOfContract, {})
+			let contractObject = await firstClient.getContractInstance(contractSource);
+			let deployInfo = (await contractObject.deploy([tokenName, tokenSymbol])).deployInfo;
 
-			//Act
-			const deployPromise = compiledContract.deploy({
-				initState: `("${tokenName}", "${tokenSymbol}")`,
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-			
-			//Assert
-			const deployedContract = await deployPromise;
-
-			assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
-		})
-	})
+			assert.equal(config.ownerKeyPair.publicKey, deployInfo.owner);
+		});
+	});
 
 	describe('Interact with contract', () => {
-		let deployedContract;
+		let contract;
+		let contractInstanceFromSecondAccount;
 		let compiledContract;
 
 		beforeEach(async () => {
-			compiledContract = await firstClient.contractCompile(contentOfContract, {
-				gas: config.gas
-			})
-			deployedContract = await compiledContract.deploy({
-				initState: `("${tokenName}", "${tokenSymbol}")`,
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
+			// compiledContract = await firstClient.contractCompile(contentOfContract, {
+			// 	gas: config.gas
+			// })
+			// deployedContract = await compiledContract.deploy({
+			// 	initState: `("${tokenName}", "${tokenSymbol}")`,
+			// 	options: {
+			// 		ttl: config.ttl
+			// 	},
+			// 	abi: config.abiType
+			// });
+			
+			contract = await firstClient.getContractInstance(contractSource);
+			await contract.deploy([tokenName, tokenSymbol]);
+
+			// const contractIns = await client.getContractInstance(source, { contractAddress: 'ct_asdasdasda' })`
+			contractInstanceFromSecondAccount = await secondClient.getContractInstance(contractSource, {
+				contractAddress: contract.deployInfo.address
+			}); 
 		})
 
 		describe('Read', () => {
 			it('call contract read successfully', async () => {
-				//Arrange
+				const callNameResult = await contract.call(nonFungibleFunctions.NAME);
+				const callSymbolResult = await contract.call(nonFungibleFunctions.SYMBOL);
 
-				//Act
-				const callNamePromise = deployedContract.call(nonFungibleFunctions.NAME, {
-					options: {
-						ttl: config.ttl
-					}
-				});
-				
-				const callNameResult = await callNamePromise;
-
-				const callSymbolPromise = deployedContract.call(nonFungibleFunctions.SYMBOL, {
-					options: {
-						ttl: config.ttl
-					}
-				});
-				
-				const callSymbolResult = await callSymbolPromise;
-
-				//Assert
 				const decodedNameResult = await callNameResult.decode("string");
 				const decodedSymbolResult = await callSymbolResult.decode("string");
 
-				assert.equal(decodedNameResult.value, tokenName)
-				assert.equal(decodedSymbolResult.value, tokenSymbol)
+				assert.equal(decodedNameResult, tokenName, "Mismatch token name.")
+				assert.equal(decodedSymbolResult, tokenSymbol, "Mismatch token symbol.")
 			})
 		})
 
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
-				const deployContractPromise = deployedContract.call(nonFungibleFunctions.MINT, {
-					args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
-					options: {
-						ttl: config.ttl
-					},
-					abi: config.abiType
-				})
-				
-				await deployContractPromise;
-			})
+				await contract.call(nonFungibleFunctions.MINT, [
+					firstTokenId,
+					config.ownerKeyPair.publicKey
+				]);
+			});
 
 			describe('Mint', () => {
-				it('should mint 1 token successfully', async () => {
+				xit('should mint 1 token successfully', async () => {
 					//Arrange
 					const expectedBalance = 1;
 
 					//Act
-					const ownerOfPromise = deployedContract.call(nonFungibleFunctions.OWNER_OF, {
-						args: `(${firstTokenId})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const ownerOfResult = await ownerOfPromise;
+					const ownerOfResult = await contract.call(nonFungibleFunctions.OWNER_OF, [
+						firstTokenId
+					]);
 
-					const balanceOfPromise = deployedContract.call(nonFungibleFunctions.BALANCE_OF, {
-						args: `(${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfResult = await balanceOfPromise;
+					const balanceOfResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
+						ownerPublicKeyAsHex
+					]);
 
 					//Assert
-					const decodedOwnerOfResult = await ownerOfResult
-					let encodedData = await decodedOwnerOfResult.decode('address')
-					const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
+					let ownerPublicKey = await ownerOfResult.decode('address');
+					console.log('addr');
+					console.log(ownerPublicKey);
+					//const ownerPublicKey = crypto.aeEncodeKey(bytes.toBytes(encodedData.value, true))
 
 					const decodedBalanceOfResult = await balanceOfResult.decode("int");
 
 					assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
-					assert.equal(decodedBalanceOfResult.value, expectedBalance)
+					assert.equal(decodedBalanceOfResult, expectedBalance)
 				})
 
 				it('should not mint from non-owner', async () => {
-					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, nonFungibleFunctions.MINT, {
-						args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					})
+					let unauthorisedPromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.MINT, [
+						firstTokenId,
+						config.ownerKeyPair.publicKey
+					]);
+					
+					// const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, nonFungibleFunctions.MINT, {
+					// 	args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
+					// 	options: {
+					// 		ttl: config.ttl
+					// 	}
+					// })
+					
 					await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
 				})
 
@@ -188,12 +150,10 @@ describe('Non-fungible token', () => {
 					//Arrange
 
 					//Act
-					const secondDeployContractPromise = deployedContract.call(nonFungibleFunctions.MINT, {
-						args: `(${firstTokenId}, ${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					})
+					const secondDeployContractPromise = contract.call(nonFungibleFunctions.MINT, [
+						firstTokenId,
+						config.ownerKeyPair.publicKey
+					]);
 
 					//Assert
 					await assert.isRejected(secondDeployContractPromise, errorMessages.CANNOT_OVERRIDE_TOKEN);

@@ -7,8 +7,6 @@ const NETWORK_ID = 'ae_devnet';
 const ABI = 'sophia';
 const COMPILER_HTTP_ADDRESS = 'https://compiler.aepps.com';
 
-const DEFAULT_MAX_GAS = 900000000000001;
-
 const readFile = (path, encoding = null, errTitle = 'READ FILE ERR') => {
 	try {
 		return fs.readFileSync(
@@ -66,14 +64,13 @@ const getDeployedContractInstance = async function (Universal, clientConfig, con
 	return result;
 };
 
-// args that you pass, should be something like this => `("${INIT_CONTRACT_NAME}", ${INIT_AGE})`
 const executeSmartContractFunction = async function (deployedContract, functionName, args = [], options = {}) {
 
 	let result = await deployedContract.call(functionName, args, options);
 	return result;
 }
 
-const executeSmartContractFunctionFromAnotherClient = async function (clientConfiguration, functionName, args, amount = 0, ttl = 345345, gas = DEFAULT_MAX_GAS) {
+const executeSmartContractFunctionFromAnotherClient = async function (clientConfiguration, functionName, args, amount = 0, ttl = 345345) {
 
 	let configuration = {
 		options: {
