@@ -1,37 +1,4 @@
 include "math.aes"
-// namespace SafeMath =
-
-//   public function add(a : int, b : int) : int =
-//     let c = a + b
-//     require((b >= 0 && c >= a) || (b < 0 && c < a), "Invalid sum operation.")
-
-//     c
-
-//   public function sub(a : int, b : int) : int =
-//     let c = a - b
-//     require((b >= 0 && c =< a) || (b < 0 && c > a), "Invalid subtract operation.")
-
-//     c
-
-//   public function mul(a : int, b : int) : int =
-//     if (a == 0)
-//       0
-//     else
-//       let c = a * b
-//       require(c / a == b, "Invalid multiplication operation.")
-
-//       c
-
-//   public function div(a : int, b : int) : int =
-//     require(b > 0, "Cannot divide to 0.")
-//     let c = a / b
-
-//     c
-
-//   private function require(expression : bool, error : string) =
-//     if(!expression) 
-//       abort(error)
-
 
 contract NonFungibleBurnable =
   record state = { 

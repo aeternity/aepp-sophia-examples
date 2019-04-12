@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const Crypto = require('@aeternity/aepp-sdk').Crypto;
-const toBytes = require('@aeternity/aepp-sdk/es/utils/bytes').toBytes;
 
 const NETWORK_ID = 'ae_devnet';
 const ABI = 'sophia';
@@ -102,17 +100,10 @@ const getClient = async function (Universal, clientConfig, keyPair) {
 	return client;
 }
 
-function publicKeyToHex(publicKey) {
-	let byteArray = Crypto.decodeBase58Check(publicKey.split('_')[1]);
+function publicKeyToHex(crypto, publicKey) {
+	let byteArray = crypto.decodeBase58Check(publicKey.split('_')[1]);
 	let asHex = '#' + byteArray.toString('hex');
 	return asHex;
-}
-
-function decodedHexAddressToPublicAddress(hexAddress) {
-
-	const publicKey = Crypto.aeEncodeKey(toBytes(hexAddress, true));
-
-	return publicKey;
 }
 
 const execute = async (cli, command, args, options = {}) => {
@@ -142,6 +133,5 @@ module.exports = {
 	publicKeyToHex,
 	getClient,
 	executeSmartContractFunctionFromAnotherClient,
-	decodedHexAddressToPublicAddress,
 	execute
 }
