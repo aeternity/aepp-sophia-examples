@@ -22,7 +22,7 @@ contract NonFungibleFull =
     operator_approvals = {},
     token_uris = {}}
 
-  public function get() : address =
+  public function get_caller() : address =
     Call.caller
 
   public function name() : string =

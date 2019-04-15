@@ -82,8 +82,8 @@ describe('Ownable', () => {
 			const getOwnerResult = await contractObject.call(ownableFunctions.OWNER);
 			let defaultAddress = await getOwnerResult.decode('address');
 			
-			// !!! if address is default "#0", there is no need to convert it from hex to "normal"
 			//let address = decodedHexAddressToPublicAddress(ownerHexPublicKey);
+			// !!! if address is default "#0", there is no need to convert it from hex to "normal"
 
 			assert.equal(defaultAddress, 0, 'The owner is different from the caller');
 		})

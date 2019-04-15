@@ -14,17 +14,20 @@ const nonFungibleFunctions = require('./constants/smartContractFunctions.json');
 const utils = require('../utils/utils');
 const getClient = utils.getClient;
 
-const contractFilePath = './../contracts/non-fungible-full-token.aes';
+const contractFilePath = './../contracts/non-fungible-metadata-token.aes';
 
 // this helper is very basic implementation of library resolver  v0.0.0.0.0.1 :) :P
 const libHelper = require('./../utils/library-resolver');
 const contractSource =  libHelper.resolveLibraries(path.resolve(__dirname, contractFilePath));
 
+const ownerPublicKey = config.ownerKeyPair.publicKey;
+const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
+
 const tokenName = "AE Token";
 const tokenSymbol = "NFT";
 const firstTokenId = 1;
 
-describe('Non-fungible token', () => {
+describe.only('Non-fungible Metadata token', () => {
 
 	let firstClient;
 	let secondClient;
@@ -60,7 +63,7 @@ describe('Non-fungible token', () => {
 			}); 
 		})
 
-		describe('test', async () => {
+		xdescribe('test', async () => {
 			it('get address', async () => {
 
 				let testContract = `
@@ -91,18 +94,18 @@ describe('Non-fungible token', () => {
 
 				assert.equal(decodedNameResult, tokenName, "Mismatch token name.")
 				assert.equal(decodedSymbolResult, tokenSymbol, "Mismatch token symbol.")
-			})
+            });
 		})
 
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
-				await contract.call(nonFungibleFunctions.MINT, [
-					firstTokenId,
-					config.ownerKeyPair.publicKey
-				]);
+				// await contract.call(nonFungibleFunctions.MINT, [
+				// 	firstTokenId,
+				// 	config.ownerKeyPair.publicKey
+				// ]);
 			});
 
-			describe('Mint', () => {
+			xdescribe('Mint', () => {
 				xit('should mint 1 token successfully', async () => {
 					//Arrange
 					const expectedBalance = 1;
@@ -146,7 +149,7 @@ describe('Non-fungible token', () => {
 				})
 			})
 
-			describe('Burn', () => {
+			xdescribe('Burn', () => {
 				it('should burn token successfully', async () => {
 					//Arrange
 					const expectedBalance = 0;
@@ -245,7 +248,7 @@ describe('Non-fungible token', () => {
 				})
 			})
 
-			describe('Metadata', () => {	
+			describe.only('Metadata', () => {	
 				it('should write/read token metadata successfully', async () => {	
 					//Arrange	
 					const expectedTokenURI = "Token";	
