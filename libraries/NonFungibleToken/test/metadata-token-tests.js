@@ -37,15 +37,15 @@ describe.only('Non-fungible Metadata token', () => {
 		firstClient = await getClient(Universal, config, config.ownerKeyPair);
 		secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
 
-		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
+		await firstClient.spend(1, notOwnerPublicKey)
 	})
 
 	describe('Deploy contract', async () => {
 		it('deploying successfully', async () => {
 			let contractObject = await firstClient.getContractInstance(contractSource);
 			let deployInfo = (await contractObject.deploy([tokenName, tokenSymbol])).deployInfo;
-			// console.log(contractObject);
-			assert.equal(config.ownerKeyPair.publicKey, deployInfo.owner);
+			
+			assert.equal(ownerPublicKey, deployInfo.owner);
 		});
 	});
 
@@ -61,26 +61,6 @@ describe.only('Non-fungible Metadata token', () => {
 			contractInstanceFromSecondAccount = await secondClient.getContractInstance(contractSource, {
 				contractAddress: contract.deployInfo.address
 			}); 
-		})
-
-		xdescribe('test', async () => {
-			it('get address', async () => {
-
-				let testContract = `
-					contract Test =
-					public function get_caller() : address =
-						Call.caller
-				`
-
-				const result = await contract.call('get_caller');
-				let publicKey = await result.decode('address');
-				console.log('publicKey');
-				console.log(publicKey);
-				console.log();
-				console.log('result');
-				console.log(result);
-				console.log();
-			})
 		})
 
 		describe('Read', () => {
@@ -99,39 +79,38 @@ describe.only('Non-fungible Metadata token', () => {
 
 		describe('Contract functionality', () => {
 			beforeEach(async () => {
-				// await contract.call(nonFungibleFunctions.MINT, [
-				// 	firstTokenId,
-				// 	config.ownerKeyPair.publicKey
-				// ]);
+				await contract.call(nonFungibleFunctions.MINT, [
+					firstTokenId,
+					ownerPublicKey
+				]);
 			});
 
-			xdescribe('Mint', () => {
-				xit('should mint 1 token successfully', async () => {
+			describe('Mint', () => {
+				it('should mint 1 token successfully', async () => {
 					//Arrange
 					const expectedBalance = 1;
 
 					//Act
-					const ownerOfResult = await contract.call(nonFungibleFunctions.OWNER_OF, [
+					const ownerOfToken = await contract.call(nonFungibleFunctions.OWNER_OF, [
 						firstTokenId
 					]);
 
 					const balanceOfResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 
 					//Assert
-					// TODO: show to Naz, decoded address is not valid
-					let ownerPublicKey = await ownerOfResult.decode('address');
+					let _ownerPublicKey = await ownerOfToken.decode('address');
 					const decodedBalanceOfResult = await balanceOfResult.decode("int");
 
-					assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
+					assert.equal(_ownerPublicKey, ownerPublicKey)
 					assert.equal(decodedBalanceOfResult, expectedBalance)
 				})
 
 				it('should not mint from non-owner', async () => {
 					let unauthorisedPromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.MINT, [
 						firstTokenId,
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 					
 					await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
@@ -141,7 +120,7 @@ describe.only('Non-fungible Metadata token', () => {
 					//Act
 					const secondDeployContractPromise = contract.call(nonFungibleFunctions.MINT, [
 						firstTokenId,
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 
 					//Assert
@@ -149,54 +128,26 @@ describe.only('Non-fungible Metadata token', () => {
 				})
 			})
 
-			xdescribe('Burn', () => {
-				it('should burn token successfully', async () => {
-					//Arrange
-					const expectedBalance = 0;
-
-					//Act
-					await contract.call(nonFungibleFunctions.BURN, [
-						firstTokenId
-					]);
-
-					const balanceOfResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						config.ownerKeyPair.publicKey
-					]);
-					
-					//Assert
-					const decodedBalanceOfResult = await balanceOfResult.decode("int");
-					assert.equal(decodedBalanceOfResult, expectedBalance);
-				})
-
-				it("shouldn't burn token from non-owner", async () => {
-					let unauthorizedBurnPromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.BURN, [
-						firstTokenId
-					]);
-
-					await assert.isRejected(unauthorizedBurnPromise, errorMessages.ONLY_OWNER_CAN_TRANSFER);
-				})
-			})
-
 			describe('Transfer', () => {
-				xit('should transfer token successfully', async () => {
+				it('should transfer token successfully', async () => {
 					//Arrange
 					const expectedBalanceOfNotOwner = 1;
 					const expectedBalanceOfOwner = 0;
 
 					//Act
 					await contract.call(nonFungibleFunctions.SET_APPROVAL_FOR_ALL, [
-						config.ownerKeyPair.publicKey,
+						ownerPublicKey,
 						true
 					]);
 					
 					await contract.call(nonFungibleFunctions.APPROVE, [
 						firstTokenId,
-						config.notOwnerKeyPair.publicKey
+						notOwnerPublicKey
 					]);
 
 					await contract.call(nonFungibleFunctions.TRANSFER_FROM, [
-						config.ownerKeyPair.publicKey,
-						config.notOwnerKeyPair.publicKey,
+						ownerPublicKey,
+						notOwnerPublicKey,
 						firstTokenId
 					]);
 					
@@ -220,7 +171,6 @@ describe.only('Non-fungible Metadata token', () => {
 
 					assert.equal(decodedBalanceOfNotOwnerResult, expectedBalanceOfNotOwner)
 					assert.equal(decodedBalanceOfOwnerResult, expectedBalanceOfOwner)
-					// TODO: show to Naz
 					assert.equal(publicKey, config.notOwnerKeyPair.publicKey)
 				})
 
@@ -244,11 +194,11 @@ describe.only('Non-fungible Metadata token', () => {
 					]);
 
 					//Assert
-					await assert.isRejected(unauthorizedTransferPromise, errorMessages.NOT_AN_OWNER_OR_NOT_APPROVED);
+					await assert.isRejected(unauthorizedTransferPromise, errorMessages.NOT_APPROVED_OR_OWNER);
 				})
 			})
 
-			describe.only('Metadata', () => {	
+			describe('Metadata', () => {	
 				it('should write/read token metadata successfully', async () => {	
 					//Arrange	
 					const expectedTokenURI = "Token";	
@@ -258,11 +208,11 @@ describe.only('Non-fungible Metadata token', () => {
 						firstTokenId,
 						expectedTokenURI
 					]);
-
+					
 					const tokenURIResult = await contract.call(nonFungibleFunctions.GET_TOKEN_URI, [
 						firstTokenId
 					]);
-
+					
 					//Assert	
 					const decodedTokenURIResult = await tokenURIResult.decode("string");	
 

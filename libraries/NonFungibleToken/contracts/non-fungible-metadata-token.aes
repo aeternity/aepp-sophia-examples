@@ -27,24 +27,32 @@ contract NonFungibleMetadata =
   public function symbol() : string =
     state.symbol
 
-  public function balance_of(m_token_owner: address) : int =
-    Map.lookup_default(m_token_owner, state.m_owned_tokens_count, 0)
+  public function balance_of(token_owner: address) : int =
+    Map.lookup_default(token_owner, state.m_owned_tokens_count, 0)
 
-  public function owner_of(token_id: int) =
+  public function owner_of(token_id: int) : address =
     Map.lookup_default(token_id, state.m_token_owner, #0)
+
+  public stateful function mint(token_id: int, to: address) = 
+    only_owner(Call.caller)
+    require(Map.lookup_default(token_id, state.m_token_owner, #0) == #0, "Token can't be overrided")
+
+    put(state{ 
+      m_token_owner[token_id] = to,
+      m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
 
   public function get_approved(token_id: int) : address =
     Map.lookup_default(token_id, state.m_token_approvals, #0)
 
   public function is_approved_for_all(owner: address, operator: address) : bool =
-    state.m_operator_approvals[owner][operator]
+    Map.lookup_default(operator, Map.lookup_default(owner, state.m_operator_approvals, {}) , false)
 
-  public function token_uri(token_id: int) =
+  public function get_token_uri(token_id: int) =
     Map.lookup_default(token_id, state.m_token_uris, "")
 
   public stateful function set_token_uri(token_id: int, uri: string) =
     only_token_owner(Call.caller, token_id)
-    put(state{m_token_uris = state.m_token_uris{[token_id] = uri}})
+    put(state{m_token_uris[token_id] = uri})
 
   public stateful function approve(token_id: int, to: address) =
     let owner: address = owner_of(token_id)
@@ -52,7 +60,7 @@ contract NonFungibleMetadata =
     require(to != Call.caller, "Receiver can't be same as sender")
     require(Call.caller == owner || is_approved_for_all(owner, Call.caller), "Not owner or not approved")
     
-    put(state{m_token_approvals = state.m_token_approvals{[token_id] = to}})
+    put(state{m_token_approvals[token_id] = to})
 
   public stateful function transfer_from(from: address, to: address, token_id: int) =
     require(is_approved_or_owner(Call.caller, token_id), "Caller isn't approved or owner")
@@ -62,18 +70,12 @@ contract NonFungibleMetadata =
     add_token_to(to, token_id)
 
   public stateful function set_approval_for_all(to: address, approved: bool) =
-    //ensure_allowed(Call.caller)
     put(state{m_operator_approvals[Call.caller = {}][to] = approved})
   
   private function check_token_exists(token_id: int) : bool =
     switch(Map.lookup(token_id, state.m_token_owner))
       None => false
       Some(x) => true
-
-  // private function ensure_allowed(key : address) =
-  //   switch(Map.lookup(key, state.m_operator_approvals))
-  //     None => put(state{m_operator_approvals[key] = {}})
-  //     Some(_) => ()
 
   private stateful function add_token_to(to: address, token_id: int) = 
     put(state{m_token_owner = state.m_token_owner{[token_id] = to}})
@@ -89,35 +91,15 @@ contract NonFungibleMetadata =
   private stateful function remove_token_metadata(token_id: int) = 
     put(state{m_token_uris = state.m_token_uris{[token_id] = ""}})
 
-  // private function lookupByAddress(k : address, m, v) =
-  // 	switch(Map.lookup(k, m))
-	//     None    => v
-	//     Some(x) => x
-
-  // private function lookupById(k : int, m, v) =
-  // 	switch(Map.lookup(k, m))
-	//     None    => v
-	//     Some(x) => x
-
-  // private function add(_a : int, _b : int) : int =
-  //   let c : int = _a + _b
-  //   require(c >= _a, "Error")
-  //   c
-
-  // private function sub(_a : int, _b : int) : int =
-  //   require(_b =< _a, "Error")
-  //   _a - _b
-
   private function require(expression: bool, error: string) =
     if(!expression) 
       abort(error)
 
-  // private function onlyOwner(owner : address) =
-  //   if(owner != state.owner) 
-  //     abort("Only owner can mint!")
+  private function only_owner(owner : address) =
+    require(owner == state.owner, "Only owner can mint!")
 
   private function only_token_owner(owner: address, token_id: int) =
-    require(owner != Map.lookup_default(token_id, state.m_token_owner, #0), "Only token owner can transfer!")
+    require(owner == Map.lookup_default(token_id, state.m_token_owner, #0), "Only token owner can transfer!")
 
   private function is_approved_or_owner(spender: address, token_id: int) : bool = 
     let owner : address = owner_of(token_id)

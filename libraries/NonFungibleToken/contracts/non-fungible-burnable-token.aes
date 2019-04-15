@@ -25,14 +25,14 @@ contract NonFungibleBurnable =
   public function symbol() : string = 
     state.symbol
 
-  public function balance_of(m_token_owner: address) : int = 
-    Map.lookup_default(m_token_owner, state.m_owned_tokens_count, 0) // lookupByAddress(m_token_owner, state.m_owned_tokens_count, 0)
+  public function balance_of(token_owner: address) : int = 
+    Map.lookup_default(token_owner, state.m_owned_tokens_count, 0) 
 
   public function owner_of(token_id: int) = 
-    Map.lookup_default(token_id, state.m_token_owner, #0) // lookupById(token_id, state.m_token_owner, #0)
+    Map.lookup_default(token_id, state.m_token_owner, #0)
 
   public function get_approved(token_id: int) : address = 
-    Map.lookup_default(token_id, state.m_token_approvals, #0) // lookupById(token_id, state.m_token_approvals, #0)
+    Map.lookup_default(token_id, state.m_token_approvals, #0)
 
   public function is_approved_for_all(owner: address, operator: address) : bool = 
     // state.m_operator_approvals[owner][operator]
