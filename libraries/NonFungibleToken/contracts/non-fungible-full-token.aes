@@ -31,8 +31,8 @@ contract NonFungibleFull =
   public function symbol() : string =
     state.symbol
 
-  public function balance_of(m_token_owner: address) : int =
-    Map.lookup_default(m_token_owner, state.m_owned_tokens_count, 0)
+  public function balance_of(token_owner: address) : int =
+    Map.lookup_default(token_owner, state.m_owned_tokens_count, 0)
 
   public function owner_of(token_id': token_id) : address =
     Map.lookup_default(token_id', state.m_token_owner, #0)

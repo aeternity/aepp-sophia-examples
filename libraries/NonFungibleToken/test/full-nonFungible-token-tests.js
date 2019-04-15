@@ -27,7 +27,7 @@ const firstTokenId = 1;
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
-describe('Non-fungible token', () => {
+describe('Non-fungible full token', () => {
 
 	let firstClient;
 	let secondClient;
@@ -44,8 +44,8 @@ describe('Non-fungible token', () => {
 		it('deploying successfully', async () => {
 			let contractObject = await firstClient.getContractInstance(contractSource);
 			let deployInfo = (await contractObject.deploy([tokenName, tokenSymbol])).deployInfo;
-			// console.log(contractObject);
-			assert.equal(config.ownerKeyPair.publicKey, deployInfo.owner);
+			
+			assert.equal(ownerPublicKey, deployInfo.owner);
 		});
 	});
 
@@ -106,7 +106,7 @@ describe('Non-fungible token', () => {
 			});
 
 			describe('Mint', () => {
-				xit('should mint 1 token successfully', async () => {
+				it('should mint 1 token successfully', async () => {
 					//Arrange
 					const expectedBalance = 1;
 
@@ -116,22 +116,21 @@ describe('Non-fungible token', () => {
 					]);
 
 					const balanceOfResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 
 					//Assert
-					// TODO: show to Naz, decoded address is not valid
-					let ownerPublicKey = await ownerOfResult.decode('address');
+					let _ownerPublicKey = await ownerOfResult.decode('address');
 					const decodedBalanceOfResult = await balanceOfResult.decode("int");
 
-					assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
+					assert.equal(_ownerPublicKey, ownerPublicKey)
 					assert.equal(decodedBalanceOfResult, expectedBalance)
 				})
 
 				it('should not mint from non-owner', async () => {
 					let unauthorisedPromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.MINT, [
 						firstTokenId,
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 					
 					await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
@@ -141,7 +140,7 @@ describe('Non-fungible token', () => {
 					//Act
 					const secondDeployContractPromise = contract.call(nonFungibleFunctions.MINT, [
 						firstTokenId,
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 
 					//Assert
@@ -160,7 +159,7 @@ describe('Non-fungible token', () => {
 					]);
 
 					const balanceOfResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 					
 					//Assert
@@ -178,35 +177,35 @@ describe('Non-fungible token', () => {
 			})
 
 			describe('Transfer', () => {
-				xit('should transfer token successfully', async () => {
+				it('should transfer token successfully', async () => {
 					//Arrange
 					const expectedBalanceOfNotOwner = 1;
 					const expectedBalanceOfOwner = 0;
 
 					//Act
 					await contract.call(nonFungibleFunctions.SET_APPROVAL_FOR_ALL, [
-						config.ownerKeyPair.publicKey,
+						ownerPublicKey,
 						true
 					]);
 					
 					await contract.call(nonFungibleFunctions.APPROVE, [
 						firstTokenId,
-						config.notOwnerKeyPair.publicKey
+						notOwnerPublicKey
 					]);
 
 					await contract.call(nonFungibleFunctions.TRANSFER_FROM, [
-						config.ownerKeyPair.publicKey,
-						config.notOwnerKeyPair.publicKey,
+						ownerPublicKey,
+						notOwnerPublicKey,
 						firstTokenId
 					]);
 					
 					const balanceOfNotOwnerResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						config.notOwnerKeyPair.publicKey
+						notOwnerPublicKey
 					]);
 					
 
 					const balanceOfOwnerResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						config.ownerKeyPair.publicKey,
+						ownerPublicKey
 					]);
 					
 					const ownerOfResult = await contract.call(nonFungibleFunctions.OWNER_OF, [
@@ -216,19 +215,18 @@ describe('Non-fungible token', () => {
 					// //Assert
 					const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode("int");
 					const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode("int");
-					const publicKey = await ownerOfResult.decode('address'); // await getAddress(ownerOfResult); // !!!
+					const publicKey = await ownerOfResult.decode('address');
 
-					assert.equal(decodedBalanceOfNotOwnerResult, expectedBalanceOfNotOwner)
-					assert.equal(decodedBalanceOfOwnerResult, expectedBalanceOfOwner)
-					// TODO: show to Naz
-					assert.equal(publicKey, config.notOwnerKeyPair.publicKey)
+					assert.equal(decodedBalanceOfNotOwnerResult, expectedBalanceOfNotOwner);
+					assert.equal(decodedBalanceOfOwnerResult, expectedBalanceOfOwner);
+					assert.equal(publicKey, notOwnerPublicKey);
 				})
 
 				it('non-owner of token shouldn`t be able to call approve', async () => {
 					//Act
 					const unauthorizedApprovePromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.APPROVE, [
 						firstTokenId,
-						config.ownerKeyPair.publicKey
+						ownerPublicKey
 					]);
 
 					//Assert
@@ -238,8 +236,8 @@ describe('Non-fungible token', () => {
 				it('non-owner of token shouldn`t be able to call transferFrom', async () => {
 					//Act
 					const unauthorizedTransferPromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.TRANSFER_FROM, [
-						config.notOwnerKeyPair.publicKey,
-						config.ownerKeyPair.publicKey,
+						notOwnerPublicKey,
+						ownerPublicKey,
 						firstTokenId
 					]);
 

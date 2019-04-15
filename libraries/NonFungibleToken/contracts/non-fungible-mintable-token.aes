@@ -39,7 +39,7 @@ contract NonFungibleMintable =
 
   public stateful function mint(token_id: int, to: address) = 
     only_owner(Call.caller)
-    require(!check_token_exists(token_id), "Token can't be overrided")
+    require(check_token_exists(token_id), "Token can't be overrided")
     // if(check_token_exists(token_id) == true)
     //   abort("Token can't be overrided")
 

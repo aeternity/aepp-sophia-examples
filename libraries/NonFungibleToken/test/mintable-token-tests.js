@@ -27,7 +27,7 @@ const firstTokenId = 1;
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
-describe.only('Non-fungible burnable token', () => {
+describe('Non-fungible mintable token', () => {
 
 	let firstClient;
 	let secondClient;
@@ -126,35 +126,7 @@ describe.only('Non-fungible burnable token', () => {
 					//Assert
 					await assert.isRejected(secondDeployContractPromise, errorMessages.CANNOT_OVERRIDE_TOKEN);
 				})
-			})
-
-			describe('Burn', () => {
-				it('should burn token successfully', async () => {
-					//Arrange
-					const expectedBalance = 0;
-
-					//Act
-					await contract.call(nonFungibleFunctions.BURN, [
-						firstTokenId
-					]);
-
-					const balanceOfResult = await contract.call(nonFungibleFunctions.BALANCE_OF, [
-						ownerPublicKey
-					]);
-					
-					//Assert
-					const decodedBalanceOfResult = await balanceOfResult.decode("int");
-					assert.equal(decodedBalanceOfResult, expectedBalance);
-				})
-
-				it("shouldn't burn token from non-owner", async () => {
-					let unauthorizedBurnPromise = contractInstanceFromSecondAccount.call(nonFungibleFunctions.BURN, [
-						firstTokenId
-					]);
-
-					await assert.isRejected(unauthorizedBurnPromise, errorMessages.ONLY_OWNER_CAN_TRANSFER);
-				})
-			})
+			});
 
 			describe('Transfer', () => {
 				it('should transfer token successfully', async () => {
@@ -223,29 +195,7 @@ describe.only('Non-fungible burnable token', () => {
 					//Assert
 					await assert.isRejected(unauthorizedTransferPromise, errorMessages.NOT_AN_OWNER_OR_NOT_APPROVED);
 				})
-			})
-
-			xdescribe('Metadata', () => {	
-				it('should write/read token metadata successfully', async () => {	
-					//Arrange	
-					const expectedTokenURI = "Token";	
-
-					//Act	
-					await contract.call(nonFungibleFunctions.SET_TOKEN_URI, [
-						firstTokenId,
-						expectedTokenURI
-					]);
-
-					const tokenURIResult = await contract.call(nonFungibleFunctions.GET_TOKEN_URI, [
-						firstTokenId
-					]);
-
-					//Assert	
-					const decodedTokenURIResult = await tokenURIResult.decode("string");	
-
-					assert.equal(decodedTokenURIResult, expectedTokenURI);
-				})	
-			})
+			});
 		})
 	})
 })

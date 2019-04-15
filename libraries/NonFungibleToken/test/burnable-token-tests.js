@@ -27,7 +27,7 @@ const firstTokenId = 1;
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
-describe.only('Non-fungible burnable token', () => {
+describe('Non-fungible burnable token', () => {
 
 	let firstClient;
 	let secondClient;
