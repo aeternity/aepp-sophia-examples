@@ -51,7 +51,7 @@ function resolveLibraries (filePath) {
     
         let match;
         while (match = rgx.exec(contract)) {
-          console.log('==>', path.resolve(contractDirectory, match[1]));
+          //console.log('==>', path.resolve(contractDirectory, match[1]));
           let dependency = fs.readFileSync(path.resolve(contractDirectory, match[1]), 'utf-8');
 
           contact.addDependency(dependency);
