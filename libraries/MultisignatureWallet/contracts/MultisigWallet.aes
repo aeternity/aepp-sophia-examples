@@ -27,7 +27,7 @@ contract MultiSigWallet =
         method: string}
 
     datatype method = 
-        Vote   |  
+        Vote |  
         Revoke | 
         Result
           
@@ -48,6 +48,10 @@ contract MultiSigWallet =
           m_change_requirement_votes = {},
           m_change_requirement_confirmations = {}}
 
+
+    public function get() : int =
+        991
+
     public stateful function init_owner(owner : address) = 
         only_owner()
         only_not_configured()
@@ -66,7 +70,7 @@ contract MultiSigWallet =
         validate_requirement(new_required, state.owners_count)
         // is caller already voted
         // has_voted_for_requirement_change(new_required, Call.caller)
-        require(!Map.lookup_default((new_required, caller), state.m_change_requirement_votes, false), "Your vote has been already submitted.")
+        require(!Map.lookup_default((new_required, Call.caller), state.m_change_requirement_votes, false), "Your vote has been already submitted.")
 
         put(state{m_change_requirement_votes[(new_required, Call.caller)] = true})
 
@@ -152,19 +156,19 @@ contract MultiSigWallet =
         only_owners()
         valid_requirement()
 
-        let transactio: transaction = state.m_index_transaction[tx_id]
-        require(transaction.confirmations >= state.required, "Not enough votes!")
+        let transaction': transaction = state.m_index_transaction[tx_id]
+        require(transaction'.confirmations >= state.required, "Not enough votes!")
         
-        switch(transaction.method)
+        switch(transaction'.method)
             "Vote"   => votingContract.vote()
             "Revoke" => votingContract.revoke()
 
-        let transaction' = transaction { 
-            id = transaction.id, 
+        let tx = transaction' { 
+            id = transaction'.id, 
             confirmations = 0, 
-            method = transaction.method }
+            method = transaction'.method }
     
-        put(state{m_index_transaction = state.m_index_transaction{[tx_id] = transaction'}})
+        put(state{m_index_transaction = state.m_index_transaction{[tx_id] = tx}})
 
         reset_approve_tx_vote(tx_id, 1, state.owners_count)
 
@@ -312,7 +316,7 @@ contract MultiSigWallet =
 
     private function has_voted_for_owner_addition(new_owner : address) =
         // require(!get_value_from_map_tuple(new_owner, Call.caller, state.m_add_owner_confirmations), "Your vote has been already submitted.")
-        require(!Map.lookup((new_owner, Call.caller), state.m_add_owner_confirmations, false), "Your vote has been already submitted.")
+        require(!Map.lookup_default((new_owner, Call.caller), state.m_add_owner_confirmations, false), "Your vote has been already submitted.")
         
 
     private function has_voted_for_owner_removal(owner: address) =
@@ -351,4 +355,4 @@ contract MultiSigWallet =
 
     private function has_voted_tx_approved(tx_id: int) =
         //require(!get_value_from_map_tuple_int_address(tx_id, Call.caller, state.m_tx_confirmations), "Your vote has been already submitted.")
-        require(!Map.lookup_default(tx_id, Call.caller, state.m_tx_confirmations, false), "Your vote has been already submitted.")
+        require(!Map.lookup_default((tx_id, Call.caller), state.m_tx_confirmations, false), "Your vote has been already submitted.")

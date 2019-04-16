@@ -12,7 +12,7 @@
     "@aeternity/aepp-sdk": "2.4.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "forgae": "^1.0.2",
+    "forgae": "1.0.2",
     "path": "^0.12.7",
     "promisify-child-process": "^3.1.0"
   }

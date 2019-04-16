@@ -7,34 +7,40 @@ const assert = chai.assert;
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
 const config = require('./constants/config.json')
-const utils = require('./../utils/utils');
 const errorMessages = require('./constants/error-messages.json');
 
 const MULTISIGNATURE_WALLET_CONTRACT_PATH =  "./../contracts/MultisigWallet.aes";
 const VOTING_CONTRACT_PATH = './../contracts/Voting-test.aes';
+// const contentOfMultisigContract = utils.readFileRelative(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH), config.filesEncoding);
+// const contentOfVotingContract = utils.readFileRelative(path.resolve(__dirname, VOTING_CONTRACT_PATH), config.filesEncoding);
 
+const libHelper = require('../utils/library-resolver');
+const contentOfMultisigContract =  libHelper.resolveLibraries(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH));
+const contentOfVotingContract =  libHelper.resolveLibraries(path.resolve(__dirname, VOTING_CONTRACT_PATH));
+
+const utils = require('./../utils/utils');
 const getDeployedContractInstance = utils.getDeployedContractInstance;
 const executeSmartContractFunction = utils.executeSmartContractFunction;
 const executeSmartContractFunctionFromAnotherClient = utils.executeSmartContractFunctionFromAnotherClient;
-const getAEClient = utils.getAEClient;
+const getClient = utils.getClient;
 const publicKeyToHex = utils.publicKeyToHex;
 
 const RANDOM_ADDRESS_1 = 'ak_gLYH5tAexTCvvQA6NpXksrkPJKCkLnB9MTDFTVCBuHNDJ3uZv';
 const RANDOM_ADDRESS_2 = 'ak_zPoY7cSHy2wBKFsdWJGXM7LnSjVt6cn1TWBDdRBUMC7Tur2NQ';
 const RANDOM_ADDRESS_3 = 'ak_tWZrf8ehmY7CyB1JAoBmWJEeThwWnDpU4NadUdzxVSbzDgKjP';
 
-const rndAddrAsHex1 = publicKeyToHex(RANDOM_ADDRESS_1);
-const rndAddrAsHex2 = publicKeyToHex(RANDOM_ADDRESS_2);
-const rndAddrAsHex3 = publicKeyToHex(RANDOM_ADDRESS_3);
+const rndAddrAsHex1 = '' // publicKeyToHex(RANDOM_ADDRESS_1);
+const rndAddrAsHex2 = '' // publicKeyToHex(RANDOM_ADDRESS_2);
+const rndAddrAsHex3 = '' // publicKeyToHex(RANDOM_ADDRESS_3);
 
 let VALID_METHOD_NAME = 'Vote';
 let INVALID_METHOD_NAME = 'sayHello';
 
-const contentOfMultisigContract = utils.readFileRelative(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH), config.filesEncoding);
-const contentOfVotingContract = utils.readFileRelative(path.resolve(__dirname, VOTING_CONTRACT_PATH), config.filesEncoding);
+const ownerPublicKeyAsHex = '' // utils.publicKeyToHex(config.ownerKeyPair.publicKey);
+const notOwnerPublicKeyAsHex = '' // utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
 
-const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
-const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
+const ownerPublicKey = config.ownerKeyPair.publicKey;
+const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
 const multiSigFunctions = require('./constants/smartContractFunctions.json');
 const votingFunctions = require('./constants/helperSmartContractFunctions.json');
@@ -52,54 +58,46 @@ describe('MultiSig', () => {
 
 	describe('Deploy contract', () => {
 
+		let firstClient;
 		let multiSigInstance;
+		let deployInfo;
 
 		before(async () => {
-			let deployInfo = await getDeployedContractInstance(Universal, config, contentOfMultisigContract);
-			multiSigInstance = deployInfo.deployedContract;
+			// let deployInfo = await getDeployedContractInstance(Universal, config, contentOfMultisigContract);
+			// multiSigInstance = deployInfo.deployedContract;
+			
+			firstClient = await getClient(Universal, config, config.ownerKeyPair);
 		})
 
 		// DO NOT CHANGE TEST POSITIONS
-		it('deploying successfully', async () => {
-			firstClient = await Universal({
-				url: config.host,
-				internalUrl: config.internalHost,
-				keypair: config.ownerKeyPair,
-				nativeMode: true,
-				networkId: config.networkId
-			});
-	
-			firstClient.setKeypair(config.ownerKeyPair)
-			await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
-	
-			//Arrange
-			const compiledContract = await firstClient.contractCompile(contentOfMultisigContract, {
-				gas: config.gas
-			})
+		it.only('deploying successfully', async () => {
+			multiSigInstance = await firstClient.getContractInstance(contentOfMultisigContract);
+            deployInfo = (await multiSigInstance.deploy([])).deployInfo;
 
-			//Act
-			const deployPromise = compiledContract.deploy({
-				options: {
-					ttl: config.ttl,
-				}
-			});
+			console.log('deployInfo');
+			console.log(deployInfo);
+			console.log();
 
-			//Assert
-			const deployedContract = await deployPromise;
-			assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
+			assert.equal(ownerPublicKey, deployInfo.owner)
 		});
 
-		it(`[NEGATIVE] Should not init owner.`, async () => {
-			let addrAsHex = publicKeyToHex(multiSigInstance.address);
-			await assert.isRejected(executeSmartContractFunction(multiSigInstance, multiSigFunctions.INIT_OWNER, `(${addrAsHex})`), errorMessages.CANNOT_BE_SAME_ADDRESS);
+		xit(`[NEGATIVE] Should not init owner.`, async () => {
+			//let addrAsHex = publicKeyToHex(multiSigInstance.address);
+			//await assert.isRejected(executeSmartContractFunction(multiSigInstance, multiSigFunctions.INIT_OWNER, `(${addrAsHex})`), errorMessages.CANNOT_BE_SAME_ADDRESS);
+			await assert.isRejected(multiSigInstance.call(multiSigFunctions.INIT_OWNER, [ deployInfo.address ]), errorMessages.CANNOT_BE_SAME_ADDRESS);
 		});
 
-		it(`Should init owner correct.`, async () => {
+		it.only(`Should init owner correct.`, async () => {
 
-			let funcResult = await executeSmartContractFunction(multiSigInstance, multiSigFunctions.INIT_OWNER, `(${notOwnerPublicKeyAsHex})`);
-			let resultValue = (await funcResult.decode('()')).value;
+			// let funcResult = await executeSmartContractFunction(multiSigInstance, multiSigFunctions.INIT_OWNER, `(${notOwnerPublicKeyAsHex})`);
+			// let resultValue = (await funcResult.decode('()')).value;
 			
-			assert.ok(Array.isArray(resultValue) && resultValue.length === 0, 'Expected output does not match!');
+			// assert.ok(Array.isArray(resultValue) && resultValue.length === 0, 'Expected output does not match!');
+
+			//await multiSigInstance.call(multiSigFunctions.INIT_OWNER, [ notOwnerPublicKey ]);
+			let a = await multiSigInstance.call('get');
+			console.log(a);
+			console.log(await a.decode('string', { abi: 'sophia'}));
 		});
 
 		it('[NEGATIVE] Should configure correct, if it is configured correct, initOwner should throw exception.', async () => {

@@ -1,10 +1,10 @@
 {
-	"INIT_OWNER": "initOwner",
+	"INIT_OWNER": "init_owner",
 	"CONFIGURE": "configure",
-	"GET_CONFIRMATIONS": "getConfirmations",
+	"GET_CONFIRMATIONS": "get_confirmations",
 	"APPROVE": "approve",
-	"ADD_TRANSACTION": "addTransaction",
-	"VOTE_REMOVE_OWNER": "voteRemoveOwner",
-	"VOTE_ADD_OWNER": "voteAddOwner",
-	"VOTE_CHANGE_REQUIREMENT": "voteChangeRequirement"
+	"ADD_TRANSACTION": "add_transaction",
+	"VOTE_REMOVE_OWNER": "vote_remove_owner",
+	"VOTE_ADD_OWNER": "vote_add_owner",
+	"VOTE_CHANGE_REQUIREMENT": "vote_change_requirement"
 }
