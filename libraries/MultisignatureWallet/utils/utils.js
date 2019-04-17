@@ -128,7 +128,7 @@ module.exports = {
 	writeFileRelative,
 	fileExists,
 	trimAddresses,
-	getDeployedContractInstance,
+	//getDeployedContractInstance,
 	// executeSmartContractFunction,
 	publicKeyToHex,
 	getClient,
