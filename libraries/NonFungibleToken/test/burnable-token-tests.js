@@ -14,11 +14,12 @@ const nonFungibleFunctions = require('./constants/smartContractFunctions.json');
 const utils = require('../utils/utils');
 const getClient = utils.getClient;
 
-const contractFilePath = './../contracts/non-fungible-full-token.aes';
+const contractFilePath = './../contracts/non-fungible-mintable-burnable-token.aes';
 
 // this helper is very basic implementation of library resolver  v0.0.0.0.0.1 :) :P
 const libHelper = require('../utils/library-resolver');
 const contractSource =  libHelper.resolveLibraries(path.resolve(__dirname, contractFilePath));
+
 
 const tokenName = "AE Token";
 const tokenSymbol = "NFT";

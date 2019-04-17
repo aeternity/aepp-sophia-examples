@@ -94,4 +94,4 @@ contract NonFungibleMintableBurnable =
 
   private function is_approved_or_owner(spender: address, token_id: int) : bool = 
     let owner : address = owner_of(token_id)
-    get_approved(token_id) == spender || owner == spender || is_approved_for_all(owner, spender)
+    get_approved(token_id) == spender || owner == spender || is_approved_for_all(owner, spender) 
