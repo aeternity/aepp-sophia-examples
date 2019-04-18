@@ -49,8 +49,6 @@ contract MultiSigWallet =
           m_change_requirement_confirmations = {}}
 
 
-    public function get() : int =
-        991
 
     public stateful function init_owner(owner : address) = 
         only_owner()
