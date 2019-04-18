@@ -27,7 +27,7 @@ const firstTokenId = 1;
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
-describe('Non-fungible full token', () => {
+describe.only('Non-fungible full token', () => {
 
 	let firstClient;
 	let secondClient;
@@ -62,26 +62,6 @@ describe('Non-fungible full token', () => {
 				contractAddress: contract.deployInfo.address
 			}); 
 		})
-
-		// describe('test', async () => {
-		// 	it('get address', async () => {
-
-		// 		let testContract = `
-		// 			contract Test =
-		// 			public function get_caller() : address =
-		// 				Call.caller
-		// 		`
-
-		// 		const result = await contract.call('get_caller');
-		// 		let publicKey = await result.decode('address');
-		// 		console.log('publicKey');
-		// 		console.log(publicKey);
-		// 		console.log();
-		// 		console.log('result');
-		// 		console.log(result);
-		// 		console.log();
-		// 	})
-		// })
 
 		describe('Read', () => {
 

@@ -35,11 +35,11 @@ contract NonFungibleMintableBurnable =
     Map.lookup_default(token_id, state.m_token_approvals, #0)
 
   public function is_approved_for_all(owner: address, operator: address) : bool =
-    state.m_operator_approvals[owner][operator]
+    Map.lookup_default(operator, Map.lookup_default(owner, state.m_operator_approvals, {}), false)
 
   public stateful function mint(token_id: int, to: address) = 
     only_owner(Call.caller)
-    require(check_token_exists(token_id), "Token can't be overrided")
+    require(!check_token_exists(token_id), "Token can't be overrided")
 
     put(state{m_token_owner = state.m_token_owner{[token_id] = to}})
     put(state{m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
@@ -54,10 +54,10 @@ contract NonFungibleMintableBurnable =
     require(to != Call.caller, "Receiver can't be same as sender")
     require(Call.caller == owner || is_approved_for_all(owner, Call.caller), "Not owner or not approved")
     
-    put(state{m_token_approvals = state.m_token_approvals{[token_id] = to}})
+    put(state{m_token_approvals[token_id] = to})
 
   public stateful function transfer_from(from: address, to: address, token_id: int) =
-    require(is_approved_or_owner(Call.caller, token_id), "Caller isn't approved or owner")
+    require(is_approved_or_owner(Call.caller, token_id), "Not owner or not approved")
     
     clear_approval(from, token_id)
     remove_token_from(from, token_id)

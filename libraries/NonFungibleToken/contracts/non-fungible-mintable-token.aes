@@ -35,13 +35,11 @@ contract NonFungibleMintable =
     Map.lookup_default(token_id, state.m_token_approvals, #0)
 
   public function is_approved_for_all(owner: address, operator: address) : bool =
-    state.m_operator_approvals[owner][operator]
+    Map.lookup_default(operator, Map.lookup_default(owner, state.m_operator_approvals, {}), false)
 
   public stateful function mint(token_id: int, to: address) = 
     only_owner(Call.caller)
-    require(check_token_exists(token_id), "Token can't be overrided")
-    // if(check_token_exists(token_id) == true)
-    //   abort("Token can't be overrided")
+    require(!check_token_exists(token_id), "Token can't be overrided")
 
     put(state{m_token_owner = state.m_token_owner{[token_id] = to}})
     put(state{m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
@@ -55,7 +53,7 @@ contract NonFungibleMintable =
     put(state{m_token_approvals = state.m_token_approvals{[token_id] = to}})
 
   public stateful function transfer_from(from: address, to: address, token_id: int) =
-    require(is_approved_or_owner(Call.caller, token_id), "Caller isn't approved or owner")
+    require(is_approved_or_owner(Call.caller, token_id), "Not owner or not approved")
     
     clear_approval(from, token_id)
     remove_token_from(from, token_id)
@@ -80,36 +78,12 @@ contract NonFungibleMintable =
   private stateful function clear_approval(from: address, token_id: int) = 
     put(state{m_token_approvals = state.m_token_approvals{[token_id] = #0}})
 
-  // private function lookupByAddress(k : address, m, v) =
-  // 	switch(Map.lookup(k, m))
-	//     None    => v
-	//     Some(x) => x
-
-  // private function lookupById(k : int, m, v) =
-  // 	switch(Map.lookup(k, m))
-	//     None    => v
-	//     Some(x) => x
-
-  // private function add(_a : int, _b : int) : int =
-  //   let c : int = _a + _b
-  //   require(c >= _a, "Error")
-  //   c
-
-  // private function sub(_a : int, _b : int) : int =
-  //   require(_b =< _a, "Error")
-  //   _a - _b
-
   private function require(expression: bool, error: string) =
     if(!expression) 
       abort(error)
 
-  // private function only_owner(owner: address) =
-  //   if(owner != state.owner) 
-  //     abort("Only owner can mint!")
-
-  // private function onlyTokenOwner(owner : address, token_id : int) =
-  //   if(owner != lookupById(token_id, state.m_token_owner, #0)) 
-  //     abort("Only token owner can transfer!")
+  private function only_owner(owner: address) =
+    require(owner == state.owner, "Only owner can mint!")
 
   private function is_approved_or_owner(spender: address, token_id: int) : bool = 
     let owner: address = owner_of(token_id)

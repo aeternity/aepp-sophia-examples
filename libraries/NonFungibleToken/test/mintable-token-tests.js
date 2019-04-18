@@ -43,7 +43,10 @@ describe('Non-fungible mintable token', () => {
 	describe('Deploy contract', async () => {
 		it('deploying successfully', async () => {
 			let contractObject = await firstClient.getContractInstance(contractSource);
-            let deployInfo = (await contractObject.deploy([tokenName, tokenSymbol])).deployInfo;
+            let deployInfo = (await contractObject.deploy([
+				tokenName, 
+				tokenSymbol
+			])).deployInfo;
             
 			assert.equal(ownerPublicKey, deployInfo.owner);
 		});
