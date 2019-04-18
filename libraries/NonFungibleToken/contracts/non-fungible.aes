@@ -35,7 +35,7 @@ contract NonFungible =
     Map.lookup_default(token_id, state.m_token_approvals, #0)
 
   public function is_approved_for_all(owner: address, operator: address) : bool =
-    state.m_operator_approvals[owner][operator]
+    Map.lookup_default(operator, Map.lookup_default(owner, state.m_operator_approvals, {}), false)
 
   public stateful function approve(token_id: int, to: address) =
     let owner : address = owner_of(token_id)
