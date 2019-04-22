@@ -11,7 +11,7 @@ const contractFilePath = "./../contracts/fungible-token-capped.aes";
 const path = require('path');
 const errorMessages = require('./constants/error-messages.json');
 
-const fungibleTokenFunctions = require('./constants/fungible-token-functions'); 
+const fungibleTokenFunctions = require('./constants/fungible-token-functions');
 
 const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
 
@@ -32,7 +32,7 @@ describe('Fungible Capped Token', () => {
 		firstClient.setKeypair(config.ownerKeyPair)
 		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
 
-		contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding); 
+		contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 	})
 
 	describe('Deploy contract', () => {
@@ -50,7 +50,7 @@ describe('Fungible Capped Token', () => {
 				},
 				abi: config.abiType
 			});
-			
+
 			const deployedContract = await deployPromise;
 
 			const capPromise = deployedContract.call(fungibleTokenFunctions.CAP, {
@@ -58,7 +58,7 @@ describe('Fungible Capped Token', () => {
 					ttl: config.ttl,
 				}
 			});
-			
+
 			const capPromiseResult = await capPromise;
 
 			//Assert
