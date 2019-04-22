@@ -1,5 +1,3 @@
-include "math.aes"
-
 contract NonFungibleFull =
   type token_id = int
   record state = { 
@@ -57,7 +55,7 @@ contract NonFungibleFull =
 
     put(state{ 
       m_token_owner[token_id'] = to,
-      m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
+      m_owned_tokens_count[to] = Map.lookup_default(to, state.m_owned_tokens_count, 0) + 1})
 
   public stateful function burn(token_id': token_id) = 
     only_token_owner(Call.caller, token_id') 
@@ -85,13 +83,13 @@ contract NonFungibleFull =
   private stateful function add_token_to(to: address, token_id': token_id) = 
     put(state{
       m_token_owner[token_id'] = to,
-      m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
+      m_owned_tokens_count[to] = Map.lookup_default(to, state.m_owned_tokens_count, 0) + 1})
 
   private stateful function remove_token_from(from: address, token_id': token_id) =
     only_token_owner(from, token_id')
     put(state{
       m_token_owner[token_id'] = #0,
-      m_owned_tokens_count[from] = SafeMath.sub(Map.lookup_default(from, state.m_owned_tokens_count, 0), 1)})
+      m_owned_tokens_count[from] = Map.lookup_default(from, state.m_owned_tokens_count, 0) - 1})
 
   private stateful function clear_approval(owner: address, token_id': token_id) =
     only_token_owner(owner, token_id')

@@ -27,7 +27,7 @@ const firstTokenId = 1;
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
-describe.only('Non-fungible full token', () => {
+describe('Non-fungible full token', () => {
 
 	let firstClient;
 	let secondClient;

@@ -1,5 +1,3 @@
-include "math.aes"
-
 contract NonFungibleMetadata =
   record state = { 
     name: string,
@@ -39,7 +37,7 @@ contract NonFungibleMetadata =
 
     put(state{ 
       m_token_owner[token_id] = to,
-      m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
+      m_owned_tokens_count[to] = Map.lookup_default(to, state.m_owned_tokens_count, 0) + 1})
 
   public function get_approved(token_id: int) : address =
     Map.lookup_default(token_id, state.m_token_approvals, #0)
@@ -79,11 +77,11 @@ contract NonFungibleMetadata =
 
   private stateful function add_token_to(to: address, token_id: int) = 
     put(state{m_token_owner = state.m_token_owner{[token_id] = to}})
-    put(state{m_owned_tokens_count[to] = SafeMath.add(Map.lookup_default(to, state.m_owned_tokens_count, 0), 1)})
+    put(state{m_owned_tokens_count[to] = Map.lookup_default(to, state.m_owned_tokens_count, 0) + 1})
 
   private stateful function remove_token_from(from: address, token_id: int) =
     put(state{m_token_owner = state.m_token_owner{[token_id] = #0}})
-    put(state{m_owned_tokens_count[from] = SafeMath.sub(Map.lookup_default(from, state.m_owned_tokens_count, 0), 1)})
+    put(state{m_owned_tokens_count[from] = Map.lookup_default(from, state.m_owned_tokens_count, 0) - 1})
 
   private stateful function clear_approval(from: address, token_id: int) = 
     put(state{m_token_approvals = state.m_token_approvals{[token_id] = #0}})
