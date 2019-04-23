@@ -19,9 +19,9 @@ const contractFilePath = "./../contracts/fungible-token.aes";
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
-let contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
+const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 
-describe.only('Fungible token', () => {
+describe('Fungible token', () => {
 
     let firstClient;
     let secondClient;
@@ -32,7 +32,7 @@ describe.only('Fungible token', () => {
         secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
 
         await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
-    })
+    });
 
     describe('Deploy contract', () => {
 
@@ -41,8 +41,8 @@ describe.only('Fungible token', () => {
             let deployInfo = (await contractObject.deploy([])).deployInfo;
 
             assert.equal(ownerPublicKey, deployInfo.owner);
-        })
-    })
+        });
+    });
 
     describe('Interact with contract', () => {
         let deployedContract;
@@ -71,7 +71,7 @@ describe.only('Fungible token', () => {
                     ]);
 
                     // Assert
-                    const decodedBalanceOfResult = await balanceOfResult.decode();console.log(decodedBalanceOfResult);
+                    const decodedBalanceOfResult = await balanceOfResult.decode();
                     assert.equal(decodedBalanceOfResult, expectedBalance)
                 })
 

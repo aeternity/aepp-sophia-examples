@@ -2,94 +2,58 @@ const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
-const utils = require('./../utils/utils');
+
+const path = require('path');
+const utils = require('../utils/utils');
+const getClient = utils.getClient;
+
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
 const config = require("./constants/config.json");
-const contractFilePath = "./../contracts/fungible-token-pausable.aes";
-
-const path = require('path');
 const errorMessages = require('./constants/error-messages.json');
-
-const ownerPublicKeyAsHex = ''// utils.publicKeyToHex(config.ownerKeyPair.publicKey);
-const notOwnerPublicKeyAsHex = ''// utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
-
 const fungibleTokenFunctions = require('./constants/fungible-token-functions');
 
-describe('Fungible Pauseable Token', () => {
+const contractFilePath = "./../contracts/fungible-token-pausable.aes";
+
+const ownerPublicKey = config.ownerKeyPair.publicKey;
+const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
+
+const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
+
+describe.only('Fungible Pauseable Token', () => {
 
     let firstClient;
     let secondClient;
-    let contentOfContract;
 
     before(async () => {
-        firstClient = await Universal({
-            url: config.host,
-            internalUrl: config.internalHost,
-            keypair: config.ownerKeyPair,
-            nativeMode: true,
-            networkId: config.networkId
-        });
-
-        secondClient = await Universal({
-            url: config.host,
-            internalUrl: config.internalHost,
-            keypair: config.notOwnerKeyPair,
-            nativeMode: true,
-            networkId: config.networkId
-        });
-
-        firstClient.setKeypair(config.ownerKeyPair)
-        await firstClient.spend(1, config.notOwnerKeyPair.publicKey);
-
-        contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
-    })
+        firstClient = await getClient(Universal, config, config.ownerKeyPair);
+        secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
+    });
 
     describe('Deploy contract', () => {
 
-        it('deploying successfully ', async () => {
-            // Arrange
-            const compiledContract = await firstClient.contractCompile(contentOfContract, {})
+        it('deploying successfully', async () => {
+            let contractObject = await firstClient.getContractInstance(contentOfContract);
+            let deployInfo = (await contractObject.deploy([])).deployInfo;
 
-            // Act
-            const deployPromise = compiledContract.deploy({
-                options: {
-                    ttl: config.ttl
-                },
-                abi: config.abiType
-            });
-
-            // Assert
-            const deployedContract = await deployPromise;
-            assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
-        })
+            assert.equal(ownerPublicKey, deployInfo.owner);
+        });
     })
 
     describe('Interact with contract', () => {
         let deployedContract;
-        let compiledContract;
 
         beforeEach(async () => {
-            compiledContract = await firstClient.contractCompile(contentOfContract, {})
-            deployedContract = await compiledContract.deploy({
-                options: {
-                    ttl: config.ttl
-                },
-                abi: config.abiType
-            });
+            deployedContract = await firstClient.getContractInstance(contentOfContract);
+            await deployedContract.deploy([]);
         })
 
         describe('Contract functionality', () => {
             beforeEach(async () => {
-                const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
-                    args: `(${ ownerPublicKeyAsHex }, 1000)`,
-                    options: {
-                        ttl: config.ttl
-                    },
-                    abi: config.abiType
-                })
-
-                await mintPromise;
+                await deployedContract.call(fungibleTokenFunctions.MINT, [
+                    ownerPublicKey,
+                    1000
+                ]);
             })
 
             describe('Pause', () => {
@@ -98,33 +62,21 @@ describe('Fungible Pauseable Token', () => {
                     const expectedValue = true;
 
                     // Act
-                    const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
+                    await deployedContract.call(fungibleTokenFunctions.PAUSE);
 
-                    await pausePromise;
-
-                    const pausedPromise = deployedContract.call(fungibleTokenFunctions.PAUSED, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
-
-                    const pausedPromiseResult = await pausedPromise;
+                    const pausedPromiseResult = await deployedContract.call(fungibleTokenFunctions.PAUSED);
 
                     // Assert
-                    const pausedResult = await pausedPromiseResult.decode("bool");
-                    assert.equal(pausedResult.value, expectedValue)
+                    const pausedResult = await pausedPromiseResult.decode();
+                    assert.equal(pausedResult, expectedValue)
                 })
 
                 it('should not pause contract from non-owner', async () => {
-                    const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.PAUSE, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    })
+                    let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
+                        contractAddress: deployedContract.deployInfo.address
+                    }); 
+
+                    const unauthorisedPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.PAUSE)
 
                     await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
                 })
@@ -132,21 +84,12 @@ describe('Fungible Pauseable Token', () => {
                 it('shouldn`t mint when contract is paused', async () => {
 
                     // Act
-                    const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
+                    await deployedContract.call(fungibleTokenFunctions.PAUSE);
 
-                    await pausePromise;
-
-                    const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
-                        args: `(${ ownerPublicKeyAsHex }, 1)`,
-                        options: {
-                            ttl: config.ttl
-                        },
-                        abi: config.abiType
-                    })
+                    const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, [
+                        ownerPublicKey,
+                        1
+                    ])
 
                     // Assert
                     await assert.isRejected(mintPromise, errorMessages.CONTRACT_IS_PAUSED);
@@ -157,21 +100,11 @@ describe('Fungible Pauseable Token', () => {
                     const burnAmount = 10;
 
                     // Act
-                    const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
+                    await deployedContract.call(fungibleTokenFunctions.PAUSE);
 
-                    await pausePromise;
-
-                    const burnPromise = deployedContract.call(fungibleTokenFunctions.BURN, {
-                        args: `(${ burnAmount })`,
-                        options: {
-                            ttl: config.ttl
-                        },
-                        abi: config.abiType
-                    })
+                    const burnPromise = deployedContract.call(fungibleTokenFunctions.BURN, [
+                        burnAmount
+                    ]);
 
                     // Assert
                     await assert.isRejected(burnPromise, errorMessages.CONTRACT_IS_PAUSED);
@@ -182,53 +115,38 @@ describe('Fungible Pauseable Token', () => {
                     const transferAmount = 10;
 
                     // Act
-                    const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
+                    await deployedContract.call(fungibleTokenFunctions.PAUSE);
 
-                    await pausePromise;
-
-                    const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
-                        args: `(${ notOwnerPublicKeyAsHex }, ${ transferAmount })`,
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
+                    const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, [
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
                     // Assert
                     await assert.isRejected(approvePromise, errorMessages.CONTRACT_IS_PAUSED);
                 })
 
                 it('shouldn`t transfer when contract is paused with already approved coins', async () => {
+                    let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
+                        contractAddress: deployedContract.deployInfo.address
+                    }); 
+
                     // Arrange
                     const transferAmount = 10;
 
                     // Act
-                    const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
-                        args: `(${ notOwnerPublicKeyAsHex }, ${ transferAmount })`,
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
+                    await deployedContract.call(fungibleTokenFunctions.APPROVE, [
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-                    await approvePromise;
+                    await deployedContract.call(fungibleTokenFunctions.PAUSE);
 
-                    const pausePromise = deployedContract.call(fungibleTokenFunctions.PAUSE, {
-                        options: {
-                            ttl: config.ttl
-                        }
-                    });
-
-                    await pausePromise;
-
-                    const transferFromPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.TRANSFER_FROM, {
-                        args: `(${ ownerPublicKeyAsHex }, ${ notOwnerPublicKeyAsHex }, ${ transferAmount })`,
-                        options: {
-                            ttl: config.ttl
-                        }
-                    })
+                    const transferFromPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.TRANSFER_FROM, [
+                        ownerPublicKey,
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
                     // Assert
                     await assert.isRejected(transferFromPromise, errorMessages.CONTRACT_IS_PAUSED);
