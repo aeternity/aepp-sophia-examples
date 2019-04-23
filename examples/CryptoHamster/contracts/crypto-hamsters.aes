@@ -2,7 +2,7 @@ contract CryptoHamster =
 
     record state = {
         index : int,
-        hamsters : map(string, hamster)}
+        map_hamsters : map(string, hamster)}
 
     record hamster = {
         id: int,
@@ -11,37 +11,37 @@ contract CryptoHamster =
 
     public stateful function init() = 
         { index = 1,
-          hamsters = {}}
+          map_hamsters = {}}
 
-    public function createHamster(hamsterName: string) =
-        require(!nameExists(hamsterName), "Name is already taken")
+    public function create_hamster(hamster_name: string) =
+        require(!name_exists(hamster_name), "Name is already taken")
 
-        createHamsterByNameDNA(hamsterName, generateRandomDNA())
+        create_hamster_by_name_dna(hamster_name, generate_random_dna())
 
-    public function nameExists(name: string) : bool =
-        switch(Map.lookup(name, state.hamsters))
+    public function name_exists(name: string) : bool =
+        switch(Map.lookup(name, state.map_hamsters))
             None    => false
             Some(x) => true
 
-    public function getHamsterDNA(_name: string) : int =
-        require(nameExists(_name), "There is no hamster with that name!")
+    public function get_hamster_dna(name: string) : int =
+        require(name_exists(name), "There is no hamster with that name!")
 
-        let neededHamster : hamster = state.hamsters[_name]
+        let needed_hamster : hamster = state.map_hamsters[name]
 
-        neededHamster.dna
+        needed_hamster.dna
 
-    private function createHamsterByNameDNA(_name: string, _dna: int) =
-        let newHamster : hamster = {
+    private function create_hamster_by_name_dna(name: string, dna: int) =
+        let new_hamster : hamster = {
             id = state.index,
-            name = _name,
-            dna = _dna}
+            name = name,
+            dna = dna}
 
-        put(state{hamsters[_name] = newHamster})
+        put(state{map_hamsters[name] = new_hamster})
         put(state{index = (state.index + 1)})
 
-    private function generateRandomDNA() : int =
+    private function generate_random_dna() : int =
         Chain.block_hash(Chain.block_height - 1) - Chain.timestamp + state.index
 
-    private function require(expression : bool, err : string) =
+    private function require(expression : bool, error : string) =
         if(!expression) 
-            abort(err)
+            abort(error)
