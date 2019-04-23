@@ -18,7 +18,7 @@ const contractFilePath = "./../contracts/fungible-token-capped.aes";
 const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 
-describe.only('Fungible Capped Token', () => {
+describe('Fungible Capped Token', () => {
 
     let firstClient;
 
