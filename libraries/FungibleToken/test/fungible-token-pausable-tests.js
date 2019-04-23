@@ -20,7 +20,7 @@ const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
 
 const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 
-describe.only('Fungible Pauseable Token', () => {
+describe('Fungible Pauseable Token', () => {
 
     let firstClient;
     let secondClient;
@@ -34,9 +34,9 @@ describe.only('Fungible Pauseable Token', () => {
 
         it('deploying successfully', async () => {
             let contractObject = await firstClient.getContractInstance(contentOfContract);
-            let deployInfo = (await contractObject.deploy([])).deployInfo;
+            await contractObject.deploy([]);
 
-            assert.equal(ownerPublicKey, deployInfo.owner);
+            assert.equal(ownerPublicKey, contractObject.deployInfo.owner);
         });
     })
 
@@ -74,7 +74,7 @@ describe.only('Fungible Pauseable Token', () => {
                 it('should not pause contract from non-owner', async () => {
                     let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
                         contractAddress: deployedContract.deployInfo.address
-                    }); 
+                    });
 
                     const unauthorisedPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.PAUSE)
 
@@ -129,7 +129,7 @@ describe.only('Fungible Pauseable Token', () => {
                 it('shouldn`t transfer when contract is paused with already approved coins', async () => {
                     let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
                         contractAddress: deployedContract.deployInfo.address
-                    }); 
+                    });
 
                     // Arrange
                     const transferAmount = 10;

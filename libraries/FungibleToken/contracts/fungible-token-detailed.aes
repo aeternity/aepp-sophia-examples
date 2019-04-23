@@ -75,8 +75,8 @@ contract FungibleDetailed =
     put(state{total_supply = state.total_supply + value,
           m_balances[account] = balance_of(Call.caller) + value})
 
-  public stateful function burn(value: int) : bool =
-    require(state.m_balances[Call.caller] >= value, "Burned amount is less than account balance")
+  public stateful function burn(value: int) =
+    require(balance_of(Call.caller) >= value, "Burned amount is less than account balance")
 
     put(state{total_supply = state.total_supply - value,
           m_balances[Call.caller] = balance_of(Call.caller) - value})

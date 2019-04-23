@@ -38,9 +38,9 @@ describe('Fungible token', () => {
 
         it('deploying successfully', async () => {
             let contractObject = await firstClient.getContractInstance(contentOfContract);
-            let deployInfo = (await contractObject.deploy([])).deployInfo;
+            await contractObject.deploy([]);
 
-            assert.equal(ownerPublicKey, deployInfo.owner);
+            assert.equal(ownerPublicKey, contractObject.deployInfo.owner);
         });
     });
 
@@ -79,7 +79,7 @@ describe('Fungible token', () => {
 
                     let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
                         contractAddress: deployedContract.deployInfo.address
-                    }); 
+                    });
 
                     const unauthorisedPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.MINT, [
                         ownerPublicKey,
@@ -142,7 +142,7 @@ describe('Fungible token', () => {
                 it('shouldn`t burn more tokens than it has', async () => {
                     let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
                         contractAddress: deployedContract.deployInfo.address
-                    }); 
+                    });
 
                     // Arrange
                     const burnAmount = 100;
@@ -194,7 +194,7 @@ describe('Fungible token', () => {
 
                     let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
                         contractAddress: deployedContract.deployInfo.address
-                    }); 
+                    });
 
                     await contractInstanceFromSecondAccount.call(fungibleTokenFunctions.TRANSFER_FROM, [
                         ownerPublicKey,
@@ -209,7 +209,7 @@ describe('Fungible token', () => {
                     const balanceOfOwnerResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
                         ownerPublicKey
                     ]);
-                    
+
                     // Assert
                     const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode();
                     const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode();
