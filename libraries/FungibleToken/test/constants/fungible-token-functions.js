@@ -8,10 +8,10 @@ module.exports = {
     PAUSED: 'paused',
     BURN: 'burn',
     APPROVE: 'approve',
-    TRANSFER_FROM: 'transferFrom',
-    BALANCE_OF: 'balanceOf',
-    TOTAL_SUPPLY: 'totalSupply',
-    INCREASE_ALLOWANCE: 'increaseAllowance',
+    TRANSFER_FROM: 'transfer_from',
+    BALANCE_OF: 'balance_of',
+    TOTAL_SUPPLY: 'total_supply',
+    INCREASE_ALLOWANCE: 'increase_allowance',
     ALLOWANCE: 'allowance',
-    DECREASE_ALLOWANCE: 'decreaseAllowance'
+    DECREASE_ALLOWANCE: 'decrease_allowance'
 }

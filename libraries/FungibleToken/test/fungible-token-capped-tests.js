@@ -13,7 +13,7 @@ const errorMessages = require('./constants/error-messages.json');
 
 const fungibleTokenFunctions = require('./constants/fungible-token-functions');
 
-const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
+const ownerPublicKeyAsHex = '';// utils.publicKeyToHex(config.ownerKeyPair.publicKey);
 
 describe('Fungible Capped Token', () => {
 

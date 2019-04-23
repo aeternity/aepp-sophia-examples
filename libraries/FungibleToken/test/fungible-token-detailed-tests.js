@@ -35,21 +35,21 @@ describe('Fungible Detailed Token', () => {
     describe('Deploy contract', () => {
 
         it('deploying successfully', async () => {
-            //Arrange
+            // Arrange
             const expectedName = "UnitTest"
             const expectedSymbol = "TT"
             const expectedDecimals = 18;
             const compiledContract = await firstClient.contractCompile(contentOfContract, {})
 
-            //Act
+            // Act
             const deployPromise = compiledContract.deploy({
-                initState: `("${expectedName}", "${expectedSymbol}", ${expectedDecimals})`,
+                initState: `("${ expectedName }", "${ expectedSymbol }", ${ expectedDecimals })`,
                 options: {
                     ttl: config.ttl
                 },
                 abi: config.abiType
             });
-            
+
             const deployedContract = await deployPromise;
 
             const namePromise = deployedContract.call(fungibleTokenFunctions.NAME, {
@@ -57,7 +57,7 @@ describe('Fungible Detailed Token', () => {
                     ttl: config.ttl
                 }
             });
-            
+
             const namePromiseResult = await namePromise;
 
             const symbolPromise = deployedContract.call(fungibleTokenFunctions.SYMBOL, {
@@ -65,7 +65,7 @@ describe('Fungible Detailed Token', () => {
                     ttl: config.ttl
                 }
             });
-            
+
             const symbolPromiseResult = await symbolPromise;
 
             const decimalsPromise = deployedContract.call(fungibleTokenFunctions.DECIMALS, {
@@ -73,10 +73,10 @@ describe('Fungible Detailed Token', () => {
                     ttl: config.ttl
                 }
             });
-            
+
             const decimalsPromiseResult = await decimalsPromise;
 
-            //Assert
+            // Assert
             const decodedNamePromiseResult = await namePromiseResult.decode("string");
             const decodedSymbolPromiseResult = await symbolPromiseResult.decode("string");
             const decodedDecimalsPromiseResult = await decimalsPromiseResult.decode("int");
