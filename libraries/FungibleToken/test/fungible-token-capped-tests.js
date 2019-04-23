@@ -1,71 +1,46 @@
+const path = require('path');
 const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
-const utils = require('./../utils/utils');
+
+const utils = require('../utils/utils');
+const getClient = utils.getClient;
+
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
+
 const config = require("./constants/config.json");
+const fungibleTokenFunctions = require('./constants/fungible-token-functions');
+const errorMessages = require('./constants/error-messages.json');
 const contractFilePath = "./../contracts/fungible-token-capped.aes";
 
-const path = require('path');
-const errorMessages = require('./constants/error-messages.json');
+const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
+const ownerPublicKey = config.ownerKeyPair.publicKey;
 
-const fungibleTokenFunctions = require('./constants/fungible-token-functions');
-
-const ownerPublicKeyAsHex = '';// utils.publicKeyToHex(config.ownerKeyPair.publicKey);
-
-describe('Fungible Capped Token', () => {
+describe.only('Fungible Capped Token', () => {
 
     let firstClient;
-    let contentOfContract;
 
     before(async () => {
-        firstClient = await Universal({
-            url: config.host,
-            internalUrl: config.internalHost,
-            keypair: config.ownerKeyPair,
-            nativeMode: true,
-            networkId: config.networkId
-        });
-
-        firstClient.setKeypair(config.ownerKeyPair)
-        await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
-
-        contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
-    })
+        firstClient = await getClient(Universal, config, config.ownerKeyPair);
+    });
 
     describe('Deploy contract', () => {
 
         it('deploying successfully', async () => {
             // Arrange
             const cap = 100;
-            const compiledContract = await firstClient.contractCompile(contentOfContract, {})
 
-            // Act
-            const deployPromise = compiledContract.deploy({
-                initState: `(${ cap })`,
-                options: {
-                    ttl: config.ttl
-                },
-                abi: config.abiType
-            });
-
-            const deployedContract = await deployPromise;
-
-            const capPromise = deployedContract.call(fungibleTokenFunctions.CAP, {
-                options: {
-                    ttl: config.ttl
-                }
-            });
-
-            const capPromiseResult = await capPromise;
+            let deployedContract = await firstClient.getContractInstance(contentOfContract);
+            await deployedContract.deploy([cap]);
 
             // Assert
-            const decodedCapPromiseResult = await capPromiseResult.decode("int");
+            const capPromiseResult = await deployedContract.call(fungibleTokenFunctions.CAP);
+            const decodedCapPromiseResult = await capPromiseResult.decode();
 
-            assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner);
-            assert.equal(decodedCapPromiseResult.value, cap);
+            assert.equal(ownerPublicKey, deployedContract.deployInfo.owner);
+            assert.equal(decodedCapPromiseResult, cap);
         })
     })
 
@@ -74,26 +49,14 @@ describe('Fungible Capped Token', () => {
         it('shoulnd`t mint over cap limit', async () => {
             // Arrange
             const cap = 100;
-            const compiledContract = await firstClient.contractCompile(contentOfContract, {})
 
-            // Act
-            const deployPromise = compiledContract.deploy({
-                initState: `(${ cap })`,
-                options: {
-                    ttl: config.ttl
-                },
-                abi: config.abiType
-            });
+            let deployedContract = await firstClient.getContractInstance(contentOfContract);
+            await deployedContract.deploy([cap]);
 
-            const deployedContract = await deployPromise;
-
-            const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
-                args: `(${ ownerPublicKeyAsHex }, 1000)`,
-                options: {
-                    ttl: config.ttl
-                },
-                abi: config.abiType
-            })
+            const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, [
+                ownerPublicKey,
+                1000
+            ]);
 
             // Assert
             await assert.isRejected(mintPromise, errorMessages.EXCEEDS_CAP);

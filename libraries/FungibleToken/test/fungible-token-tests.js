@@ -1,12 +1,11 @@
+const path = require('path');
 const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
 
-const path = require('path');
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
-const Crypto = AeSDK.Crypto;
 
 const utils = require('./../utils/utils');
 const getClient = utils.getClient;
@@ -18,7 +17,6 @@ const contractFilePath = "./../contracts/fungible-token.aes";
 
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
-
 const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 
 describe('Fungible token', () => {
@@ -30,8 +28,6 @@ describe('Fungible token', () => {
 
         firstClient = await getClient(Universal, config, config.ownerKeyPair);
         secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
-
-        await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
     });
 
     describe('Deploy contract', () => {

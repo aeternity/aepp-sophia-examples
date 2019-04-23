@@ -1,24 +1,23 @@
+const path = require('path');
 const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
 
-const path = require('path');
 const utils = require('../utils/utils');
 const getClient = utils.getClient;
 
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
+
 const config = require("./constants/config.json");
 const errorMessages = require('./constants/error-messages.json');
 const fungibleTokenFunctions = require('./constants/fungible-token-functions');
-
 const contractFilePath = "./../contracts/fungible-token-pausable.aes";
 
+const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
-
-const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 
 describe('Fungible Pauseable Token', () => {
 
