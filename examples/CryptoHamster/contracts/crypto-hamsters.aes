@@ -19,9 +19,7 @@ contract CryptoHamster =
         create_hamster_by_name_dna(hamster_name, generate_random_dna())
 
     public function name_exists(name: string) : bool =
-        switch(Map.lookup(name, state.map_hamsters))
-            None    => false
-            Some(x) => true
+        Map.member(name, state.map_hamsters)
 
     public function get_hamster_dna(name: string) : int =
         require(name_exists(name), "There is no hamster with that name!")
