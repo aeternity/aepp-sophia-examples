@@ -4,34 +4,23 @@ const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
+
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
 const config = require('./constants/config.json')
 const errorMessages = require('./constants/error-messages.json');
 
+const utils = require('./../utils/utils');
+const getClient = utils.getClient;
+
 const MULTISIGNATURE_WALLET_CONTRACT_PATH = "./../contracts/MultisigWallet.aes";
 const VOTING_CONTRACT_PATH = './../contracts/Voting-test.aes';
-// const contentOfMultisigContract = utils.readFileRelative(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH), config.filesEncoding);
-// const contentOfVotingContract = utils.readFileRelative(path.resolve(__dirname, VOTING_CONTRACT_PATH), config.filesEncoding);
-
-const libHelper = require('../utils/library-resolver');
-const contentOfMultisigContract = libHelper.resolveLibraries(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH));
-const contentOfVotingContract = libHelper.resolveLibraries(path.resolve(__dirname, VOTING_CONTRACT_PATH));
-
-const utils = require('./../utils/utils');
-// const getDeployedContractInstance = utils.getDeployedContractInstance;
-// const executeSmartContractFunction = utils.executeSmartContractFunction;
-// const executeSmartContractFunctionFromAnotherClient = utils.executeSmartContractFunctionFromAnotherClient;
-const getClient = utils.getClient;
-// const publicKeyToHex = utils.publicKeyToHex;
+const contentOfMultisigContract = utils.readFileRelative(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH), config.filesEncoding);
+const contentOfVotingContract = utils.readFileRelative(path.resolve(__dirname, VOTING_CONTRACT_PATH), config.filesEncoding);
 
 const RANDOM_ADDRESS_1 = 'ak_gLYH5tAexTCvvQA6NpXksrkPJKCkLnB9MTDFTVCBuHNDJ3uZv';
 const RANDOM_ADDRESS_2 = 'ak_zPoY7cSHy2wBKFsdWJGXM7LnSjVt6cn1TWBDdRBUMC7Tur2NQ';
 const RANDOM_ADDRESS_3 = 'ak_tWZrf8ehmY7CyB1JAoBmWJEeThwWnDpU4NadUdzxVSbzDgKjP';
-
-// const rndAddrAsHex1 = '' // publicKeyToHex(RANDOM_ADDRESS_1);
-// const rndAddrAsHex2 = '' // publicKeyToHex(RANDOM_ADDRESS_2);
-// const rndAddrAsHex3 = '' // publicKeyToHex(RANDOM_ADDRESS_3);
 
 let VALID_METHOD_NAME = 'Vote';
 let INVALID_METHOD_NAME = 'sayHello';

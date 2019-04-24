@@ -10,16 +10,16 @@ contract MultiSigWallet =
         owners_count: int,
         transactions_count: int,
         required: int,
-        m_index_owner: map(int, address),
-        m_owner_index: map(address, int),
-        m_index_transaction: map(int, transaction),
-        m_remove_owner_votes: map(address, int),
-        m_add_owner_votes: map(address, int),
-        m_remove_owner_confirmations: map((address,address), bool),
-        m_add_owner_confirmations: map((address,address), bool), 
-        m_change_requirement_votes: map((int,address), bool),
-        m_change_requirement_confirmations: map(int, int),
-        m_tx_confirmations: map((int,address), bool)} 
+        map_index_owner: map(int, address),
+        map_owner_index: map(address, int),
+        map_index_transaction: map(int, transaction),
+        map_remove_owner_votes: map(address, int),
+        map_add_owner_votes: map(address, int),
+        map_remove_owner_confirmations: map((address,address), bool),
+        map_add_owner_confirmations: map((address,address), bool), 
+        map_change_requirement_votes: map((int,address), bool),
+        map_change_requirement_confirmations: map(int, int),
+        map_tx_confirmations: map((int,address), bool)} 
     
     record transaction = { 
         id: int,
@@ -37,16 +37,16 @@ contract MultiSigWallet =
           configured = false,
           owners_count = 0,
           transactions_count = 0,
-          m_index_owner = {},
-          m_owner_index = {},
-          m_index_transaction = {},
-          m_remove_owner_votes = {},
-          m_add_owner_votes = {},
-          m_tx_confirmations = {},
-          m_add_owner_confirmations = {},
-          m_remove_owner_confirmations = {},
-          m_change_requirement_votes = {},
-          m_change_requirement_confirmations = {}}
+          map_index_owner = {},
+          map_owner_index = {},
+          map_index_transaction = {},
+          map_remove_owner_votes = {},
+          map_add_owner_votes = {},
+          map_tx_confirmations = {},
+          map_add_owner_confirmations = {},
+          map_remove_owner_confirmations = {},
+          map_change_requirement_votes = {},
+          map_change_requirement_confirmations = {}}
 
 
 
@@ -68,17 +68,17 @@ contract MultiSigWallet =
         validate_requirement(new_required, state.owners_count)
         // is caller already voted
         // has_voted_for_requirement_change(new_required, Call.caller)
-        require(!Map.lookup_default((new_required, Call.caller), state.m_change_requirement_votes, false), "Your vote has been already submitted.")
+        require(!Map.lookup_default((new_required, Call.caller), state.map_change_requirement_votes, false), "Your vote has been already submitted.")
 
-        put(state{m_change_requirement_votes[(new_required, Call.caller)] = true})
+        put(state{map_change_requirement_votes[(new_required, Call.caller)] = true})
 
         if(vote)
-            // put(state{m_change_requirement_confirmations[new_required] =  get_requirement_confirmations(new_required)
-            put(state{m_change_requirement_confirmations[new_required] =  Map.lookup_default(new_required, state.m_change_requirement_confirmations, 0) + 1})
+            // put(state{map_change_requirement_confirmations[new_required] =  get_requirement_confirmations(new_required)
+            put(state{map_change_requirement_confirmations[new_required] =  Map.lookup_default(new_required, state.map_change_requirement_confirmations, 0) + 1})
 
         // if(get_requirement_confirmations(new_required) >= state.required)
-        if(Map.lookup_default(new_required, state.m_change_requirement_confirmations, 0) >= state.required)
-            put(state{m_change_requirement_confirmations[new_required] = 0})
+        if(Map.lookup_default(new_required, state.map_change_requirement_confirmations, 0) >= state.required)
+            put(state{map_change_requirement_confirmations[new_required] = 0})
             put(state{required = new_required})
             reset_requirement_vote(new_required, 1, state.owners_count)
 
@@ -88,12 +88,12 @@ contract MultiSigWallet =
         is_not_owner(owner)
         has_voted_for_owner_addition(owner)
         
-        //put(state{m_add_owner_votes[owner] = get_value_address_int(owner, state.m_add_owner_votes) + 1})
-        put(state{m_add_owner_votes[owner] = Map.lookup_default(owner, state.m_add_owner_votes, 0) + 1})
-        put(state{m_add_owner_confirmations[(owner,Call.caller)] = true}) // set this value to true because current owner make a vote 
+        //put(state{map_add_owner_votes[owner] = get_value_address_int(owner, state.map_add_owner_votes) + 1})
+        put(state{map_add_owner_votes[owner] = Map.lookup_default(owner, state.map_add_owner_votes, 0) + 1})
+        put(state{map_add_owner_confirmations[(owner,Call.caller)] = true}) // set this value to true because current owner make a vote 
 
-        //if(get_value_address_int(owner, state.m_add_owner_votes) >= state.required)
-        if(Map.lookup_default(owner, state.m_add_owner_votes, 0) >= state.required)
+        //if(get_value_address_int(owner, state.map_add_owner_votes) >= state.required)
+        if(Map.lookup_default(owner, state.map_add_owner_votes, 0) >= state.required)
             add_new_owner(owner)
             
     public stateful function vote_remove_owner(owner: address) =
@@ -102,18 +102,18 @@ contract MultiSigWallet =
         is_owner_exists(owner)
         has_voted_for_owner_removal(owner)
         
-        //put(state{m_remove_owner_votes[owner] = get_value_address_int(owner, state.m_remove_owner_votes) + 1})
-        put(state{m_remove_owner_votes[owner] = Map.lookup_default(owner, state.m_remove_owner_votes, 0) + 1})
-        put(state{m_remove_owner_confirmations[(owner,Call.caller)] = true})
+        //put(state{map_remove_owner_votes[owner] = get_value_address_int(owner, state.map_remove_owner_votes) + 1})
+        put(state{map_remove_owner_votes[owner] = Map.lookup_default(owner, state.map_remove_owner_votes, 0) + 1})
+        put(state{map_remove_owner_confirmations[(owner,Call.caller)] = true})
 
-        //if(get_value_address_int(owner, state.m_remove_owner_votes) >= state.required)
-        if(Map.lookup_default(owner, state.m_remove_owner_votes, 0) >= state.required)
+        //if(get_value_address_int(owner, state.map_remove_owner_votes) >= state.required)
+        if(Map.lookup_default(owner, state.map_remove_owner_votes, 0) >= state.required)
             removeOwner(owner)
 
     public function get_confirmations(tx_id: int) : int =
         only_configured()
 
-        state.m_index_transaction[tx_id].confirmations
+        state.map_index_transaction[tx_id].confirmations
 
     public stateful function add_transaction(method: string) : int = 
         only_configured()
@@ -125,7 +125,7 @@ contract MultiSigWallet =
             confirmations = 0,
             method = method}
 
-        put(state{m_index_transaction = state.m_index_transaction{[state.transactions_count] = tx}})
+        put(state{map_index_transaction = state.map_index_transaction{[state.transactions_count] = tx}})
         put(state{transactions_count = state.transactions_count + 1})  
 
         tx.id
@@ -135,15 +135,15 @@ contract MultiSigWallet =
         only_owners()
         has_voted_tx_approved(tx_id)
 
-        let transaction: transaction = state.m_index_transaction[tx_id]
+        let transaction: transaction = state.map_index_transaction[tx_id]
 
         let transaction' = transaction { 
             id = transaction.id, 
             confirmations = transaction.confirmations + 1, 
             method = transaction.method }
 
-        put(state{m_tx_confirmations[(tx_id,Call.caller)] = true})
-        put(state{m_index_transaction = state.m_index_transaction{[tx_id] = transaction'}})
+        put(state{map_tx_confirmations[(tx_id,Call.caller)] = true})
+        put(state{map_index_transaction = state.map_index_transaction{[tx_id] = transaction'}})
 
         // if there are needed votes execute tx
         if(transaction'.confirmations >= state.required)
@@ -154,7 +154,7 @@ contract MultiSigWallet =
         only_owners()
         valid_requirement()
 
-        let transaction': transaction = state.m_index_transaction[tx_id]
+        let transaction': transaction = state.map_index_transaction[tx_id]
         require(transaction'.confirmations >= state.required, "Not enough votes!")
         
         switch(transaction'.method)
@@ -166,7 +166,7 @@ contract MultiSigWallet =
             confirmations = 0, 
             method = transaction'.method }
     
-        put(state{m_index_transaction = state.m_index_transaction{[tx_id] = tx}})
+        put(state{map_index_transaction = state.map_index_transaction{[tx_id] = tx}})
 
         reset_approve_tx_vote(tx_id, 1, state.owners_count)
 
@@ -179,10 +179,10 @@ contract MultiSigWallet =
     private stateful function add_new_owner(owner : address) =
         require(owner != Contract.address, "Address can't be same as contract address")
           
-        put(state{m_add_owner_votes[owner] = 0})
+        put(state{map_add_owner_votes[owner] = 0})
         put(state{owners_count = state.owners_count + 1})    
-        put(state{m_index_owner = state.m_index_owner{[state.owners_count] = owner}})
-        put(state{m_owner_index = state.m_owner_index{[owner] = state.owners_count}})
+        put(state{map_index_owner = state.map_index_owner{[state.owners_count] = owner}})
+        put(state{map_owner_index = state.map_owner_index{[owner] = state.owners_count}})
 
         reset_add_owner_vote(owner, 1, state.owners_count)
 
@@ -190,7 +190,7 @@ contract MultiSigWallet =
         require(Call.caller == state.owner, "Only owner")
         
     private function only_owners() =
-        require(Map.lookup_default(Call.caller, state.m_owner_index, 0) != 0, "Caller is not an owner.")
+        require(Map.lookup_default(Call.caller, state.map_owner_index, 0) != 0, "Caller is not an owner.")
 
     // private function lookupByAddress(key : address, _map, defaultValue : int) =
     //     switch(Map.lookup(key, _map))
@@ -243,13 +243,13 @@ contract MultiSigWallet =
 
     private function is_owner_exists(owner': address) =
         // let index = 
-        //     switch (Map.lookup(owner', state.m_owner_index))
+        //     switch (Map.lookup(owner', state.map_owner_index))
         //         None => 0
         //         Some(x) => x
 
         // require(index > 0, "Address is not an owner!")
         
-        require(Map.lookup_default(owner', state.m_owner_index, 0) > 0, "Address is not an owner!")
+        require(Map.lookup_default(owner', state.map_owner_index, 0) > 0, "Address is not an owner!")
 
         // index
 
@@ -262,36 +262,36 @@ contract MultiSigWallet =
         require(required =< owner_count && required > 0 && owner_count > 0, "Invalid requirements.")
     
     // private function is_owner_voted_for_requirement(new_required: int, voter : address) : bool = 
-    //     switch(Map.lookup((new_required, voter), state.m_change_requirement_votes))
+    //     switch(Map.lookup((new_required, voter), state.map_change_requirement_votes))
     //             None    => false
     //             Some(x) => x
 
     private stateful function reset_requirement_vote(required: int, current_owner_index: int, max_index: int ) = 
         if(current_owner_index =< max_index)
-            put(state{m_change_requirement_votes[(required, state.m_index_owner[current_owner_index])] = false})
-            // Map.delete((required, state.m_index_owner[current_owner_index]), state.m_change_requirement_votes)
-            put(state{m_change_requirement_votes = Map.delete((required, state.m_index_owner[current_owner_index]), state.m_change_requirement_votes)})
+            put(state{map_change_requirement_votes[(required, state.map_index_owner[current_owner_index])] = false})
+            // Map.delete((required, state.map_index_owner[current_owner_index]), state.map_change_requirement_votes)
+            put(state{map_change_requirement_votes = Map.delete((required, state.map_index_owner[current_owner_index]), state.map_change_requirement_votes)})
             reset_requirement_vote(required, current_owner_index + 1, max_index)
 
     private stateful function reset_add_owner_vote(owner': address, current_owner_index: int, max_index : int) = 
         if(current_owner_index =< max_index)
-            put(state{m_add_owner_confirmations[(owner', state.m_index_owner[current_owner_index])] = false})
-            // Map.delete((owner', state.m_index_owner[current_owner_index]), state.m_add_owner_confirmations)
-            put(state{m_add_owner_confirmations = Map.delete((owner', state.m_index_owner[current_owner_index]), state.m_add_owner_confirmations)})
+            put(state{map_add_owner_confirmations[(owner', state.map_index_owner[current_owner_index])] = false})
+            // Map.delete((owner', state.map_index_owner[current_owner_index]), state.map_add_owner_confirmations)
+            put(state{map_add_owner_confirmations = Map.delete((owner', state.map_index_owner[current_owner_index]), state.map_add_owner_confirmations)})
             reset_add_owner_vote(owner', current_owner_index + 1, max_index)
 
     private stateful function reset_remove_owner_vote(owner': address, current_owner_index: int, max_index: int) = 
         if(current_owner_index =< max_index)
-            put(state{m_remove_owner_confirmations[(owner', state.m_index_owner[current_owner_index])] = false})
-            // Map.delete((owner', state.m_index_owner[current_owner_index]), state.m_remove_owner_confirmations)
-            put(state{m_remove_owner_confirmations = Map.delete((owner', state.m_index_owner[current_owner_index]), state.m_remove_owner_confirmations)})
+            put(state{map_remove_owner_confirmations[(owner', state.map_index_owner[current_owner_index])] = false})
+            // Map.delete((owner', state.map_index_owner[current_owner_index]), state.map_remove_owner_confirmations)
+            put(state{map_remove_owner_confirmations = Map.delete((owner', state.map_index_owner[current_owner_index]), state.map_remove_owner_confirmations)})
             reset_remove_owner_vote(owner', current_owner_index + 1, max_index)
 
     private stateful function reset_approve_tx_vote(tx_id: int, current_owner_index: int, max_index: int ) = 
         if(current_owner_index =< max_index)
-            put(state{m_tx_confirmations[(tx_id, state.m_index_owner[current_owner_index])] = false})
-            //Map.delete((tx_id, state.m_index_owner[current_owner_index]), state.m_tx_confirmations)
-            put(state{m_tx_confirmations = Map.delete((tx_id, state.m_index_owner[current_owner_index]), state.m_tx_confirmations)})
+            put(state{map_tx_confirmations[(tx_id, state.map_index_owner[current_owner_index])] = false})
+            //Map.delete((tx_id, state.map_index_owner[current_owner_index]), state.map_tx_confirmations)
+            put(state{map_tx_confirmations = Map.delete((tx_id, state.map_index_owner[current_owner_index]), state.map_tx_confirmations)})
             reset_approve_tx_vote(tx_id, current_owner_index + 1, max_index)
 
     // private function has_voted_for_requirement_change(new_required: int, caller: address) =
@@ -300,30 +300,30 @@ contract MultiSigWallet =
         
 
     // private function get_requirement_confirmations(key: int) : int =
-    //     switch(Map.lookup(key, state.m_change_requirement_confirmations))
+    //     switch(Map.lookup(key, state.map_change_requirement_confirmations))
     //         None => 0
     //         Some(x) => x
 
     private function is_not_owner(new_owner: address) =
         // let index =
-        //     switch(Map.lookup(new_owner, state.m_owner_index))
+        //     switch(Map.lookup(new_owner, state.map_owner_index))
         //         None => 0
         //         Some(x) => x
         
-        require(Map.lookup_default(new_owner, state.m_owner_index, 0) == 0, "Suggested owner is already owner!")
+        require(Map.lookup_default(new_owner, state.map_owner_index, 0) == 0, "Suggested owner is already owner!")
 
     private function has_voted_for_owner_addition(new_owner : address) =
-        // require(!get_value_from_map_tuple(new_owner, Call.caller, state.m_add_owner_confirmations), "Your vote has been already submitted.")
-        require(!Map.lookup_default((new_owner, Call.caller), state.m_add_owner_confirmations, false), "Your vote has been already submitted.")
+        // require(!get_value_from_map_tuple(new_owner, Call.caller, state.map_add_owner_confirmations), "Your vote has been already submitted.")
+        require(!Map.lookup_default((new_owner, Call.caller), state.map_add_owner_confirmations, false), "Your vote has been already submitted.")
         
 
     private function has_voted_for_owner_removal(owner: address) =
-        // require(!get_value_from_map_tuple(owner, Call.caller, state.m_remove_owner_confirmations), "Your vote has been already submitted.")
-        require(!Map.lookup_default((owner, Call.caller), state.m_remove_owner_confirmations, false), "Your vote has been already submitted.")
+        // require(!get_value_from_map_tuple(owner, Call.caller, state.map_remove_owner_confirmations), "Your vote has been already submitted.")
+        require(!Map.lookup_default((owner, Call.caller), state.map_remove_owner_confirmations, false), "Your vote has been already submitted.")
 
     private function has_enough_remove_votes(owner: address) =
-        //require(get_value_address_int(owner, state.m_remove_owner_votes) >= state.required, "Not enough votes!")
-        require(Map.lookup_default(owner, state.m_remove_owner_votes, 0) >= state.required, "Not enough votes!")
+        //require(get_value_address_int(owner, state.map_remove_owner_votes) >= state.required, "Not enough votes!")
+        require(Map.lookup_default(owner, state.map_remove_owner_votes, 0) >= state.required, "Not enough votes!")
 
     private stateful function removeOwner(owner: address) =
         only_configured()
@@ -331,20 +331,20 @@ contract MultiSigWallet =
         has_enough_remove_votes(owner)
 
         // swap last owner with deleted one
-        let owner_index = state.m_owner_index[owner]
-        let last_added_owner = state.m_index_owner[state.owners_count]
-        put(state{m_owner_index[last_added_owner] = owner_index})
-        put(state{m_index_owner[owner_index] = last_added_owner})
+        let owner_index = state.map_owner_index[owner]
+        let last_added_owner = state.map_index_owner[state.owners_count]
+        put(state{map_owner_index[last_added_owner] = owner_index})
+        put(state{map_index_owner[owner_index] = last_added_owner})
 
         // Map.delete is not working correctly
-        put(state{m_owner_index[owner] = 0}) 
-        put(state{m_remove_owner_votes[owner] = 0})
+        put(state{map_owner_index[owner] = 0}) 
+        put(state{map_remove_owner_votes[owner] = 0})
 
-        //Map.delete(owner, state.m_remove_owner_votes)
-        put(state{m_remove_owner_votes = Map.delete(owner, state.m_remove_owner_votes)})
+        //Map.delete(owner, state.map_remove_owner_votes)
+        put(state{map_remove_owner_votes = Map.delete(owner, state.map_remove_owner_votes)})
 
-        // Map.delete(owner, state.m_owner_index)
-        put(state{m_owner_index = Map.delete(owner, state.m_owner_index)})
+        // Map.delete(owner, state.map_owner_index)
+        put(state{map_owner_index = Map.delete(owner, state.map_owner_index)})
 
         put(state{owners_count = state.owners_count - 1})    
         put(state{required = calculate_minimum_required(state.required)})
@@ -352,5 +352,5 @@ contract MultiSigWallet =
         reset_remove_owner_vote(owner, 1, state.owners_count)
 
     private function has_voted_tx_approved(tx_id: int) =
-        //require(!get_value_from_map_tuple_int_address(tx_id, Call.caller, state.m_tx_confirmations), "Your vote has been already submitted.")
-        require(!Map.lookup_default((tx_id, Call.caller), state.m_tx_confirmations, false), "Your vote has been already submitted.")
+        //require(!get_value_from_map_tuple_int_address(tx_id, Call.caller, state.map_tx_confirmations), "Your vote has been already submitted.")
+        require(!Map.lookup_default((tx_id, Call.caller), state.map_tx_confirmations, false), "Your vote has been already submitted.")
