@@ -2,15 +2,15 @@ contract FungiblePausable =
   record state = {
     owner            : address, 
     total_supply      : int,
-    m_balances         : map(address, int),
-    m_allowed          : map((address,address), int),
+    map_balances         : map(address, int),
+    map_allowed          : map((address,address), int),
     paused           : bool}
 
   public stateful function init() = {
     owner = Call.caller,
     total_supply = 0,
-    m_balances = {},
-    m_allowed = {},
+    map_balances = {},
+    map_allowed = {},
     paused = false}
 
   public function paused() : bool =
@@ -20,10 +20,10 @@ contract FungiblePausable =
     state.total_supply
 
   public function balance_of(who: address) : int =
-    Map.lookup_default(who, state.m_balances, 0)
+    Map.lookup_default(who, state.map_balances, 0)
 
   public function allowance(owner: address, spender: address) : int =
-    Map.lookup_default((owner, spender), state.m_allowed, 0)
+    Map.lookup_default((owner, spender), state.map_allowed, 0)
 
   public stateful function transfer(to: address, value: int) =
     require(!state.paused, "Contract is paused")
@@ -34,7 +34,7 @@ contract FungiblePausable =
     require(value > 0, "Value is sub zero")
     require(spender != #0, "Invalid spender address")
 
-    put(state{m_allowed[(Call.caller,spender)] = value})
+    put(state{map_allowed[(Call.caller,spender)] = value})
 
   private stateful function transfer'(from: address, to: address, value: int) =
     require(value > 0, "Value is sub zero")
@@ -42,25 +42,25 @@ contract FungiblePausable =
     require(to != #0, "Invalid address")
 
     put(state{
-      m_balances[from] = state.m_balances[from] - value,
-      m_balances[to] = state.m_balances[to] + value})
+      map_balances[from] = state.map_balances[from] - value,
+      map_balances[to] = state.map_balances[to] + value})
 
   public stateful function transfer_from(from: address, to: address, value: int) =
     require(!state.paused, "Contract is paused")
-    require(state.m_allowed[(from, Call.caller)] >= value, "Value is bigger than allowed")
+    require(state.map_allowed[(from, Call.caller)] >= value, "Value is bigger than allowed")
 
-    put(state{m_allowed[(from,Call.caller)] = state.m_allowed[(from,Call.caller)] - value})
+    put(state{map_allowed[(from,Call.caller)] = state.map_allowed[(from,Call.caller)] - value})
     transfer'(from, to, value)
 
   public stateful function increase_allowance(spender: address, added_value: int) =
     require(!state.paused, "Contract is paused")
     require(spender != #0, "Invalid address")
-    put(state{m_allowed[(Call.caller, spender)] = state.m_allowed[(Call.caller,spender)] + added_value})
+    put(state{map_allowed[(Call.caller, spender)] = state.map_allowed[(Call.caller,spender)] + added_value})
 
   public stateful function decrease_allowance(spender: address, subtracted_value: int) =
     require(!state.paused, "Contract is paused")
     require(spender != #0, "Invalid address")
-    put(state{m_allowed[(Call.caller,spender)] = state.m_allowed[(Call.caller,spender)] - subtracted_value})
+    put(state{map_allowed[(Call.caller,spender)] = state.map_allowed[(Call.caller,spender)] - subtracted_value})
 
   public stateful function mint(account: address, value: int) =
     only_owner()
@@ -68,14 +68,14 @@ contract FungiblePausable =
     require(account != #0, "Invalid address")
 
     put(state{total_supply = state.total_supply + value,
-          m_balances[account] = balance_of(account) + value})
+          map_balances[account] = balance_of(account) + value})
 
   public stateful function burn(value: int) =
     require(!state.paused, "Contract is paused")
     require(balance_of(Call.caller) >= value, "Burned amount is less than account balance")
 
     put(state{total_supply = state.total_supply - value,
-          m_balances[Call.caller] = balance_of(Call.caller) - value})
+          map_balances[Call.caller] = balance_of(Call.caller) - value})
 
   public stateful function pause() = 
     only_owner()
