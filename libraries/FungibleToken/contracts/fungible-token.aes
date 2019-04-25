@@ -47,13 +47,13 @@ contract FungibleToken =
     put(state{map_allowed[(from, Call.caller)] = Map.lookup_default((from, Call.caller), state.map_allowed, 0) - value}) 
     transfer'(from, to, value)
 
-  public stateful function increase_allowance(spender: address, addedValue: int) =
+  public stateful function increase_allowance(spender: address, added_value: int) =
     require(spender != #0, "Invalid address")
-    put(state{map_allowed[(Call.caller, spender)] = state.map_allowed[(Call.caller,spender)] + addedValue})
+    put(state{map_allowed[(Call.caller, spender)] = state.map_allowed[(Call.caller,spender)] + added_value})
 
-  public stateful function decrease_allowance(spender: address, subtractedValue: int) =
+  public stateful function decrease_allowance(spender: address, subtracted_value: int) =
     require(spender != #0, "Invalid address")
-    put(state{map_allowed[(Call.caller,spender)] = state.map_allowed[(Call.caller,spender)] - subtractedValue})
+    put(state{map_allowed[(Call.caller,spender)] = state.map_allowed[(Call.caller,spender)] - subtracted_value})
 
   public stateful function mint(account: address, value: int) =
     only_owner()
