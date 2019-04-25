@@ -5,8 +5,9 @@ contract Voting =
     public stateful function init() = {
         votes = 0} 
         
-    public function vote() =
+    public function vote() : bool =
         put(state{votes = state.votes + 1})
+        true
 
     public function revoke() : bool = 
         false

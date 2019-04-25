@@ -18,6 +18,9 @@ const VOTING_CONTRACT_PATH = './../contracts/Voting-test.aes';
 const contentOfMultisigContract = utils.readFileRelative(path.resolve(__dirname, MULTISIGNATURE_WALLET_CONTRACT_PATH), config.filesEncoding);
 const contentOfVotingContract = utils.readFileRelative(path.resolve(__dirname, VOTING_CONTRACT_PATH), config.filesEncoding);
 
+const multiSigFunctions = require('./constants/smartContractFunctions.json');
+const votingFunctions = require('./constants/helperSmartContractFunctions.json');
+
 const RANDOM_ADDRESS_1 = 'ak_gLYH5tAexTCvvQA6NpXksrkPJKCkLnB9MTDFTVCBuHNDJ3uZv';
 const RANDOM_ADDRESS_2 = 'ak_zPoY7cSHy2wBKFsdWJGXM7LnSjVt6cn1TWBDdRBUMC7Tur2NQ';
 const RANDOM_ADDRESS_3 = 'ak_tWZrf8ehmY7CyB1JAoBmWJEeThwWnDpU4NadUdzxVSbzDgKjP';
@@ -25,27 +28,16 @@ const RANDOM_ADDRESS_3 = 'ak_tWZrf8ehmY7CyB1JAoBmWJEeThwWnDpU4NadUdzxVSbzDgKjP';
 let VALID_METHOD_NAME = 'Vote';
 let INVALID_METHOD_NAME = 'sayHello';
 
-// const ownerPublicKeyAsHex = '' // utils.publicKeyToHex(config.ownerKeyPair.publicKey);
-// const notOwnerPublicKeyAsHex = '' // utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
-
 const ownerPublicKey = config.ownerKeyPair.publicKey;
 const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
-
-const multiSigFunctions = require('./constants/smartContractFunctions.json');
-const votingFunctions = require('./constants/helperSmartContractFunctions.json');
 
 async function getVotingContractInstance () {
     let notOwnerConfig = JSON.parse(JSON.stringify(config));
     notOwnerConfig.ownerKeyPair = config.notOwnerKeyPair;
 
-    // const readContract = fs.readFileSync(path.resolve(__dirname, VOTING_CONTRACT_PATH), 'utf8');
-    // let votingContractInfo = await getDeployedContractInstance(Universal, notOwnerConfig, readContract);
-    // return votingContractInfo.deployedContract;
-
     const client = await getClient(Universal, notOwnerConfig, config.ownerKeyPair); ;
     const contractInstance = await client.getContractInstance(contentOfVotingContract);
     await contractInstance.deploy([]);
-    // console.log(contractInstance);
 
     return contractInstance;
 }
@@ -59,39 +51,32 @@ describe('MultiSig', async function () {
         let deployInfo;
 
         before(async () => {
-            // let deployInfo = await getDeployedContractInstance(Universal, config, contentOfMultisigContract);
-            // multiSigInstance = deployInfo.deployedContract;
-
             firstClient = await getClient(Universal, config, config.ownerKeyPair);
         })
 
         // DO NOT CHANGE TEST POSITIONS
-        it.only('deploying successfully', async () => {
+        it('deploying successfully', async () => {
             multiSigInstance = await firstClient.getContractInstance(contentOfMultisigContract);
-            deployInfo = (await multiSigInstance.deploy([])).deployInfo;
+            await multiSigInstance.deploy([]);
 
-            // console.log('multiSigInstance');
-            // console.log(multiSigInstance);
-            // console.log();
-
-            assert.equal(ownerPublicKey, deployInfo.owner)
+            assert.equal(ownerPublicKey, multiSigInstance.deployInfo.owner)
         });
 
-        it.only(`[NEGATIVE] Should not init owner.`, async () => {
-            // let addrAsHex = publicKeyToHex(multiSigInstance.address);
-            // await assert.isRejected(executeSmartContractFunction(multiSigInstance, multiSigFunctions.INIT_OWNER, `(${addrAsHex})`), errorMessages.CANNOT_BE_SAME_ADDRESS);
-            // console.log(deployInfo.address);
-            // await assert.isRejected(multiSigInstance.call(multiSigFunctions.INIT_OWNER, [ deployInfo.address ]), errorMessages.CANNOT_BE_SAME_ADDRESS);
-            await assert.isRejected(multiSigInstance.call(multiSigFunctions.INIT_OWNER, ['ct_26CJqvMrtYbJ2WPHQBarYCLw4haPzY3BSg4hJLsQHKEsVetUnY']), errorMessages.CANNOT_BE_SAME_ADDRESS);
+        it(`[NEGATIVE] Should not init owner.`, async () => {
+            await assert.isRejected(multiSigInstance.call(multiSigFunctions.INIT_OWNER, [multiSigInstance.deployInfo.address]), errorMessages.CANNOT_BE_SAME_ADDRESS);
         });
 
         it(`Should init owner correct.`, async () => {
-            await multiSigInstance.call(multiSigFunctions.INIT_OWNER, [notOwnerPublicKey]);
+            await multiSigInstance.call(multiSigFunctions.INIT_OWNER, [
+                notOwnerPublicKey
+            ]);
         });
 
         it('[NEGATIVE] Should configure correct, if it is configured correct, initOwner should throw exception.', async () => {
             await multiSigInstance.call(multiSigFunctions.CONFIGURE);
-            await assert.isRejected(multiSigInstance.call(multiSigFunctions.INIT_OWNER, [RANDOM_ADDRESS_2]), errorMessages.NOT_CONFIGURED);
+            await assert.isRejected(multiSigInstance.call(multiSigFunctions.INIT_OWNER, [
+                RANDOM_ADDRESS_2
+            ]), errorMessages.NOT_CONFIGURED);
         });
     });
 
@@ -103,20 +88,18 @@ describe('MultiSig', async function () {
             let firstClient = await getClient(Universal, config, config.ownerKeyPair);
 
             multiSigInstance = await firstClient.getContractInstance(contentOfMultisigContract);
-            deployInfo = (await multiSigInstance.deploy([])).deployInfo;
+            await multiSigInstance.deploy([]);
         });
 
         it('[NEGATIVE] NOT Configured, should NOT get confirmations', async () => {
-            await assert.isRejected(multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [0]), errorMessages.ONLY_CONFIGURED);
+            await assert.isRejected(multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
+                0
+            ]), errorMessages.ONLY_CONFIGURED);
         });
 
-        xit('[NEGATIVE] NOT Configured, should NOT approve', async () => {
+        it('[NEGATIVE] NOT Configured, should NOT approve', async () => {
             let votingContractInstance = await getVotingContractInstance();
 
-            console.log('votingContractInstance');
-            console.log(votingContractInstance.deployInfo.address);
-
-            // let addrAsHex = publicKeyToHex(votingContractInstance.address);
             await assert.isRejected(multiSigInstance.call(multiSigFunctions.APPROVE, [
                 0,
                 votingContractInstance.deployInfo.address
@@ -143,8 +126,6 @@ describe('MultiSig', async function () {
     })
 
     describe('Contract is configured', async function () {
-        // let deployedContractInstance;
-        // let anotherClientConfiguration;
 
         let firstClient;
         let secondClient;
@@ -158,20 +139,6 @@ describe('MultiSig', async function () {
         })
 
         beforeEach(async () => {
-            // const deployInfo = await getDeployedContractInstance(Universal, config, contentOfMultisigContract);
-            // deployedContractInstance = deployInfo.deployedContract;
-
-            // // create second/another client configuration
-            // let anotherClient = await getAEClient(Universal, config, config.notOwnerKeyPair);
-
-            // anotherClientConfiguration = {
-            // 	client: anotherClient,
-            // 	byteCode: deployInfo.compiledContract.bytecode,
-            // 	contractAddress: deployedContractInstance.address
-            // }
-
-            // await executeSmartContractFunction(deployedContractInstance, multiSigFunctions.INIT_OWNER, `(${ownerPublicKeyAsHex})`);
-            // await executeSmartContractFunction(deployedContractInstance, 'configure');
 
             multiSigInstance = await firstClient.getContractInstance(contentOfMultisigContract);
             await multiSigInstance.deploy([])
@@ -293,7 +260,7 @@ describe('MultiSig', async function () {
                 funcResult = await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
                     VALID_METHOD_NAME
                 ]);
-                resultValue = await funcResult.decode('int');
+                resultValue = await funcResult.decode();
                 assert.ok(resultValue === txId++, "Tx id is not correct");
             });
 
@@ -307,14 +274,15 @@ describe('MultiSig', async function () {
                 await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
                     VALID_METHOD_NAME
                 ]);
+
                 let funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
                     0
                 ]);
-                let resultValue = await funcResult.decode('int');
+                let resultValue = await funcResult.decode();
                 assert.ok(resultValue === 0, "Transaction have confirmations");
             });
 
-            xit('Add 2 transaction and approve second one', async () => {
+            it('Add 2 transaction and approve second one', async () => {
                 await multiSigInstance.call(multiSigFunctions.VOTE_ADD_OWNER, [
                     RANDOM_ADDRESS_3
                 ]); // vote for new owner 
@@ -340,17 +308,17 @@ describe('MultiSig', async function () {
                 let funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
                     0
                 ]);
-                let resultValue = await funcResult.decode('int');
+                let resultValue = await funcResult.decode();
                 assert.ok(resultValue === 0, "Transaction have confirmations");
 
                 funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
                     1
                 ]);
-                resultValue = await funcResult.decode('int');
+                resultValue = await funcResult.decode();
                 assert.ok(resultValue === 1, "Transaction have confirmations");
             });
 
-            xit('Add 2 transaction and approve both', async () => {
+            it('Add 2 transaction and approve both', async () => {
 
                 await multiSigInstance.call(multiSigFunctions.VOTE_ADD_OWNER, [
                     RANDOM_ADDRESS_3
@@ -368,7 +336,6 @@ describe('MultiSig', async function () {
                 ]);
 
                 let votingContractInstance = await getVotingContractInstance();
-                // let addrAsHex = publicKeyToHex(votingContractInstance.address);
 
                 await multiSigInstance.call(multiSigFunctions.APPROVE, [
                     0,
@@ -381,17 +348,18 @@ describe('MultiSig', async function () {
                 let funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
                     0
                 ]);
-                let resultValue = await funcResult.decode('int');
+                let resultValue = await funcResult.decode();
                 assert.ok(resultValue === 1, "Transaction have confirmations");
 
                 funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
                     1
                 ]);
-                resultValue = await funcResult.decode('int');
+                resultValue = await funcResult.decode();
+
                 assert.ok(resultValue === 1, "Transaction have confirmations");
             });
 
-            xit('Add 2 transaction and approve both, first one with 2 approves, second with 1', async () => {
+            it('Add 2 transaction and approve both, first one with 2 approves, second with 1', async () => {
 
                 await multiSigInstance.call(multiSigFunctions.VOTE_ADD_OWNER, [
                     RANDOM_ADDRESS_3
@@ -413,72 +381,74 @@ describe('MultiSig', async function () {
                     true
                 ]); // increase required
 
-                await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
+                let funcResult = await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
                     VALID_METHOD_NAME
                 ]);
-                await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
+
+                let firstTxId = await funcResult.decode();
+
+                await assert.isFulfilled(multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [VALID_METHOD_NAME]))
+                funcResult = await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
                     VALID_METHOD_NAME
                 ]);
+
+                let secondTxId = await funcResult.decode();
 
                 let votingContractInstance = await getVotingContractInstance();
-                // let addrAsHex = publicKeyToHex(votingContractInstance.address);
 
                 await multiSigInstance.call(multiSigFunctions.APPROVE, [
-                    0,
+                    firstTxId,
                     votingContractInstance.deployInfo.address
                 ]);
                 await multiSigInstance.call(multiSigFunctions.APPROVE, [
-                    1,
+                    secondTxId,
                     votingContractInstance.deployInfo.address
                 ]);
 
                 await multiSigInstanceNotOwner.call(multiSigFunctions.APPROVE, [
-                    0,
+                    firstTxId,
                     votingContractInstance.deployInfo.address
                 ]);
 
-                let funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
-                    0
+                funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
+                    firstTxId
                 ]);
-                let resultValue = await funcResult.decode('int');
+
+                let resultValue = await funcResult.decode();
                 assert.ok(resultValue === 2, "Transaction have confirmations");
 
                 funcResult = await multiSigInstance.call(multiSigFunctions.GET_CONFIRMATIONS, [
-                    1
+                    secondTxId
                 ]);
-                resultValue = await funcResult.decode('int');
+
+                resultValue = await funcResult.decode();
                 assert.ok(resultValue === 1, "Transaction have confirmations");
             });
 
-            xit('Execute approved transaction', async () => {
+            it('Execute approved transaction', async () => {
                 let votingContractInstance = await getVotingContractInstance();
-                // let addrAsHex = publicKeyToHex(votingContractInstance.address);
 
                 let funcResult = await votingContractInstance.call(votingFunctions.RESULT);
-                let resultValue = await funcResult.decode('int');
+                let resultValue = await funcResult.decode();
                 assert.ok(resultValue === 0, "Voting contract state is incorrect!");
 
-                await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
+                let callResult = await multiSigInstance.call(multiSigFunctions.ADD_TRANSACTION, [
                     VALID_METHOD_NAME
                 ]);
+
+                let txId = await callResult.decode();
+
                 await assert.isFulfilled(multiSigInstance.call(multiSigFunctions.APPROVE, [
-                    0,
+                    txId,
                     votingContractInstance.deployInfo.address
                 ]));
 
                 funcResult = await votingContractInstance.call(votingFunctions.RESULT);
-                resultValue = await funcResult.decode('int');
-                assert.ok(resultValue === 1, "Transaction have confirmations");
+                resultValue = await funcResult.decode();
+                assert.ok(resultValue === 1, "Transaction have invalid count of confirmations");
             });
 
-            xit('[NEGATIVE] NOT owner should NOT approve transaction', async () => {
-
-                // let notOwnerConfig = JSON.parse(JSON.stringify(config));
-                // notOwnerConfig.ownerKeyPair = config.notOwnerKeyPair;
-
-                // let votingContractInfo = await getDeployedContractInstance(Universal, notOwnerConfig, contentOfVotingContract);
-                // let votingContractInstance = votingContractInfo.deployedContract;
-                // let addrAsHex = publicKeyToHex(votingContractInstance.address);
+            it('[NEGATIVE] NOT owner should NOT approve transaction', async () => {
 
                 const votingContractInstance = await getVotingContractInstance();
 
@@ -493,7 +463,7 @@ describe('MultiSig', async function () {
             });
         })
 
-        xdescribe('Required validation', async function () {
+        describe('Required validation', async function () {
 
             it('[NEGATIVE] should NOT set "required" bigger than owners count', async () => {
                 await assert.isRejected(multiSigInstance.call(multiSigFunctions.VOTE_CHANGE_REQUIREMENT, [
