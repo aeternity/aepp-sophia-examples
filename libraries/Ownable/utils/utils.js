@@ -111,13 +111,6 @@ function publicKeyToHex(publicKey) {
 	return asHex;
 }
 
-function decodedHexAddressToPublicAddress(hexAddress) {
-
-	const publicKey = Crypto.aeEncodeKey(toBytes(hexAddress, true));
-
-	return publicKey;
-}
-
 module.exports = {
 	readFile,
 	readFileRelative,
@@ -128,6 +121,5 @@ module.exports = {
 	executeSmartContractFunction,
 	publicKeyToHex,
 	getClient,
-	executeSmartContractFunctionFromAnotherClient,
-	decodedHexAddressToPublicAddress
+	executeSmartContractFunctionFromAnotherClient
 }
