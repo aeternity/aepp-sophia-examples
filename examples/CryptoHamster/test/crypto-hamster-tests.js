@@ -34,6 +34,36 @@ describe('Crypto Hamsters', async () => {
         await cryptoHamsterInstance.deploy([]);
     });
 
+    it.only('Test', async () => {
+
+        const maxIterations = 3;
+
+        for (let i = 0; i < maxIterations; i++) {
+            let callResult = await cryptoHamsterInstance.call('test', [
+                `name-${i}`
+            ]);
+
+            let dna = await callResult.decode();
+            console.log(`DNA: ${dna}`);
+        }
+
+        // for (let i = 0; i < maxIterations; i++) {
+        //     await cryptoHamsterInstance.call(cryptoHamsterFunctions.CREATE_HAMSTER, [
+        //         `name-${i}`
+        //     ]);
+        //     console.log(i);
+        // }
+
+        // for (let i = 0; i < maxIterations; i++) {
+        //     let callResult = await cryptoHamsterInstance.call(cryptoHamsterFunctions.GET_HAMSTER_DNA, [
+        //         `name-${i}`
+        //     ]);
+
+        //     let dna = await callResult.decode();
+        //     console.log(`name: name-${i}, DNA: ${dna}`);
+        // }
+    });
+
     it('Should create hamster successfully', async () => {
         await cryptoHamsterInstance.call(cryptoHamsterFunctions.CREATE_HAMSTER, [
             randomNames[0]

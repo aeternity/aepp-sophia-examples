@@ -16,7 +16,7 @@ contract CryptoHamster =
     public function create_hamster(hamster_name: string) =
         require(!name_exists(hamster_name), "Name is already taken")
 
-        create_hamster_by_name_dna(hamster_name, generate_random_dna())
+        create_hamster_by_name_dna(hamster_name, generate_random_dna(hamster_name))
 
     public function name_exists(name: string) : bool =
         Map.member(name, state.map_hamsters)
@@ -37,8 +37,12 @@ contract CryptoHamster =
         put(state{map_hamsters[name] = new_hamster})
         put(state{index = (state.index + 1)})
 
-    private function generate_random_dna() : int =
+    private function generate_random_dna(name: string) : int =
         Chain.block_hash(Chain.block_height - 1) - Chain.timestamp + state.index
+        //String.sha3(some_string) mod 10 ^ 16
+
+    public function test(name: string) : hash =
+        String.sha3(name)
 
     private function require(expression : bool, error : string) =
         if(!expression) 
