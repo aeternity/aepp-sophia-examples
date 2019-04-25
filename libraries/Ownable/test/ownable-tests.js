@@ -13,8 +13,6 @@ const errorMessages = require('./constants/error-messages.json');
 const utils = require('./../utils/utils');
 const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
 const getClient = utils.getClient;
-const decodedHexAddressToPublicAddress = utils.decodedHexAddressToPublicAddress;
-
 
 const ownableFunctions = require('./constants/smartContractFunctions.json')
 
@@ -58,8 +56,7 @@ describe('Ownable', () => {
 		it('should set the proper owner to the smart contract', async () => {
 
 			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER);
-			let ownerHexPublicKey = await callOwnerResult.decode('address');
-			let ownerPublicKey = decodedHexAddressToPublicAddress(ownerHexPublicKey);
+			let ownerPublicKey = await callOwnerResult.decode('address');
 			
 			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey);
 		})
@@ -80,11 +77,14 @@ describe('Ownable', () => {
 
 			await contractObject.call(ownableFunctions.RENOUNCE_OWNERSHIP);
 			const getOwnerResult = await contractObject.call(ownableFunctions.OWNER);
-			let defaultAddress = await getOwnerResult.decode('address');
-			
-			// !!! if address is default "#0", there is no need to convert it from hex to "normal"
-			//let address = decodedHexAddressToPublicAddress(ownerHexPublicKey);
 
+			let defaultAddress = await getOwnerResult.decode();
+
+			// until next sdk release greater than 3.0.0
+			if(defaultAddress === 'ak_1Wh4bh') {
+				defaultAddress = 0;
+			}
+			
 			assert.equal(defaultAddress, 0, 'The owner is different from the caller');
 		})
 
@@ -94,8 +94,7 @@ describe('Ownable', () => {
 			await assert.isFulfilled(callTransferOwnershipPromise, 'Calling transfer ownership function failed');
 
 			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER);
-			let encodedData = await callOwnerResult.decode('address');
-			const ownerPublicKey = decodedHexAddressToPublicAddress(encodedData);
+			let ownerPublicKey = await callOwnerResult.decode('address');
 			
 			assert.equal(ownerPublicKey, config.notOwnerKeyPair.publicKey)
 		})
@@ -111,8 +110,7 @@ describe('Ownable', () => {
 			await assert.isRejected(unauthorizedRenounceOwnershipPromise, errorMessages.NOT_AN_OWNER)
 
 			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER);
-			let encodedData = await callOwnerResult.decode('address')
-			const ownerPublicKey = decodedHexAddressToPublicAddress(encodedData);
+			let ownerPublicKey = await callOwnerResult.decode('address');
 
 			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey)
 		})
@@ -122,8 +120,7 @@ describe('Ownable', () => {
 			
 			await assert.isRejected(unauthorizedTransferOwnershipPromise, errorMessages.NOT_AN_OWNER);
 			const callOwnerResult = await contractObject.call(ownableFunctions.OWNER); 
-			let encodedData = await callOwnerResult.decode('address');
-			const ownerPublicKey = decodedHexAddressToPublicAddress(encodedData);
+			let ownerPublicKey = await callOwnerResult.decode('address');
 
 			assert.equal(ownerPublicKey, config.ownerKeyPair.publicKey);
 		})
