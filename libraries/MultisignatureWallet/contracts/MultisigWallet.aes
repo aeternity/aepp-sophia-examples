@@ -85,11 +85,9 @@ contract MultiSigWallet =
         is_not_owner(owner)
         has_voted_for_owner_addition(owner)
         
-        //put(state{map_add_owner_votes[owner] = get_value_address_int(owner, state.map_add_owner_votes) + 1})
         put(state{map_add_owner_votes[owner] = Map.lookup_default(owner, state.map_add_owner_votes, 0) + 1})
         put(state{map_add_owner_confirmations[(owner,Call.caller)] = true}) // set this value to true because current owner make a vote 
 
-        //if(get_value_address_int(owner, state.map_add_owner_votes) >= state.required)
         if(Map.lookup_default(owner, state.map_add_owner_votes, 0) >= state.required)
             add_new_owner(owner)
             
@@ -99,11 +97,9 @@ contract MultiSigWallet =
         is_owner_exists(owner)
         has_voted_for_owner_removal(owner)
         
-        //put(state{map_remove_owner_votes[owner] = get_value_address_int(owner, state.map_remove_owner_votes) + 1})
         put(state{map_remove_owner_votes[owner] = Map.lookup_default(owner, state.map_remove_owner_votes, 0) + 1})
         put(state{map_remove_owner_confirmations[(owner,Call.caller)] = true})
 
-        //if(get_value_address_int(owner, state.map_remove_owner_votes) >= state.required)
         if(Map.lookup_default(owner, state.map_remove_owner_votes, 0) >= state.required)
             removeOwner(owner)
 
