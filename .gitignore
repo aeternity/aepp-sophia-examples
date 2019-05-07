@@ -11,7 +11,7 @@ docs/build
 .outputParameter
 nonce.txt
 erc721.aes.deploy*
-package-lock.json
+/*/*/package-lock.json
 .vscode
 .forgae-store
 
