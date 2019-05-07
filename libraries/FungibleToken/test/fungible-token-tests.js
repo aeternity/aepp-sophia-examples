@@ -1,438 +1,312 @@
+const path = require('path');
 const chai = require('chai');
 let chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert;
-const utils = require('./../utils/utils');
+
 const AeSDK = require('@aeternity/aepp-sdk');
 const Universal = AeSDK.Universal;
+
+const utils = require('./../utils/utils');
+const getClient = utils.getClient;
+
 const config = require("./constants/config.json");
+const errorMessages = require('./constants/error-messages.json');
+const fungibleTokenFunctions = require('./constants/fungible-token-functions');
 const contractFilePath = "./../contracts/fungible-token.aes";
 
-const path = require('path');
-const errorMessages = require('./constants/error-messages.json');
-
-const ownerPublicKeyAsHex = utils.publicKeyToHex(config.ownerKeyPair.publicKey);
-const notOwnerPublicKeyAsHex = utils.publicKeyToHex(config.notOwnerKeyPair.publicKey);
-
-const fungibleTokenFunctions = require('./constants/fungible-token-functions');
+const ownerPublicKey = config.ownerKeyPair.publicKey;
+const notOwnerPublicKey = config.notOwnerKeyPair.publicKey;
+const contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
 
 describe('Fungible token', () => {
 
-	let firstClient;
-	let secondClient;
-	let contentOfContract;
+    let firstClient;
+    let secondClient;
 
-	before(async () => {
-		firstClient = await Universal({
-			url: config.host,
-			internalUrl: config.internalHost,
-			keypair: config.ownerKeyPair,
-			nativeMode: true,
-			networkId: config.networkId
-		});
+    before(async () => {
 
-		secondClient = await Universal({
-			url: config.host,
-			internalUrl: config.internalHost,
-			keypair: config.notOwnerKeyPair,
-			nativeMode: true,
-			networkId: config.networkId
-		});
+        firstClient = await getClient(Universal, config, config.ownerKeyPair);
+        secondClient = await getClient(Universal, config, config.notOwnerKeyPair);
+    });
 
+    describe('Deploy contract', () => {
 
-		firstClient.setKeypair(config.ownerKeyPair)
-		await firstClient.spend(1, config.notOwnerKeyPair.publicKey)
-		contentOfContract = utils.readFileRelative(path.resolve(__dirname, contractFilePath), config.filesEncoding);
-	})
+        it('deploying successfully', async () => {
+            let contractObject = await firstClient.getContractInstance(contentOfContract);
+            await contractObject.deploy([]);
 
-	describe('Deploy contract', () => {
+            assert.equal(ownerPublicKey, contractObject.deployInfo.owner);
+        });
+    });
 
-		it('deploying successfully', async () => {
-			//Arrange
-			const compiledContract = await firstClient.contractCompile(contentOfContract, {})
+    describe('Interact with contract', () => {
+        let deployedContract;
 
-			//Act
-			const deployPromise = compiledContract.deploy({
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
+        beforeEach(async () => {
+            deployedContract = await firstClient.getContractInstance(contentOfContract);
+            await deployedContract.deploy([]);
+        })
 
-			//Assert
-			const deployedContract = await deployPromise;
-			assert.equal(config.ownerKeyPair.publicKey, deployedContract.owner)
-		})
+        describe('Contract functionality', () => {
+            beforeEach(async () => {
+                await deployedContract.call(fungibleTokenFunctions.MINT, [
+                    ownerPublicKey,
+                    1000
+                ]);
+            })
 
-	})
+            describe('Mint', () => {
+                it('should mint 1000 token successfully', async () => {
+                    // Arrange
+                    const expectedBalance = 1000;
 
-	describe('Interact with contract', () => {
-		let deployedContract;
-		let compiledContract;
+                    // Act
+                    const balanceOfResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
+                        ownerPublicKey
+                    ]);
 
-		beforeEach(async () => {
-			compiledContract = await firstClient.contractCompile(contentOfContract, {})
-			deployedContract = await compiledContract.deploy({
-				options: {
-					ttl: config.ttl
-				},
-				abi: config.abiType
-			});
-		})
+                    // Assert
+                    const decodedBalanceOfResult = await balanceOfResult.decode();
+                    assert.equal(decodedBalanceOfResult, expectedBalance)
+                })
 
-		describe('Contract functionality', () => {
-			beforeEach(async () => {
-				const mintPromise = deployedContract.call(fungibleTokenFunctions.MINT, {
-					args: `(${ownerPublicKeyAsHex}, 1000)`,
-					options: {
-						ttl: config.ttl
-					},
-					abi: config.abiType
-				})
-				
-				await mintPromise;
-			})
+                it('should not mint from non-owner', async () => {
 
-			describe('Mint', () => {
-				it('should mint 1000 token successfully', async () => {
-					//Arrange
-					const expectedBalance = 1000;
+                    let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
+                        contractAddress: deployedContract.deployInfo.address
+                    });
 
-					//Act
-					const balanceOfPromise = deployedContract.call(fungibleTokenFunctions.BALANCE_OF, {
-						args: `(${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfResult = await balanceOfPromise;
+                    const unauthorisedPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.MINT, [
+                        ownerPublicKey,
+                        123
+                    ]);
 
-					//Assert
-					const decodedBalanceOfResult = await balanceOfResult.decode("int");
-					assert.equal(decodedBalanceOfResult.value, expectedBalance)
-				})
+                    await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
+                })
 
-				it('should not mint from non-owner', async () => {
-					const unauthorisedPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.MINT, {
-						args: `(${ownerPublicKeyAsHex}, 123)`,
-						options: {
-							ttl: config.ttl
-						}
-					})
-					await assert.isRejected(unauthorisedPromise, errorMessages.ONLY_OWNER_CAN_MINT);
-				})
+                it('should increase total supply on mint', async () => {
+                    // Arrange
+                    const expectedTotalSupply = 1003;
 
-				it('should increase total supply on mint', async () => {
-					//Arrange
-					const expectedTotalSupply = 1003;
+                    // Act
+                    // 1000 tokens are already minted
+                    await deployedContract.call(fungibleTokenFunctions.MINT, [
+                        ownerPublicKey,
+                        1
+                    ]);
 
-					//Act
-					//1000 tokens are already minted
-					const deployContractPromise1 = deployedContract.call(fungibleTokenFunctions.MINT, {
-						args: `(${ownerPublicKeyAsHex}, 1)`,
-						options: {
-							ttl: config.ttl
-						},
-						abi: config.abiType
-					})
-					
-					await deployContractPromise1;
+                    await deployedContract.call(fungibleTokenFunctions.MINT, [
+                        ownerPublicKey,
+                        1
+                    ]);
 
-					const deployContractPromise2 = deployedContract.call(fungibleTokenFunctions.MINT, {
-						args: `(${ownerPublicKeyAsHex}, 1)`,
-						options: {
-							ttl: config.ttl
-						},
-						abi: config.abiType
-					})
-					
-					await deployContractPromise2;
+                    await deployedContract.call(fungibleTokenFunctions.MINT, [
+                        ownerPublicKey,
+                        1
+                    ]);
 
-					const deployContractPromise3 = deployedContract.call(fungibleTokenFunctions.MINT, {
-						args: `(${ownerPublicKeyAsHex}, 1)`,
-						options: {
-							ttl: config.ttl
-						},
-						abi: config.abiType
-					})
-					await deployContractPromise3;
+                    const totalSupplyResult = await deployedContract.call(fungibleTokenFunctions.TOTAL_SUPPLY);
 
-					const totalSupplyPromise = deployedContract.call(fungibleTokenFunctions.TOTAL_SUPPLY, {
-						options: {
-							ttl: config.ttl
-						}
-					});
+                    // Assert
+                    const totalSupplyResultDecoded = await totalSupplyResult.decode();
+                    assert.equal(totalSupplyResultDecoded, expectedTotalSupply)
+                })
 
-					const totalSupplyResult = await totalSupplyPromise;
+            })
 
-					//Assert
-					const totalSupplyResultDecoded = await totalSupplyResult.decode("int");
-					assert.equal(totalSupplyResultDecoded.value, expectedTotalSupply)
-				})
+            describe('Burn', () => {
+                it('should burn token successfully', async () => {
+                    // Arrange
+                    const expectedBalance = 900;
+                    const burnAmount = 100;
 
-			})
+                    // Act
+                    await deployedContract.call(fungibleTokenFunctions.BURN, [
+                        burnAmount
+                    ]);
 
-			describe('Burn', () => {
-				it('should burn token successfully', async () => {
-					//Arrange
-					const expectedBalance = 900;
-					const burnAmount = 100;
+                    const balanceOfResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
+                        ownerPublicKey
+                    ]);
 
-					//Act
-					const ownerOfPromise = deployedContract.call(fungibleTokenFunctions.BURN, {
-						args: `(${burnAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await ownerOfPromise;
+                    // Assert
+                    const decodedBalanceOfResult = await balanceOfResult.decode();
+                    assert.equal(decodedBalanceOfResult, expectedBalance);
+                })
 
-					const balanceOfPromise = deployedContract.call(fungibleTokenFunctions.BALANCE_OF, {
-						args: `(${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfResult = await balanceOfPromise;
+                it('shouldn`t burn more tokens than it has', async () => {
+                    let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
+                        contractAddress: deployedContract.deployInfo.address
+                    });
 
-					//Assert
-					const decodedBalanceOfResult = await balanceOfResult.decode("int");
-					assert.equal(decodedBalanceOfResult.value, expectedBalance)
-				})
+                    // Arrange
+                    const burnAmount = 100;
 
-				it('shouldn`t burn more tokens than it has', async () => {
-					//Arrange
-					const burnAmount = 100;
+                    // Act
+                    const unauthorizedBurnPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.BURN, [
+                        burnAmount
+                    ]);
 
-					//Act
-					const unauthorizedBurnPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.BURN, {
-						args: `(${burnAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					})
+                    // Assert
+                    await assert.isRejected(unauthorizedBurnPromise, errorMessages.LESS_TOKENS_THAN_ACCOUNT_BALANCE);
+                })
 
-					//Assert
-					await assert.isRejected(unauthorizedBurnPromise, errorMessages.LESS_TOKENS_THAN_ACCOUNT_BALANCE);
-				})
+                it('should decrease total supply on burn', async () => {
+                    // Arrange
+                    const expectedTotalSupply = 900;
+                    const burnAmount = 50;
 
-				it('should decrease total supply on burn', async () => {
-					//Arrange
-					const expectedTotalSupply = 900;
-					const burnAmount = 50;
+                    // Act
+                    await deployedContract.call(fungibleTokenFunctions.BURN, [
+                        burnAmount
+                    ]);
 
-					//Act
-					const ownerOfPromise1 = deployedContract.call(fungibleTokenFunctions.BURN, {
-						args: `(${burnAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await ownerOfPromise1;
+                    await deployedContract.call(fungibleTokenFunctions.BURN, [
+                        burnAmount
+                    ]);
 
-					const ownerOfPromise2 = deployedContract.call(fungibleTokenFunctions.BURN, {
-						args: `(${burnAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await ownerOfPromise2;
+                    const balanceOfResult = await deployedContract.call(fungibleTokenFunctions.TOTAL_SUPPLY);
 
-					const balanceOfPromise = deployedContract.call(fungibleTokenFunctions.TOTAL_SUPPLY, {
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfResult = await balanceOfPromise;
+                    // Assert
+                    const decodedBalanceOfResult = await balanceOfResult.decode();
+                    assert.equal(decodedBalanceOfResult, expectedTotalSupply)
+                })
+            })
 
-					//Assert
-					const decodedBalanceOfResult = await balanceOfResult.decode("int");
-					assert.equal(decodedBalanceOfResult.value, expectedTotalSupply)
-				})
-			})
+            describe('Transfer', async () => {
 
-			describe('Transfer', async () => {
+                it('should transfer token successfully', async () => {
+                    // Arrange
+                    const expectedBalanceOfNotOwner = 10;
+                    const expectedBalanceOfOwner = 990;
+                    const transferAmount = 10;
 
-				it('should transfer token successfully', async () => {
-					//Arrange
-					const expectedBalanceOfNotOwner = 10;
-					const expectedBalanceOfOwner = 990;
-					const transferAmount = 10;
+                    // Act
+                    await deployedContract.call(fungibleTokenFunctions.APPROVE, [
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-					//Act
-					const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
-						args: `(${notOwnerPublicKeyAsHex}, ${transferAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await approvePromise;
+                    let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
+                        contractAddress: deployedContract.deployInfo.address
+                    });
 
-					const transferFromPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.TRANSFER_FROM, {
-						args: `(${ownerPublicKeyAsHex}, ${notOwnerPublicKeyAsHex}, ${transferAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					})
+                    await contractInstanceFromSecondAccount.call(fungibleTokenFunctions.TRANSFER_FROM, [
+                        ownerPublicKey,
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-					await transferFromPromise;
-					
-					const balanceOfNotOwnerPromise = deployedContract.call(fungibleTokenFunctions.BALANCE_OF, {
-						args: `(${notOwnerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfNotOwnerResult = await balanceOfNotOwnerPromise;
-					
-					const balanceOwnerPromise = deployedContract.call(fungibleTokenFunctions.BALANCE_OF, {
-						args: `(${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfOwnerResult = await balanceOwnerPromise;
+                    const balanceOfNotOwnerResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
+                        notOwnerPublicKey
+                    ]);
 
-					//Assert
-					const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode("int");
-					const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode("int");
+                    const balanceOfOwnerResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
+                        ownerPublicKey
+                    ]);
 
-					assert.equal(decodedBalanceOfNotOwnerResult.value, expectedBalanceOfNotOwner)
-					assert.equal(decodedBalanceOfOwnerResult.value, expectedBalanceOfOwner)
-				})
+                    // Assert
+                    const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode();
+                    const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode();
 
-				it('shouldn`t transfer token without approve', async () => {
-					//Arrange
-					const expectedBalanceOfNotOwner = 0;
-					const expectedBalanceOfOwner = 1000;
-					const transferAmount = 123;
+                    assert.equal(decodedBalanceOfNotOwnerResult, expectedBalanceOfNotOwner)
+                    assert.equal(decodedBalanceOfOwnerResult, expectedBalanceOfOwner)
+                })
 
-					//Act
-					const transferFromPromise = secondClient.contractCall(compiledContract.bytecode, config.abiType, deployedContract.address, fungibleTokenFunctions.TRANSFER_FROM, {
-						args: `(${ownerPublicKeyAsHex}, ${notOwnerPublicKeyAsHex}, ${transferAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					})
+                it('shouldn`t transfer token without approve', async () => {
 
-					await assert.isRejected(transferFromPromise, errorMessages.VALUE_IS_BIGGER_THAN_ALLOWED);
+                    let contractInstanceFromSecondAccount = await secondClient.getContractInstance(contentOfContract, {
+                        contractAddress: deployedContract.deployInfo.address
+                    });
 
-					const balanceOfNotOwnerPromise = deployedContract.call(fungibleTokenFunctions.BALANCE_OF, {
-						args: `(${notOwnerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfNotOwnerResult = await balanceOfNotOwnerPromise;
+                    // Arrange
+                    const expectedBalanceOfNotOwner = 0;
+                    const expectedBalanceOfOwner = 1000;
+                    const transferAmount = 123;
 
-					const balanceOwnerPromise = deployedContract.call(fungibleTokenFunctions.BALANCE_OF, {
-						args: `(${ownerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const balanceOfOwnerResult = await balanceOwnerPromise;
+                    // Act
+                    const transferFromPromise = contractInstanceFromSecondAccount.call(fungibleTokenFunctions.TRANSFER_FROM, [
+                        ownerPublicKey,
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-					//Assert
-					const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode("int");
-					const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode("int");
+                    await assert.isRejected(transferFromPromise, errorMessages.VALUE_IS_BIGGER_THAN_ALLOWED);
 
-					assert.equal(decodedBalanceOfNotOwnerResult.value, expectedBalanceOfNotOwner)
-					assert.equal(decodedBalanceOfOwnerResult.value, expectedBalanceOfOwner)
-				})
-			})
+                    const balanceOfNotOwnerResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
+                        notOwnerPublicKey
+                    ]);
 
-			describe('Transfer', () => {
-				it('should increase allowance successfully', async () => {
-					//Arrange
-					const expectedAllowance = 20;
-					const transferAmount = 10;
+                    const balanceOfOwnerResult = await deployedContract.call(fungibleTokenFunctions.BALANCE_OF, [
+                        ownerPublicKey
+                    ]);
 
-					//Act
-					const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
-						args: `(${notOwnerPublicKeyAsHex}, ${transferAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await approvePromise;
+                    // Assert
+                    const decodedBalanceOfNotOwnerResult = await balanceOfNotOwnerResult.decode();
+                    const decodedBalanceOfOwnerResult = await balanceOfOwnerResult.decode();
 
-					const increaseAllowancePromise = deployedContract.call(fungibleTokenFunctions.INCREASE_ALLOWANCE, {
-						args: `(${notOwnerPublicKeyAsHex}, ${transferAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await increaseAllowancePromise;
+                    assert.equal(decodedBalanceOfNotOwnerResult, expectedBalanceOfNotOwner)
+                    assert.equal(decodedBalanceOfOwnerResult, expectedBalanceOfOwner)
+                })
+            })
 
-					const allowancePromise = deployedContract.call(fungibleTokenFunctions.ALLOWANCE, {
-						args: `(${ownerPublicKeyAsHex}, ${notOwnerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const allowancePromiseResult = await allowancePromise;
+            describe('Transfer', () => {
+                it('should increase allowance successfully', async () => {
+                    // Arrange
+                    const expectedAllowance = 20;
+                    const transferAmount = 10;
 
-					//Assert
-					const allowanceResult = await allowancePromiseResult.decode("int");
+                    // Act
+                    await deployedContract.call(fungibleTokenFunctions.APPROVE, [
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-					assert.equal(allowanceResult.value, expectedAllowance)
-				})
+                    await deployedContract.call(fungibleTokenFunctions.INCREASE_ALLOWANCE, [
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-				it('should deccrease allowance successfully', async () => {
-					//Arrange
-					const expectedAllowance = 9;
-					const transferAmount = 10;
-					const decreaseAmount = 1;
+                    const allowancePromiseResult = await deployedContract.call(fungibleTokenFunctions.ALLOWANCE, [
+                        ownerPublicKey,
+                        notOwnerPublicKey
+                    ]);
 
-					//Act
-					const approvePromise = deployedContract.call(fungibleTokenFunctions.APPROVE, {
-						args: `(${notOwnerPublicKeyAsHex}, ${transferAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await approvePromise;
+                    // Assert
+                    const allowanceResult = await allowancePromiseResult.decode();
 
-					const decreaseAllowancePromise = deployedContract.call(fungibleTokenFunctions.DECREASE_ALLOWANCE, {
-						args: `(${notOwnerPublicKeyAsHex}, ${decreaseAmount})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					await decreaseAllowancePromise;
+                    assert.equal(allowanceResult, expectedAllowance)
+                })
 
-					const allowancePromise = deployedContract.call(fungibleTokenFunctions.ALLOWANCE, {
-						args: `(${ownerPublicKeyAsHex}, ${notOwnerPublicKeyAsHex})`,
-						options: {
-							ttl: config.ttl
-						}
-					});
-					
-					const allowancePromiseResult = await allowancePromise;
+                it('should deccrease allowance successfully', async () => {
+                    // Arrange
+                    const expectedAllowance = 9;
+                    const transferAmount = 10;
+                    const decreaseAmount = 1;
 
-					//Assert
-					const allowanceResult = await allowancePromiseResult.decode("int");
+                    // Act
+                    await deployedContract.call(fungibleTokenFunctions.APPROVE, [
+                        notOwnerPublicKey,
+                        transferAmount
+                    ]);
 
-					assert.equal(allowanceResult.value, expectedAllowance)
-				})
-			})
-		})
-	})
+                    await deployedContract.call(fungibleTokenFunctions.DECREASE_ALLOWANCE, [
+                        notOwnerPublicKey,
+                        decreaseAmount
+                    ]);
+
+                    const allowancePromiseResult = await deployedContract.call(fungibleTokenFunctions.ALLOWANCE, [
+                        ownerPublicKey,
+                        notOwnerPublicKey
+                    ]);
+
+                    // Assert
+                    const allowanceResult = await allowancePromiseResult.decode();
+
+                    assert.equal(allowanceResult, expectedAllowance)
+                })
+            })
+        })
+    })
 })

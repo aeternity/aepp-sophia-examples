@@ -1,124 +1,93 @@
 contract FungiblePausable =
   record state = {
-    _owner            : address, 
-    _totalSupply      : int,
-    _balances         : map(address, int),
-    _allowed          : map((address,address), int),
-    _paused           : bool}
+    owner            : address, 
+    total_supply      : int,
+    map_balances         : map(address, int),
+    map_allowed          : map((address,address), int),
+    paused           : bool}
 
   public stateful function init() = {
-    _owner = Call.caller,
-    _totalSupply = 0,
-    _balances = {},
-    _allowed = {},
-    _paused = false}
+    owner = Call.caller,
+    total_supply = 0,
+    map_balances = {},
+    map_allowed = {},
+    paused = false}
 
-  private function lookupByAddress(k : address, m, v) =
-  	switch(Map.lookup(k, m))
-	    None    => v
-	    Some(x) => x
+  public function paused() : bool =
+    state.paused
 
-  public function paused() : bool = state._paused
+  public function total_supply() : int =
+    state.total_supply
 
-  public function totalSupply() : int = state._totalSupply
+  public function balance_of(who: address) : int =
+    Map.lookup_default(who, state.map_balances, 0)
 
-  public function balanceOf(who: address) : int = lookupByAddress(who, state._balances, 0)
+  public function allowance(owner: address, spender: address) : int =
+    Map.lookup_default((owner, spender), state.map_allowed, 0)
 
-  public function allowance(owner: address, spender: address) : int = 
-    switch(Map.lookup((owner, spender), state._allowed))
-	    None    => 0
-	    Some(x) => x
+  public stateful function transfer(to: address, value: int) =
+    require(!state.paused, "Contract is paused")
+    transfer'(Call.caller, to, value)
 
-  public stateful function transfer(to: address, value: int) : bool =
-    require(!state._paused, "Contract is paused")
-    _transfer(Call.caller, to, value)
-
-  public stateful function approve(spender: address, value: int) : bool = 
-    require(!state._paused, "Contract is paused")
+  public stateful function approve(spender: address, value: int) = 
+    require(!state.paused, "Contract is paused")
     require(value > 0, "Value is sub zero")
     require(spender != #0, "Invalid spender address")
 
-    put(state{_allowed[(Call.caller,spender)] = value})
+    put(state{map_allowed[(Call.caller,spender)] = value})
 
-    true
-
-  private stateful function _transfer(from: address, to: address, value: int) : bool =
+  private stateful function transfer'(from: address, to: address, value: int) =
     require(value > 0, "Value is sub zero")
-    require((value =< balanceOf(from)), "Not enough balance")
+    require((value =< balance_of(from)), "Not enough balance")
     require(to != #0, "Invalid address")
 
     put(state{
-      _balances[from] = sub(state._balances[from], value),
-      _balances[to] = add(state._balances[to], value)})
+      map_balances[from] = state.map_balances[from] - value,
+      map_balances[to] = state.map_balances[to] + value})
 
-    true
+  public stateful function transfer_from(from: address, to: address, value: int) =
+    require(!state.paused, "Contract is paused")
+    require(state.map_allowed[(from, Call.caller)] >= value, "Value is bigger than allowed")
 
-  public stateful function transferFrom(from: address, to: address, value: int) : bool =
-    require(!state._paused, "Contract is paused")
-    require(state._allowed[(from, Call.caller)] >= value, "Value is bigger than allowed")
+    put(state{map_allowed[(from,Call.caller)] = state.map_allowed[(from,Call.caller)] - value})
+    transfer'(from, to, value)
 
-    put(state{_allowed[(from,Call.caller)] = sub(state._allowed[(from,Call.caller)], value)})
-    _transfer(from, to, value)
-
-    true
-
-  public stateful function increaseAllowance(spender: address, addedValue: int) : bool =
-    require(!state._paused, "Contract is paused")
+  public stateful function increase_allowance(spender: address, added_value: int) =
+    require(!state.paused, "Contract is paused")
     require(spender != #0, "Invalid address")
-    put(state{_allowed[(Call.caller, spender)] = add(state._allowed[(Call.caller,spender)], addedValue)})
+    put(state{map_allowed[(Call.caller, spender)] = state.map_allowed[(Call.caller,spender)] + added_value})
 
-    true
-
-  public stateful function decreaseAllowance(spender: address, subtractedValue: int) : bool =
-    require(!state._paused, "Contract is paused")
+  public stateful function decrease_allowance(spender: address, subtracted_value: int) =
+    require(!state.paused, "Contract is paused")
     require(spender != #0, "Invalid address")
-    put(state{_allowed[(Call.caller,spender)] = sub(state._allowed[(Call.caller,spender)], subtractedValue)})
+    put(state{map_allowed[(Call.caller,spender)] = state.map_allowed[(Call.caller,spender)] - subtracted_value})
 
-    true
-
-  public stateful function mint(account: address, value: int) : bool =
-    onlyOwner()
-    require(!state._paused, "Contract is paused")
+  public stateful function mint(account: address, value: int) =
+    only_owner()
+    require(!state.paused, "Contract is paused")
     require(account != #0, "Invalid address")
 
-    put(state{_totalSupply = add(state._totalSupply, value),
-          _balances[account] = add(balanceOf(account), value)})
+    put(state{total_supply = state.total_supply + value,
+          map_balances[account] = balance_of(account) + value})
 
-    true
+  public stateful function burn(value: int) =
+    require(!state.paused, "Contract is paused")
+    require(balance_of(Call.caller) >= value, "Burned amount is less than account balance")
 
-  public stateful function burn(value: int) : bool =
-    require(!state._paused, "Contract is paused")
-    require(balanceOf(Call.caller) >= value, "Burned amount is less than account balance")
+    put(state{total_supply = state.total_supply - value,
+          map_balances[Call.caller] = balance_of(Call.caller) - value})
 
-    put(state{_totalSupply = sub(state._totalSupply, value),
-          _balances[Call.caller] = sub(balanceOf(Call.caller), value)})
+  public stateful function pause() = 
+    only_owner()
+    put(state{paused = true})
 
-    true
+  public stateful function unpause() = 
+    only_owner()
+    put(state{paused = false})
 
-  public stateful function pause() : bool = 
-    onlyOwner()
-    put(state{_paused = true})
+  private function require(expression : bool, error : string) =
+    if(!expression) 
+      abort(error)
 
-    true
-
-  public stateful function unpause() : bool = 
-    onlyOwner()
-    put(state{_paused = false})
-
-    true
-
-  private function add(_a : int, _b : int) : int =
-    let c : int = _a + _b
-    require(c >= _a, "Error")
-    c
-
-  private function sub(_a : int, _b : int) : int =
-    require(_b =< _a, "Error")
-    _a - _b
-
-  private function require(b : bool, err : string) =
-    if(!b) 
-      abort(err)
-
-  private function onlyOwner() =
-      require(Call.caller == state._owner, "Only owner can mint!")
+  private function only_owner() =
+      require(Call.caller == state.owner, "Only owner can mint!")
