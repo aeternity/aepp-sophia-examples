@@ -2,12 +2,12 @@
     "NAME": "name",
 	"SYMBOL": "symbol",
 	"MINT": "mint",
-	"OWNER_OF": "ownerOf",
-    "BALANCE_OF": "balanceOf",
+	"OWNER_OF": "owner_of",
+    "BALANCE_OF": "balance_of",
     "APPROVE": "approve",
     "BURN": "burn",
-	"TRANSFER_FROM": "transferFrom",
-	"SET_APPROVAL_FOR_ALL": "setApprovalForAll",
-	"SET_TOKEN_URI": "setTokenURI",
-	"GET_TOKEN_URI": "getTokenURI"
+	"TRANSFER_FROM": "transfer_from",
+	"SET_APPROVAL_FOR_ALL": "set_approval_for_all",
+	"SET_TOKEN_URI": "set_token_uri",
+	"GET_TOKEN_URI": "get_token_uri"
 }

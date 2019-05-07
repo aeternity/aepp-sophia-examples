@@ -1,121 +1,95 @@
 contract NonFungibleMintableBurnable =
   record state = { 
-    name              : string,
-    symbol            : string,
-    owner             : address,
-    ownedTokensCount  : map(address, int),
-    tokenOwner        : map(int, address),
-    tokenApprovals    : map(int, address),
-    operatorApprovals : map(address, map(address, bool))}
+    name: string,
+    symbol: string,
+    owner: address,
+    map_owned_tokens_count: map(address, int),
+    map_token_owner: map(int, address),
+    map_token_approvals: map(int, address),
+    map_operator_approvals : map(address, map(address, bool))}
 
-  //todo repalce {} with Map.empty
   public stateful function  init(name : string, symbol : string) = {
   	name = name,
   	symbol = symbol,
     owner = Call.caller,
-  	ownedTokensCount = {},
-  	tokenOwner = {},
-  	tokenApprovals = {},
-    operatorApprovals = {}}
+  	map_owned_tokens_count = {},
+  	map_token_owner = {},
+  	map_token_approvals = {},
+    map_operator_approvals = {}}
 
-  public function name() : string = state.name
-  public function symbol() : string = state.symbol
-  public function balanceOf(tokenOwner : address) : int = lookupByAddress(tokenOwner, state.ownedTokensCount, 0)
-  public function ownerOf(tokenId : int) = lookupById(tokenId, state.tokenOwner, #0)
-  public function getApproved(tokenId : int) : address = lookupById(tokenId, state.tokenApprovals, #0)
-  public function isApprovedForAll(owner : address, operator : address) : bool = state.operatorApprovals[owner][operator]
+  public function name() : string = 
+    state.name
 
-  public stateful function mint(tokenId : int, to : address) : bool = 
-    onlyOwner(Call.caller)
-    if(checkTokenExists(tokenId) == true)
-      abort("Token can't be overrided")
+  public function symbol() : string = 
+    state.symbol
 
-    put(state{tokenOwner = state.tokenOwner{[tokenId] = to}})
-    put(state{ownedTokensCount[to] = add(lookupByAddress(to, state.ownedTokensCount, 0), 1)})
-    true
+  public function balance_of(token_owner: address) : int = 
+    Map.lookup_default(token_owner, state.map_owned_tokens_count, 0)
 
-  public stateful function burn(tokenId : int) : bool = 
-    onlyTokenOwner(Call.caller, tokenId) 
-    removeTokenFrom(Call.caller, tokenId)
-    true
+  public function owner_of(token_id: int) =
+    Map.lookup_default(token_id, state.map_token_owner, #0)
 
-  public stateful function approve(tokenId : int, to : address) : bool =
-    let owner : address = ownerOf(tokenId)
+  public function get_approved(token_id: int) : address =
+    Map.lookup_default(token_id, state.map_token_approvals, #0)
+
+  public function is_approved_for_all(owner: address, operator: address) : bool =
+    Map.lookup_default(operator, Map.lookup_default(owner, state.map_operator_approvals, {}), false)
+
+  public stateful function mint(token_id: int, to: address) = 
+    only_owner(Call.caller)
+    require(!check_token_exists(token_id), "Token can't be overrided")
+
+    put(state{map_token_owner = state.map_token_owner{[token_id] = to}})
+    put(state{map_owned_tokens_count[to] = Map.lookup_default(to, state.map_owned_tokens_count, 0) + 1})
+
+  public stateful function burn(token_id: int) = 
+    only_token_owner(Call.caller, token_id) 
+    remove_token_from(Call.caller, token_id)
+
+  public stateful function approve(token_id: int, to: address) =
+    let owner: address = owner_of(token_id)
     
     require(to != Call.caller, "Receiver can't be same as sender")
-    require(Call.caller == owner || isApprovedForAll(owner, Call.caller), "Not owner or not approved")
+    require(Call.caller == owner || is_approved_for_all(owner, Call.caller), "Not owner or not approved")
     
-    put(state{tokenApprovals = state.tokenApprovals{[tokenId] = to}})
+    put(state{map_token_approvals[token_id] = to})
 
-    true
-
-  public stateful function transferFrom(from : address, to : address, tokenId : int) : bool =
-    require(isApprovedOrOwner(Call.caller, tokenId), "Caller isn't approved or owner")
+  public stateful function transfer_from(from: address, to: address, token_id: int) =
+    require(is_approved_or_owner(Call.caller, token_id), "Not owner or not approved")
     
-    clearApproval(from, tokenId)
-    removeTokenFrom(from, tokenId)
-    addTokenTo(to, tokenId)
+    clear_approval(from, token_id)
+    remove_token_from(from, token_id)
+    add_token_to(to, token_id)
 
-    true
-
-  public stateful function setApprovalForAll(to : address, approved : bool) : bool =
-    ensureAllowed(Call.caller)
-    put(state{operatorApprovals[Call.caller][to] = approved})
-    true
+  public stateful function set_approval_for_all(to: address, approved: bool) =
+    put(state{map_operator_approvals[Call.caller = {}][to] = approved})
   
-  private function checkTokenExists(tokenId : int) : bool =
-    switch(Map.lookup(tokenId, state.tokenOwner))
-      None    => false
+  private function check_token_exists(token_id: int) : bool =
+    switch(Map.lookup(token_id, state.map_token_owner))
+      None => false
       Some(x) => true
 
-  private function ensureAllowed(key : address) =
-    switch(Map.lookup(key, state.operatorApprovals))
-      None => put(state{operatorApprovals[key] = {}})
-      Some(_) => ()
+  private stateful function add_token_to(to: address, token_id: int) = 
+    put(state{map_token_owner = state.map_token_owner{[token_id] = to}})
+    put(state{map_owned_tokens_count[to] = Map.lookup_default(to, state.map_owned_tokens_count, 0) + 1})
 
-  private stateful function addTokenTo(to : address, tokenId : int) = 
-    put(state{tokenOwner = state.tokenOwner{[tokenId] = to}})
-    put(state{ownedTokensCount[to] = add(lookupByAddress(to, state.ownedTokensCount, 0), 1)})
+  private stateful function remove_token_from(from: address, token_id: int) =
+    put(state{map_token_owner = state.map_token_owner{[token_id] = #0}})
+    put(state{map_owned_tokens_count[from] = Map.lookup_default(from, state.map_owned_tokens_count, 0) - 1})
 
-  private stateful function removeTokenFrom(from : address, tokenId : int) =
-    put(state{tokenOwner = state.tokenOwner{[tokenId] = #0}})
-    put(state{ownedTokensCount[from] = sub(lookupByAddress(from, state.ownedTokensCount, 0), 1)})
+  private stateful function clear_approval(from: address, token_id: int) = 
+    put(state{map_token_approvals = state.map_token_approvals{[token_id] = #0}})
 
-  private stateful function clearApproval(from : address, tokenId : int) : bool = 
-    put(state{tokenApprovals = state.tokenApprovals{[tokenId] = #0}})
-    true
+  private function require(expression: bool, error: string) =
+    if(!expression) 
+      abort(error)
 
-  private function lookupByAddress(k : address, m, v) =
-  	switch(Map.lookup(k, m))
-	    None    => v
-	    Some(x) => x
+  private function only_owner(owner: address) =
+    require(owner == state.owner, "Only owner can mint!")
 
-  private function lookupById(k : int, m, v) =
-  	switch(Map.lookup(k, m))
-	    None    => v
-	    Some(x) => x
+  private function only_token_owner(owner: address, token_id: int) =
+    require(owner == Map.lookup_default(token_id, state.map_token_owner, #0), "Only token owner can transfer!")
 
-  private function add(_a : int, _b : int) : int =
-    let c : int = _a + _b
-    require(c >= _a, "Error")
-    c
-
-  private function sub(_a : int, _b : int) : int =
-    require(_b =< _a, "Error")
-    _a - _b
-
-  private function require(b : bool, err : string) =
-    if(!b) 
-      abort(err)
-
-  private function onlyOwner(owner : address) =
-    if(owner != state.owner) 
-      abort("Only owner can mint!")
-
-  private function onlyTokenOwner(owner : address, tokenId : int) =
-    if(owner != lookupById(tokenId, state.tokenOwner, #0)) 
-      abort("Only token owner can transfer!")
-
-  private function isApprovedOrOwner(spender : address, tokenId : int) : bool = 
-    let owner : address = ownerOf(tokenId)
-    getApproved(tokenId) == spender || owner == spender || isApprovedForAll(owner, spender)
+  private function is_approved_or_owner(spender: address, token_id: int) : bool = 
+    let owner : address = owner_of(token_id)
+    get_approved(token_id) == spender || owner == spender || is_approved_for_all(owner, spender) 

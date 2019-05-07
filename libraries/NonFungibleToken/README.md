@@ -10,13 +10,13 @@ In addition, the smart contract keeps track of important statistical data - who 
 ## Methods description
 - `name()` - name of the token contract
 - `symbol()` - symbol of the token contract
-- `balanceOf(tokenOwner : address)` - returns how many tokens are owned by the inputted address
-- `ownerOf(tokenId : token_id)` - Returns the address of the owner of token with the supplied id
-- `getApproved(tokenId : token_id)` - Returns the address of an user that has been given the rights to transfer the token with this token_id on the behalf of the token owner
-- `isApprovedForAll(_owner: address, operator : address)` - Returns true of the certain _owner user has approved certain operator address to transact on its behalf with any token.
-- `getTokenURI(tokenId : token_id)` - Returns the metadata for a token identified by this tokenId
-- `mint(tokenId : token_id, to : address)` - Creates a new token unit with the given ID and assigns its owner to be the address identified by the `to` parameter. Callable only by the contract owner.
-- `burn(tokenId : token_id)` - Destroys this token. Callable only by the token owner.
-- `approve(tokenId : int, to : address)` - Allows a certain address `to` to represent you for your token identified by `tokenId`. Callable by the tokenOwner only
-- `transferFrom(from : address, to : address, tokenId : token_id)` - Allows for an approved representor (trough the use of `approve`) to transfer a token identified by tokenId from its owner to an address identified by `to
-- `setApprovalForAll(to : address, approved : bool)` - Allows an address identified by `to` to transact with all your tokens
+- `balance_of(token_owner : address)` - returns how many tokens are owned by the inputted address
+- `owner_of(token_id' : token_id)` - Returns the address of the owner of token with the supplied id
+- `get_approved(token_id' : token_id)` - Returns the address of an user that has been given the rights to transfer the token with this token_id on the behalf of the token owner
+- `is_approved_for_all(owner: address, operator : address)` - Returns true of the certain _owner user has approved certain operator address to transact on its behalf with any token.
+- `get_token_uri(token_id' : token_id)` - Returns the metadata for a token identified by this tokenId
+- `mint(token_id' : token_id, to : address)` - Creates a new token unit with the given ID and assigns its owner to be the address identified by the `to` parameter. Callable only by the contract owner.
+- `burn(token_id' : token_id)` - Destroys this token. Callable only by the token owner.
+- `approve(token_id' : int, to : address)` - Allows a certain address `to` to represent you for your token identified by `token_id'`. Callable by the tokenOwner only
+- `transfer_from(from : address, to : address, token_id' : token_id)` - Allows for an approved representor (trough the use of `approve`) to transfer a token identified by token_id' from its owner to an address identified by `to
+- `set_approval_for_all(to : address, approved : bool)` - Allows an address identified by `to` to transact with all your tokens
