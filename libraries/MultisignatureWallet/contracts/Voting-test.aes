@@ -9,7 +9,8 @@ contract Voting =
         put(state{votes = state.votes + 1})
         true
 
-    public function revoke() : bool = false
+    public function revoke() : bool = 
+        false
     
     public function result() : int =
         state.votes

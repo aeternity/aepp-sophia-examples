@@ -1,9 +1,9 @@
-const { spawn } = require('promisify-child-process');
 const fs = require('fs');
 const path = require('path');
-const Crypto = require('@aeternity/aepp-sdk').Crypto;
-const toBytes = require('@aeternity/aepp-sdk/es/utils/bytes').toBytes;
-const DEFAULT_MAX_GAS = 900000000000001;
+
+const NETWORK_ID = 'ae_devnet';
+const ABI = 'sophia';
+const COMPILER_HTTP_ADDRESS = 'https://compiler.aepps.com';
 
 const readFile = (path, encoding = null, errTitle = 'READ FILE ERR') => {
 	try {
@@ -43,33 +43,16 @@ const trimAddresses = (addressToTrim) => {
 	return addressToTrim.substring(3)
 }
 
-// contract source should be => const contractSource = fs.readFileSync('./path/to/contract.aes', 'utf8');
-const getDeployedContractInstance = async function (Universal, clientConfig, contractSource, initState) {
-	client = await Universal({
-		url: clientConfig.host,
-		internalUrl: clientConfig.internalHost,
-		keypair: clientConfig.ownerKeyPair,
-		nativeMode: true,
-		networkId: "ae_devnet"
-	});
+const getDeployedContractInstance = async function (Universal, clientConfig, contractSource, initState = []) {
 
-	compiledContract = await client.contractCompile(contractSource, {
-		gas: clientConfig.gas
-	});
+	client = await getAEClient(Universal, clientConfig, clientConfig.ownerKeyPair);
 
-	let deployOptions = {
-		options: {
-			ttl: clientConfig.ttl,
-			//gas: clientConfig.gas
-		},
-		abi: "sophia"
-	}
+	let compiledContract = await client.contractCompile(contractSource);
 
-	if (initState) {
-		deployOptions.initState = initState;
-	}
 
-	deployedContract = await compiledContract.deploy(deployOptions);
+	let contractObject = await client.getContractInstance(contractSource);
+	await contractObject.compile();
+	deployedContract = await contractObject.deploy(initState);
 
 	let result = {
 		deployedContract,
@@ -79,70 +62,48 @@ const getDeployedContractInstance = async function (Universal, clientConfig, con
 	return result;
 };
 
-// args that you pass, should be something like this => `("${INIT_CONTRACT_NAME}", ${INIT_AGE})`
-const executeSmartContractFunction = async function (deployedContract, functionName, args, amount = 0, ttl = 345345, gas = DEFAULT_MAX_GAS) {
-	let configuration = {
-		options: {
-			ttl: ttl,
-			gas: gas,
-			amount: amount
-		},
-		abi: "sophia",
-		gas: DEFAULT_MAX_GAS
-	};
+// const executeSmartContractFunction = async function (deployedContract, functionName, args = [], options = {}) {
 
-	if (args) {
-		configuration.args = args
-	}
+// 	let result = await deployedContract.call(functionName, args, options);
+// 	return result;
+// }
 
-	let result = await deployedContract.call(functionName, configuration);
+// const executeSmartContractFunctionFromAnotherClient = async function (clientConfiguration, functionName, args, amount = 0, ttl = 345345) {
 
-	return result
-}
+// 	let configuration = {
+// 		options: {
+// 			ttl: ttl,
+// 			amount: amount
+// 		},
+// 		abi: ABI,
+// 	};
 
-const executeSmartContractFunctionFromAnotherClient = async function (clientConfiguration, functionName, args, amount = 0, ttl = 345345, gas = DEFAULT_MAX_GAS) {
+// 	if (args) {
+// 		configuration.args = args
+// 	}
 
-	let configuration = {
-		options: {
-			ttl: ttl,
-			gas: gas,
-			amount: amount
-		},
-		abi: "sophia",
-	};
+// 	let result = await clientConfiguration.client.contractCall(clientConfiguration.byteCode, 'sophia', clientConfiguration.contractAddress, functionName, configuration);
 
-	if (args) {
-		configuration.args = args
-	}
+// 	return result;
+// }
 
-	let result = await clientConfiguration.client.contractCall(clientConfiguration.byteCode, 'sophia', clientConfiguration.contractAddress, functionName, configuration);
-
-	return result;
-}
-
-const getAEClient = async function (Ae, clientConfig, keyPair) {
-	let client = await Ae({
+const getClient = async function (Universal, clientConfig, keyPair) {
+	let client = await Universal({
 		url: clientConfig.host,
 		internalUrl: clientConfig.internalHost,
 		keypair: keyPair,
 		nativeMode: true,
-		networkId: "ae_devnet"
+		networkId: NETWORK_ID,
+		compilerUrl: COMPILER_HTTP_ADDRESS
 	});
 
 	return client;
 }
 
-function publicKeyToHex(publicKey) {
-	let byteArray = Crypto.decodeBase58Check(publicKey.split('_')[1]);
-	let asHex = '0x' + byteArray.toString('hex');
+function publicKeyToHex(crypto, publicKey) {
+	let byteArray = crypto.decodeBase58Check(publicKey.split('_')[1]);
+	let asHex = '#' + byteArray.toString('hex');
 	return asHex;
-}
-
-function decodedHexAddressToPublicAddress(hexAddress) {
-
-	const publicKey = Crypto.aeEncodeKey(toBytes(hexAddress, true));
-
-	return publicKey;
 }
 
 const execute = async (cli, command, args, options = {}) => {
@@ -167,11 +128,10 @@ module.exports = {
 	writeFileRelative,
 	fileExists,
 	trimAddresses,
-	getDeployedContractInstance,
-	executeSmartContractFunction,
+	//getDeployedContractInstance,
+	// executeSmartContractFunction,
 	publicKeyToHex,
-	getAEClient,
-	executeSmartContractFunctionFromAnotherClient,
-	decodedHexAddressToPublicAddress,
+	getClient,
+	// executeSmartContractFunctionFromAnotherClient,
 	execute
 }
