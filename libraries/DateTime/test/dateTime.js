@@ -2,7 +2,7 @@ const Deployer = require('forgae-lib').Deployer
 const dateContract = "./contracts/DateTime.aes"
 
 
-describe.only('DateTime', () => {
+describe('DateTime', () => {
   let deployedContract
   let deployer
 
