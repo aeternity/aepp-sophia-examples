@@ -1,395 +1,342 @@
-const Ae = require('@aeternity/aepp-sdk').Universal
+const Deployer = require('forgae-lib').Deployer
+const testContract = "./contracts/DateTime.aes"
 
-const config = {
-  host: 'http://localhost:3001/',
-  internalHost: 'http://localhost:3001/internal/',
-  gas: 200000,
-  ttl: 55
-}
-let contractSource = utils.readFileRelative('./contracts/DateTime.aes', 'utf-8')
-
-async function callContract (contract, function_name, timestamp) {
-  const result = await contract.call(function_name, {
-    args: `(${timestamp})`,
-    options: { ttl: config.ttl },
-    abi: 'sophia'
-  })
-  return result
-}
-
-async function processArray (array, function_name) {
-  let data = []
-  for (const item of array) {
-    data.push(await function_name(item, item.timestamp))
-  }
-  return data.map(el => el.value)
-}
 
 describe('DateTime', () => {
-  let owner = null
   let deployedContract
-  let compiledContract
+  let deployer
+
+  let year = 2012
+  let month = 6
+  let day = 8
+  let hour = 11
+  let minute = 58
+  let second = 59
+  const starting_timestamp = 1339156739 //2012-06-08T11:58:59
 
   before(async () => {
     const ownerKeyPair = wallets[0]
-    owner = await Ae({
-      url: config.host,
-      internalUrl: config.internalHost,
-      keypair: ownerKeyPair,
-      nativeMode: true,
-      networkId: 'ae_devnet'
-    })
 
-    compiledContract = await owner.contractCompile(contractSource, {})
-    deployedContract = compiledContract.deploy({
-      options: {
-        ttl: config.ttl
-      },
-      abi: 'sophia'
-    })
-    assert.isFulfilled(
-      deployedContract,
-      'Could not deploy the ExampleContract Smart Contract'
-    )
+    deployer = new Deployer('local', ownerKeyPair.secretKey)
+    deployedContract = deployer.deploy(testContract)
+
+    assert.isFulfilled(deployedContract, 'Could not deploy the ExampleContract Smart Contract')
     deployedContract = await deployedContract
   })
 
-  describe('Interaction with contract', () => {
-    describe('Convert timestamp', () => {
-      it('should convert timestamp to record', async () => {
-        const year = 2016
-        const month = 3
-        const day = 7
-        const hour = 8
-        const minute = 58
-        const second = 47
-        const weekday = 1
-        const timestamp = 1457341127
+  it('should get correct year', async () => {
+    let expected_year = 2012
+    let result = await deployedContract.get_year(starting_timestamp)
 
-        const callWithdraw = await callContract(
-          deployedContract,
-          'parse_timestamp',
-          timestamp
-        )
+    assert.equal(expected_year, result)
+  })
 
-        const result = await callWithdraw.decode(
-          '(int, int, int, int, int, int, int, int, int, int)'
-        )
-        const decodedWithdraw = result.value.map(item => item.value)
-        assert.deepEqual(decodedWithdraw.slice(0, -2), [
-          year,
-          month,
-          day,
-          hour,
-          minute,
-          second,
-          weekday,
-          timestamp
-        ])
-      })
-    })
+  it('should get correct month', async () => {
+    let expected_month = 6
+    let result = await deployedContract.get_month(starting_timestamp)
 
-    describe('Get functions', async () => {
-      let date = new Date(1988, 5, 5, 2, 31, 4)
-      let timestamp = date.getTime()
+    assert.equal(expected_month, result)
+  })
 
-      const year = date.getUTCFullYear()
-      const month = date.getUTCMonth() + 1
-      const day = date.getUTCDate()
-      const hour = date.getUTCHours()
-      const minute = date.getUTCMinutes()
-      const second = date.getUTCSeconds()
-      timestamp = parseInt(timestamp / 1000)
+  it('should get correct day', async () => {
+    let expected_day = 8
+    let result = await deployedContract.get_day(starting_timestamp)
 
-      it('should get year', async () => {
-        const result = await callContract(
-          deployedContract,
-          'get_year',
-          timestamp
-        )
-        const callWithdrawYear = await result.decode('int')
+    assert.equal(expected_day, result)
+  })
 
-        assert.equal(callWithdrawYear.value, year)
-      })
-      it('should get month', async () => {
-        const result = await callContract(
-          deployedContract,
-          'get_month',
-          timestamp
-        )
-        const callWithdrawMonth = await result.decode('int')
+  it('should get correct hour', async () => {
+    let expected_hour = 11
+    let result = await deployedContract.get_hour(starting_timestamp)
 
-        assert.equal(callWithdrawMonth.value, month)
-      })
-      it('should get day', async () => {
-        const result = await callContract(
-          deployedContract,
-          'get_day',
-          timestamp
-        )
+    assert.equal(expected_hour, result)
+  })
 
-        const callWithdrawDay = await result.decode('int')
+  it('should get correct minute', async () => {
+    let expected_minute = 58
+    let result = await deployedContract.get_minute(starting_timestamp)
 
-        assert.equal(callWithdrawDay.value, day)
-      })
-      it('should get hour', async () => {
-        const result = await callContract(
-          deployedContract,
-          'get_hour',
-          timestamp
-        )
-        const callWithdrawHour = await result.decode('int')
+    assert.equal(expected_minute, result)
+  })
 
-        assert.equal(callWithdrawHour.value, hour)
-      })
-      it('should get minute', async () => {
-        const result = await callContract(
-          deployedContract,
-          'get_minute',
-          timestamp
-        )
+  it('should get correct second', async () => {
+    let expected_second = 59
+    let result = await deployedContract.get_second(starting_timestamp)
 
-        const callWithdrawMinute = await result.decode('int')
+    assert.equal(expected_second, result)
+  })
 
-        assert.equal(callWithdrawMinute.value, minute)
-      })
-      it('should get second', async () => {
-        const result = await callContract(
-          deployedContract,
-          'get_second',
-          timestamp
-        )
-        const callWithdrawSecond = await result.decode('int')
+  it('should get correct weekday', async () => {
+    let expected_weekday = 5
+    let result = await deployedContract.get_weekday(starting_timestamp)
 
-        assert.equal(callWithdrawSecond.value, second)
-      })
-    })
+    assert.equal(expected_weekday, result)
+  })
 
-    describe('Get functions with multiple data', () => {
-      const array = [
-        {
-          year: 1974,
-          month: 1,
-          day: 1,
-          hour: 22,
-          minute: 45,
-          second: 35,
-          weekday: 2,
-          timestamp: 126312335
-        },
-        {
-          year: 1982,
-          month: 3,
-          day: 22,
-          hour: 5,
-          minute: 56,
-          second: 44,
-          weekday: 1,
-          timestamp: 385624604
-        },
-        {
-          year: 1988,
-          month: 3,
-          day: 6,
-          hour: 9,
-          minute: 10,
-          second: 6,
-          weekday: 0,
-          timestamp: 573642606
-        },
-        {
-          year: 2004,
-          month: 7,
-          day: 14,
-          hour: 10,
-          minute: 33,
-          second: 45,
-          weekday: 3,
-          timestamp: 1089801225
-        },
-        {
-          year: 2018,
-          month: 11,
-          day: 24,
-          hour: 7,
-          minute: 5,
-          second: 4,
-          weekday: 6,
-          timestamp: 1543043104
-        },
-        {
-          year: 2025,
-          month: 12,
-          day: 18,
-          hour: 0,
-          minute: 50,
-          second: 34,
-          weekday: 4,
-          timestamp: 1766019034
-        },
-        {
-          year: 2032,
-          month: 6,
-          day: 30,
-          hour: 14,
-          minute: 29,
-          second: 59,
-          weekday: 3,
-          timestamp: 1972218599
-        }
-      ]
+  it('should convert date to timestamp', async () => {
+    const result = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
 
-      it('should get year', async () => {
-        async function withdrawYear (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_year',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedYears = await processArray(array, withdrawYear)
-        const mockupYears = array.map(item => item.year)
-        assert.deepEqual(decodedYears, mockupYears)
-      })
+    assert.equal(starting_timestamp, result)
+  })
 
-      it('should get month', async () => {
-        async function withdrawMonth (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_month',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedMonths = await processArray(array, withdrawMonth)
-        const mockupMonths = array.map(item => item.month)
-        assert.deepEqual(decodedMonths, mockupMonths)
-      })
+  it('check if the given year is leap', async () => {
+    const leap = 2020
+    const not_leap = 2019
+    const is_leap = await deployedContract.check_leap_year(leap)
+    const is_not_leap = await deployedContract.check_leap_year(not_leap)
 
-      it('should get day', async () => {
-        async function withdrawDay (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_day',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedDays = await processArray(array, withdrawDay)
-        const mockupDays = array.map(item => item.day)
-        assert.deepEqual(decodedDays, mockupDays)
-      })
+    assert.equal(1, is_leap)
+    assert.equal(0, is_not_leap)
+  })
 
-      it('should get hour', async () => {
-        async function withdrawHour (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_hour',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedHours = await processArray(array, withdrawHour)
-        const mockupHours = array.map(item => item.hour)
+  it('should add more years to current timestamp', async () => {
+    let added_years = 20
+    let result = await deployedContract.add_years(starting_timestamp, 20)
+    let actual_year = await deployedContract.get_year(result)
+    let expected_year = year + added_years
 
-        assert.deepEqual(decodedHours, mockupHours)
-      })
+    assert.equal(expected_year, actual_year)
+  })
 
-      it('should get minute', async () => {
-        async function withdrawMinute (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_minute',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedMinutes = await processArray(array, withdrawMinute)
-        const mockupMinutes = array.map(item => item.minute)
+  it('should substract years from current timestamp', async () => {
+    let year = 1992
 
-        assert.deepEqual(decodedMinutes, mockupMinutes)
-      })
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second) //1992-06-08T11:58:59
+    let result = await deployedContract.sub_years(starting_timestamp, 20)
 
-      it('should get second', async () => {
-        async function withdrawSecond (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_second',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedSeconds = await processArray(array, withdrawSecond)
-        const mockupSeconds = array.map(item => item.second)
+    assert.equal(timestamp_to_match, result)
+  })
 
-        assert.deepEqual(decodedSeconds, mockupSeconds)
-      })
+  it('should add more months to current timestamp', async () => {
+    let year = 2017
 
-      it('should get weekday', async () => {
-        async function withdrawWeekday (item, timestamp) {
-          const result = await callContract(
-            deployedContract,
-            'get_weekday',
-            timestamp
-          )
-          const decoded = await result.decode('int')
-          return decoded
-        }
-        const decodedWeekdays = await processArray(array, withdrawWeekday)
-        const mockupWeekdays = array.map(item => item.weekday)
+    let result = await deployedContract.add_months(starting_timestamp, 60)
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
 
-        assert.deepEqual(decodedWeekdays, mockupWeekdays)
-      })
-    })
+    assert.equal(timestamp_to_match, result)
+  })
 
-    describe('To timestamp conversion', () => {
-      it('should convert hardcoded date to_timestamp', async () => {
-        const year = 2006
-        const month = 7
-        const day = 4
-        const hour = 9
-        const minute = 43
-        const second = 7
-        const timestamp = 1152006187
+  it('should substract months from current timestamp', async () => {
+    let year = 2007
 
-        const result = await deployedContract.call('to_timestamp', {
-          args: `(${year}, ${month}, ${day}, ${hour}, ${minute}, ${second})`,
-          options: { ttl: config.ttl },
-          abi: 'sophia'
-        })
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.sub_months(starting_timestamp, 60)
 
-        const decoded = await result.decode('int')
-        assert.equal(decoded.value, timestamp)
-      })
+    assert.equal(timestamp_to_match, result)
+  })
 
-      it('should convert date to_timestamp', async () => {
-        let date = new Date(2016, 1, 29, 10, 45, 32)
-        let timestamp = date.getTime()
-        const year = date.getUTCFullYear()
-        const month = date.getUTCMonth() + 1
-        const day = date.getUTCDate()
-        const hour = date.getUTCHours()
-        const minute = date.getUTCMinutes()
-        const second = date.getUTCSeconds()
+  it('should add more days to current timestamp', async () => {
+    let year = 2025
+    const DAY_DIFF = 4748
 
-        timestamp = parseInt(timestamp / 1000)
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.add_days(starting_timestamp, DAY_DIFF)
 
-        const result = await deployedContract.call('to_timestamp', {
-          args: `(${year}, ${month}, ${day}, ${hour}, ${minute}, ${second})`,
-          options: { ttl: config.ttl },
-          abi: 'sophia'
-        })
+    assert.equal(timestamp_to_match, result)
 
-        const decoded = await result.decode('int')
-        assert.equal(decoded.value, timestamp)
-      })
-    })
+  })
+
+  it('should substract days from timestamp', async () => {
+    let year = 1985
+    const DAY_DIFF = 9862
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.sub_days(starting_timestamp, DAY_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should add hours to given timestamp', async () => {
+    let year = 2021
+    const HOUR_DIFF = 78888
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.add_hours(starting_timestamp, HOUR_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should substract hours from given timestamp', async () => {
+    let year = 1985
+    const HOUR_DIFF = 236688
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.sub_hours(starting_timestamp, HOUR_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should add more minutes to current timestamp', async () => {
+    let year = 2021
+    const MIN_DIFF = 4733280
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.add_minutes(starting_timestamp, MIN_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should substract minutes from given timestamp', async () => {
+    let year = 1985
+    const MIN_DIFF = 14201280
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.sub_minutes(starting_timestamp, MIN_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should add more seconds to current timestamp', async () => {
+    let year = 2021
+    const SEC_DIFF = 283996800
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.add_seconds(starting_timestamp, SEC_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should substract seconds from given timestamp', async () => {
+    let year = 1985
+    const SEC_DIFF = 852076800
+
+    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    let result = await deployedContract.sub_seconds(starting_timestamp, SEC_DIFF)
+
+    assert.equal(timestamp_to_match, result)
+  })
+
+  it('should check difference in years between two timestamps', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let YEAR_DIFF = 27
+
+    let result = await deployedContract.diff_years(timestamp_1985, timestamp_2016)
+
+    assert.equal(YEAR_DIFF, result)
+  })
+
+  it('[NEGATIVE] should revert if method diff_years is called incorrectly', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_years(timestamp_2016, timestamp_1985))
+  })
+
+  it('should check difference in months between two timestamps', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let MONTH_DIFF = 324
+
+    let result = await deployedContract.diff_months(timestamp_1985, timestamp_2016)
+
+    assert.equal(MONTH_DIFF, result)
+  })
+
+  it('[NEGATIVE] should revert if method diff_months is called incorrectly', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_months(timestamp_2016, timestamp_1985))
+  })
+
+  it('should check difference in days between two timestamps', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let DAY_DIFF = 9862
+
+    let result = await deployedContract.diff_days(timestamp_1985, timestamp_2016)
+
+    assert.equal(DAY_DIFF, result)
+  })
+
+  it('[NEGATIVE] should revert if method diff_days is called incorrectly', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_days(timestamp_2016, timestamp_1985))
+  })
+
+  it('should check difference in hours between two timestamps', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let HOUR_DIFF = 236688
+
+    let result = await deployedContract.diff_hours(timestamp_1985, timestamp_2016)
+
+    assert.equal(HOUR_DIFF, result)
+  })
+
+  it('[NEGATIVE] should revert if method diff_hours is called incorrectly', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_hours(timestamp_2016, timestamp_1985))
+  })
+
+  it('should check difference in minutes between two timestamps', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let MIN_DIFF = 14201280
+
+    let result = await deployedContract.diff_minutes(timestamp_1985, timestamp_2016)
+
+    assert.equal(MIN_DIFF, result)
+  })
+
+  it('[NEGATIVE] should revert if method diff_minutes is called incorrectly', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_minutes(timestamp_2016, timestamp_1985))
+  })
+
+  it('should check difference in seconds between two timestamps', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let SEC_DIFF = 852076800
+
+    let result = await deployedContract.diff_seconds(timestamp_1985, timestamp_2016)
+
+    assert.equal(SEC_DIFF, result)
+  })
+
+  it('[NEGATIVE] should revert if method diff_seconds is called incorrectly', async () => {
+    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
+    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_seconds(timestamp_2016, timestamp_1985))
+  })
+
+  it('should check if date is valid', async () => {
+    let valid = await deployedContract.is_valid_date(1985, 6, 7)
+    let invalid = await deployedContract.is_valid_date(1969, 14, 32)
+
+    assert.equal(1, valid)
+    assert.equal(0, invalid)
+  })
+
+  it('should check if date time is valid', async () => {
+    let valid = await deployedContract.is_valid_date_time(1985, 6, 7, 9, 44, 44)
+    let invalid = await deployedContract.is_valid_date_time(1985, 6, 7, 73, 44, 44)
+
+    assert.equal(1, valid)
+    assert.equal(0, invalid)
+  })
+
+  it('should check if the timestamp is a week day', async () => {
+    let valid = await deployedContract.is_week_day(479033927) //Thursday
+    let invalid = await deployedContract.is_week_day(1559995932) //Saturday
+
+    assert.equal(1, valid)
+    assert.equal(0, invalid)
+  })
+
+  it('should check if the timestamp is a weekend', async () => {
+    let valid = await deployedContract.is_week_end(1559995932) // Saturday
+    let invalid = await deployedContract.is_week_end(479033927) // Thursday
+
+    assert.equal(1, valid)
+    assert.equal(0, invalid)
   })
 })
