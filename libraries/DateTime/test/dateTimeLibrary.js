@@ -1,8 +1,8 @@
 const Deployer = require('forgae-lib').Deployer
-const dateContract = "./contracts/DateTime.aes"
+const someContract = "./contracts/DateTimeLibrary.aes"
 
 
-describe.only('DateTime', () => {
+describe('DateTime Library', () => {
   let deployedContract
   let deployer
 
@@ -12,35 +12,22 @@ describe.only('DateTime', () => {
   let hour = 11
   let minute = 58
   let second = 59
-  let weekday = 5
   const starting_timestamp = 1339156739 //2012-06-08T11:58:59
 
   before(async () => {
     const ownerKeyPair = wallets[0]
 
     deployer = new Deployer('local', ownerKeyPair.secretKey)
-    deployedContract = deployer.deploy(dateContract)
+    deployedContract = deployer.deploy(someContract)
 
     assert.isFulfilled(deployedContract, 'Could not deploy the ExampleContract Smart Contract')
     deployedContract = await deployedContract
   })
 
-  it('should parse timestamp', async () => {
-    let result = await deployedContract.parse_timestamp(starting_timestamp)
-    
-    assert.equal(result[0].value, year)
-    assert.equal(result[1].value, month)
-    assert.equal(result[2].value, day)
-    assert.equal(result[3].value, hour)
-    assert.equal(result[4].value, minute)
-    assert.equal(result[5].value, second)
-    assert.equal(result[6].value, weekday)
-  })
-
   it('should get correct year', async () => {
     let expected_year = 2012
     let result = await deployedContract.get_year(starting_timestamp)
-
+    
     assert.equal(expected_year, result)
   })
 
@@ -121,9 +108,9 @@ describe.only('DateTime', () => {
   })
 
   it('should add more months to current timestamp', async () => {
-    let year = 2017
+    let year = 2342
 
-    let result = await deployedContract.add_months(starting_timestamp, 60)
+    let result = await deployedContract.add_months(starting_timestamp, 3960)
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
 
     assert.equal(timestamp_to_match, result)
@@ -160,8 +147,8 @@ describe.only('DateTime', () => {
   })
 
   it('should add hours to given timestamp', async () => {
-    let year = 2021
-    const HOUR_DIFF = 78888
+    let year = 2354
+    const HOUR_DIFF = 2997888
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
     let result = await deployedContract.add_hours(starting_timestamp, HOUR_DIFF)
