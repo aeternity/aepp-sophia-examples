@@ -345,25 +345,21 @@ contract DateTime =
 
   public function diff_days(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    // let l_constants = get_units_of_measure()
     let days : int = (to_timestamp - from_timestamp) / state.day_in_seconds
     days
 
   public function diff_hours(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    // let l_constants = get_units_of_measure()
     let hours : int = (to_timestamp - from_timestamp) / state.hour_in_seconds
     hours
 
   public function diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    // let l_constants = get_units_of_measure()
     let minutes : int = (to_timestamp - from_timestamp) / state.minute_in_seconds
     minutes
 
   public function diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    // let l_constants = get_units_of_measure()
     let seconds : int = to_timestamp - from_timestamp
     seconds
 
