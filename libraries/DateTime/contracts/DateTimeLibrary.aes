@@ -161,13 +161,13 @@ namespace Date =
   public function add_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)
     let dt : date_time = dt { year = dt.year + years }
-    let new_tampstamp = calculate_years(timestamp, dt)
+    let new_tampstamp = calculate_years_in_seconds(timestamp, dt)
     new_tampstamp
 
   public function sub_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)
     let dt : date_time = dt { year = dt.year - years }
-    let new_tampstamp = calculate_years(timestamp, dt)
+    let new_tampstamp = calculate_years_in_seconds(timestamp, dt)
     new_tampstamp
 
   public function add_months(timestamp : int, months: int) : int =
@@ -273,7 +273,7 @@ namespace Date =
       timestamp = timestamp
       }
 
-  private function calculate_years(timestamp : int, dt : date_time) : int =
+  private function calculate_years_in_seconds(timestamp : int, dt : date_time) : int =
     let constants : date_time_constants = get_units_of_measure()
     let days : int = days_from_date(dt.year, dt.month, dt.day)
     (days * constants.day_in_seconds) + timestamp mod constants.day_in_seconds
