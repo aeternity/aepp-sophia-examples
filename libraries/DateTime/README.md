@@ -81,11 +81,11 @@ Result:
 ```
 
 # DateTime as library
-1. Implement it as a namespace at the top-level of your smart contract as it is in `DateTimeLibrary.aes`
+1. Implement it as a namespace at the top-level of your smart contract as it is in `ExampleContract.aes`
 2. You should now be able to access all public functionalities of the library
 ```
-namespace Date = ...
-contract SomeContract =
+include "DateTimeLibrary.aes"
+contract ExampleContract =
   public function main(timestamp : int, months : int) : int = 
     let new_tampstamp = Date.add_months(timestamp, months)
     new_tampstamp

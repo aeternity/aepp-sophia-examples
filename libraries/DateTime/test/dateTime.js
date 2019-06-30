@@ -20,7 +20,9 @@ describe('DateTime', () => {
 
     deployer = new Deployer('local', ownerKeyPair.secretKey)
     deployedContract = deployer.deploy(dateContract)
+  })
 
+  it('should deploy the contract', async () => {
     assert.isFulfilled(deployedContract, 'Could not deploy the ExampleContract Smart Contract')
     deployedContract = await deployedContract
   })
@@ -112,7 +114,7 @@ describe('DateTime', () => {
   })
 
   it('should substract years from current timestamp', async () => {
-    let year = 1992
+    year = 1992
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second) //1992-06-08T11:58:59
     let result = await deployedContract.sub_years(starting_timestamp, 20)
@@ -121,7 +123,7 @@ describe('DateTime', () => {
   })
 
   it('should add more months to current timestamp', async () => {
-    let year = 2017
+    year = 2017
 
     let result = await deployedContract.add_months(starting_timestamp, 60)
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -130,7 +132,7 @@ describe('DateTime', () => {
   })
 
   it('should substract months from current timestamp', async () => {
-    let year = 2007
+    year = 2007
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
     let result = await deployedContract.sub_months(starting_timestamp, 60)
@@ -139,7 +141,7 @@ describe('DateTime', () => {
   })
 
   it('should add more days to current timestamp', async () => {
-    let year = 2025
+    year = 2025
     const DAY_DIFF = 4748
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -150,7 +152,7 @@ describe('DateTime', () => {
   })
 
   it('should substract days from timestamp', async () => {
-    let year = 1985
+    year = 1985
     const DAY_DIFF = 9862
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -160,7 +162,7 @@ describe('DateTime', () => {
   })
 
   it('should add hours to given timestamp', async () => {
-    let year = 2021
+    year = 2021
     const HOUR_DIFF = 78888
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -170,7 +172,7 @@ describe('DateTime', () => {
   })
 
   it('should substract hours from given timestamp', async () => {
-    let year = 1985
+    year = 1985
     const HOUR_DIFF = 236688
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -180,7 +182,7 @@ describe('DateTime', () => {
   })
 
   it('should add more minutes to current timestamp', async () => {
-    let year = 2021
+    year = 2021
     const MIN_DIFF = 4733280
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -190,7 +192,7 @@ describe('DateTime', () => {
   })
 
   it('should substract minutes from given timestamp', async () => {
-    let year = 1985
+    year = 1985
     const MIN_DIFF = 14201280
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -200,7 +202,7 @@ describe('DateTime', () => {
   })
 
   it('should add more seconds to current timestamp', async () => {
-    let year = 2021
+    year = 2021
     const SEC_DIFF = 283996800
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
@@ -210,7 +212,7 @@ describe('DateTime', () => {
   })
 
   it('should substract seconds from given timestamp', async () => {
-    let year = 1985
+    year = 1985
     const SEC_DIFF = 852076800
 
     let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)

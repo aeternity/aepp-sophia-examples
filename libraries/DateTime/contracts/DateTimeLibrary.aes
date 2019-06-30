@@ -22,270 +22,6 @@ namespace Date =
       seconds_accounted_for : int
     } 
 
-  private function require(expression : bool, error : string) =
-    if(!expression) 
-      abort(error)
-
-  private function get_units_of_measure() : date_time_constants = {
-    origin_year = 1970, 
-    day_in_seconds = 86400,
-    year_in_seconds = 31536000,
-    leap_year_in_seconds = 31622400,
-    hour_in_seconds = 3600,
-    minute_in_seconds = 60 }
-
-  public function parse_timestamp(timestamp : int) : date_time = 
-    let constants : date_time_constants = get_units_of_measure()
-    let dt : date_time = init_date_time(timestamp, constants)
-    
-    let dt : date_time = p_get_year(dt, constants)
-    let dt : date_time = p_get_month(dt, constants)
-    let dt : date_time = p_get_day(dt, constants)
-    let dt : date_time = dt{hour = rest(timestamp / 60 /60, 24)}
-    let dt : date_time = dt{minute = rest(timestamp / 60, 60)}
-    let dt : date_time = dt{second = rest(timestamp, 60)}
-    let wd : int = rest(timestamp / constants.day_in_seconds + 4, 7)
-    let dt : date_time = dt{weekday = wd}
-    dt
-
-  private function init_date_time(timestamp : int, constants : date_time_constants) : date_time =
-    let year = constants.origin_year + timestamp / constants.year_in_seconds
-    let total_leap_years_before = leap_years_before(year, constants.origin_year)
-    let seconds_accounted_for = constants.leap_year_in_seconds * total_leap_years_before
-    {
-      year = year,
-      month = 0,
-      day = 0,
-      hour = 0,
-      minute = 0,
-      second = 0,
-      weekday = 0,
-      leap_years_before = total_leap_years_before,
-      seconds_accounted_for = 
-        seconds_accounted_for + constants.year_in_seconds * 
-        (year - constants.origin_year - total_leap_years_before),
-      timestamp = timestamp
-      }
-
-  public function add_years(timestamp : int, years: int) : int =
-    let constants : date_time_constants = get_units_of_measure()
-    let dt : date_time = parse_timestamp(timestamp)
-    let new_tampstamp = days_from_date(dt.year + years, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
-    new_tampstamp
-
-  public function sub_years(timestamp : int, years: int) : int =
-    let constants : date_time_constants = get_units_of_measure()
-    let dt : date_time = parse_timestamp(timestamp)
-    let new_tampstamp = days_from_date(dt.year - years, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
-    new_tampstamp
-
-  public function add_months(timestamp : int, months: int) : int =
-    let constants : date_time_constants = get_units_of_measure()
-    let dt : date_time = days_to_date(timestamp / constants.day_in_seconds)
-    let dt : date_time = dt { month = dt.month + months}
-    let dt : date_time = dt { year = dt.year + (( dt.month - 1) / 12) }
-    let dt : date_time = dt { month = ( dt.month - 1 ) mod 12 + 1}
-    let days_in_month = get_days_in_month(dt.month, dt.year)
-    let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
-    
-    let new_tampstamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
-    new_tampstamp
-    
-  public function sub_months(timestamp : int, months: int) : int =
-    let constants : date_time_constants = get_units_of_measure()
-    let dt : date_time = days_to_date(timestamp / constants.day_in_seconds)
-    let year_month = dt.year * 12 + (dt.month - 1) - months
-    let dt : date_time = dt { year = year_month / 12 }
-    let dt : date_time = dt { month = (year_month mod 12) + 1}
-    let days_in_month = get_days_in_month(dt.month, dt.year)
-    let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
-    
-    let new_tampstamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
-    new_tampstamp
-  
-  public function add_days(timestamp : int, days : int) : int = 
-    let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp + (days * constants.day_in_seconds)
-    new_tampstamp
-
-  public function sub_days(timestamp : int, days : int) : int = 
-    let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp - (days * constants.day_in_seconds)
-    new_tampstamp
-
-  public function add_hours(timestamp : int, hours : int) : int = 
-    let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp + (hours * constants.hour_in_seconds)
-    new_tampstamp
-
-  public function sub_hours(timestamp : int, hours : int) : int = 
-    let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp - (hours * constants.hour_in_seconds)
-    new_tampstamp
-
-  public function add_minutes(timestamp : int, minutes : int) : int = 
-    let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp + (minutes * constants.minute_in_seconds)
-    new_tampstamp
-
-  public function sub_minutes(timestamp : int, minutes : int) : int = 
-    let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp - (minutes * constants.minute_in_seconds)
-    new_tampstamp
-
-  public function add_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = timestamp + seconds
-    new_tampstamp
-
-  public function sub_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = timestamp - seconds
-    new_tampstamp
-
-  private function calculate_day(dt : date_time, days_in_month : int) : int =
-    if(dt.day > days_in_month)
-      let dt : date_time = dt { day = days_in_month }
-      dt.day
-    else
-      let dt : date_time = dt { day = dt.day }
-      dt.day
-  
-  // ------------------------------------------------------------------------
-  // Calculate year/month/day from the number of days since 1970/01/01 using
-  // the date conversion algorithm from
-  //   http://aa.usno.navy.mil/faq/docs/JD_Formula.php
-  // and adding the offset 2440588 so that 1970/01/01 is day 0
-  //
-  // int L = days + 68569 + offset
-  // int N = 4 * L / 146097
-  // L = L - (146097 * N + 3) / 4
-  // year = 4000 * (L + 1) / 1461001
-  // L = L - 1461 * year / 4 + 31
-  // month = 80 * L / 2447
-  // dd = L - 2447 * month / 80
-  // L = month / 11
-  // month = month + 2 - 12 * L
-  // year = 100 * (N - 49) + year + L
-  // ------------------------------------------------------------------------
-  public function days_to_date(days : int) : date_time = 
-    let offset_1970_0101 = 2440588
-    let l = days + 68569 + offset_1970_0101
-    let n = 4 * l / 146097
-    let l = l - (146097 * n + 3) / 4
-    let year = 4000 * (l + 1) / 1461001
-    let l = l - 1461 * year / 4 + 31
-    let month = 80 * l / 2447
-    let day = l - 2447 * month / 80
-    let l = month / 11
-    let month = month + 2 - 12 * l
-    let year = 100 * (n - 49) + year + l
-    {
-      year = year,
-      month = month,
-      day = day,
-      hour = 0,
-      minute = 0,
-      second = 0,
-      weekday = 0,
-      leap_years_before = 0,
-      seconds_accounted_for = 0,
-      timestamp = 0
-      }
-
-  // ------------------------------------------------------------------------
-  // Calculate the number of days from 1970/01/01 to year/month/day using
-  // the date conversion algorithm from
-  //   http://aa.usno.navy.mil/faq/docs/JD_Formula.php
-  // and subtracting the offset 2440588 so that 1970/01/01 is day 0
-  //
-  // days = day
-  //      - 32075
-  //      + 1461 * (year + 4800 + (month - 14) / 12) / 4
-  //      + 367 * (month - 2 - (month - 14) / 12 * 12) / 12
-  //      - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
-  //      - offset
-  // ------------------------------------------------------------------------
-  private function days_from_date(year : int, month : int, day : int ) : int = 
-    let offset_1970_0101 = 2440588
-    let days : int  = day 
-      - 32075 
-      + 1461 * (year + 4800 + (month - 14) / 12) / 4 
-      + 367 * (month - 2 - (month - 14) / 12 * 12) / 12
-      - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
-      - offset_1970_0101
-    days
-
-  private function leap_years_before(year1 : int, year2 : int) : int  =
-    let y1 = year1 - 1
-    let y2 = year2 - 1
-    let yy1 = (y1 / 4) - (y1 / 100) + (y1 / 400)
-    let yy2 = (y2 / 4) - (y2 / 100) + (y2 / 400)
-    yy1 - yy2
-
-  private function p_get_year(dt, constants : date_time_constants) : date_time =
-    if(dt.seconds_accounted_for > dt.timestamp)
-      let dt : date_time = dt{
-        seconds_accounted_for =
-        if(is_leap_year(dt.year - 1))
-          dt.seconds_accounted_for - constants.leap_year_in_seconds
-        else
-          dt.seconds_accounted_for - constants.year_in_seconds,
-        year = dt.year - 1 }
-      p_get_year(dt, constants)
-    else
-      dt
-
-  private function p_get_month(dt : date_time, constants : date_time_constants) : date_time =
-    let dt : date_time = p_get_month'(1, 12, dt, constants)
-    dt
-
-
-  private function p_get_month'(begin : int, end : int, dt : date_time, constants : date_time_constants) : date_time =
-    let seconds_in_month = constants.day_in_seconds * get_days_in_month(begin, dt.year)
-    if((begin >= end) || (seconds_in_month + dt.seconds_accounted_for > dt.timestamp))
-      let dt = dt{month = begin}
-      dt
-    else
-      let dt : date_time = 
-        dt{seconds_accounted_for = dt.seconds_accounted_for + seconds_in_month}
-      p_get_month'(begin + 1, end, dt, constants)
-
-
-  private function get_days_in_month(month : int,year : int) : int =
-    if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
-      31
-    elif (month == 4 || month == 6 || month == 9 || month == 11)
-      30
-    elif (is_leap_year(year))
-      29
-    else
-      28
-
-  private function p_get_day(dt : date_time, constants : date_time_constants) : date_time =
-    p_get_day'(1, get_days_in_month(dt.month, dt.year), dt, constants)
-
-  
-  private function p_get_day'(from : int, to : int, dt : date_time, constants : date_time_constants) : date_time =
-    if(constants.day_in_seconds + dt.seconds_accounted_for > dt.timestamp || from >= to)
-      let dt : date_time = dt{day = from}
-      dt
-    else
-      let dt : date_time = dt{seconds_accounted_for = dt.seconds_accounted_for + constants.day_in_seconds}
-      p_get_day'(from + 1, to, dt, constants)
-
-
-  public function is_leap_year(year : int) : bool =
-    if(rest(year, 4) != 0)
-      false
-    elif(rest(year, 100) != 0)
-      true
-    elif(rest(year, 400) != 0)
-      false
-    else
-      true
-
-  private function rest(year : int, div : int) : int =
-    year - div * (year / div)
-
   public function to_timestamp(year : int,
                                month : int,
                                day : int,
@@ -317,25 +53,19 @@ namespace Date =
     let timestamp = timestamp + second  
     timestamp
 
-  private function month_to_timestamp(from : int, year : int, month : int, timestamp : int, day_in_seconds : int) : int =
-    let day_in_month = {[1] = 31,
-                        [2] = if(is_leap_year(year)) 29
-                              else 28,
-                        [3] = 31,
-                        [4] = 30,
-                        [5] = 31,
-                        [6] = 30,
-                        [7] = 31,
-                        [8] = 31,
-                        [9] = 30,
-                        [10] = 31,
-                        [11] = 30,
-                        [12] = 31}
-
-    if(from =< month)
-      month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * day_in_seconds, day_in_seconds)
-    else
-      timestamp
+  public function parse_timestamp(timestamp : int) : date_time = 
+    let constants : date_time_constants = get_units_of_measure()
+    let dt : date_time = init_date_time(timestamp, constants)
+    
+    let dt : date_time = p_get_year(dt, constants)
+    let dt : date_time = p_get_month(dt, constants)
+    let dt : date_time = p_get_day(dt, constants)
+    let dt : date_time = dt{hour = rest(timestamp / 60 /60, 24)}
+    let dt : date_time = dt{minute = rest(timestamp / 60, 60)}
+    let dt : date_time = dt{second = rest(timestamp, 60)}
+    let wd : int = rest(timestamp / constants.day_in_seconds + 4, 7)
+    let dt : date_time = dt{weekday = wd}
+    dt
 
   public function get_year(timestamp : int) : int = 
     let year : int = parse_timestamp(timestamp).year
@@ -428,133 +158,273 @@ namespace Date =
     let weekday : int = parse_timestamp(timestamp).weekday
     weekday
 
-contract SomeContract =
+  public function add_years(timestamp : int, years: int) : int =
+    let dt : date_time = parse_timestamp(timestamp)
+    let dt : date_time = dt { year = dt.year + years }
+    let new_tampstamp = calculate_years(timestamp, dt)
+    new_tampstamp
 
-  public function get_year(timestamp : int) : int = 
-    let year : int = Date.get_year(timestamp)
-    year
+  public function sub_years(timestamp : int, years: int) : int =
+    let dt : date_time = parse_timestamp(timestamp)
+    let dt : date_time = dt { year = dt.year - years }
+    let new_tampstamp = calculate_years(timestamp, dt)
+    new_tampstamp
 
-  public function get_month(timestamp : int) : int = 
-    let month : int = Date.get_month(timestamp)
-    month
+  public function add_months(timestamp : int, months: int) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    let dt : date_time = days_to_date(timestamp / constants.day_in_seconds)
+    let dt : date_time = dt { month = dt.month + months}
+    let dt : date_time = dt { year = dt.year + (( dt.month - 1) / 12) }
+    let dt : date_time = dt { month = ( dt.month - 1 ) mod 12 + 1}
+    let days_in_month = get_days_in_month(dt.month, dt.year)
+    let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
     
-  public function get_day(timestamp : int) : int = 
-    let day : int = Date.get_day(timestamp)
-    day
+    let new_tampstamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
+    new_tampstamp
     
-  public function get_hour(timestamp : int) : int = 
-    let hour : int = Date.get_hour(timestamp)
-    hour
+  public function sub_months(timestamp : int, months: int) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    let dt : date_time = days_to_date(timestamp / constants.day_in_seconds)
+    let year_month = dt.year * 12 + (dt.month - 1) - months
+    let dt : date_time = dt { year = year_month / 12 }
+    let dt : date_time = dt { month = (year_month mod 12) + 1}
+    let days_in_month = get_days_in_month(dt.month, dt.year)
+    let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
     
-  public function get_minute(timestamp : int) : int = 
-    let minute : int = Date.get_minute(timestamp)
-    minute
-
-  public function get_second(timestamp : int) : int = 
-    let second : int = Date.get_second(timestamp)
-    second
-
-  public function get_weekday(timestamp : int) : int = 
-    let second : int = Date.get_weekday(timestamp)
-    second
-
-  public function is_leap_year(year : int) : bool = 
-    let is_leap_year : bool = Date.is_leap_year(year)
-    is_leap_year
-
-  public function to_timestamp(year : int,
-                               month : int,
-                               day : int,
-                               hour : int,
-                               minute : int,
-                               second : int) : int = 
-    let timestamp : int = Date.to_timestamp(year,month,day,hour,minute,second)
-    timestamp
-
-  public function add_years(timestamp : int, years : int) : int = 
-    let new_tampstamp = Date.add_years(timestamp, years)
+    let new_tampstamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
+    new_tampstamp
+  
+  public function add_days(timestamp : int, days : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    let new_tampstamp = timestamp + (days * constants.day_in_seconds)
     new_tampstamp
 
-  public function sub_years(timestamp : int, years : int) : int = 
-    let new_tampstamp = Date.sub_years(timestamp, years)
-    new_tampstamp
-
-  public function add_months(timestamp : int, months : int) : int = 
-    let new_tampstamp = Date.add_months(timestamp, months)
-    new_tampstamp
-
-  public function sub_months(timestamp : int, months : int) : int = 
-    let new_tampstamp = Date.sub_months(timestamp, months)
-    new_tampstamp
-
-  public function add_days(timestamp: int, days : int) : int = 
-    let new_tampstamp = Date.add_days(timestamp, days)
-    new_tampstamp
-
-  public function sub_days(timestamp: int, days : int) : int = 
-    let new_tampstamp = Date.sub_days(timestamp, days)
+  public function sub_days(timestamp : int, days : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    let new_tampstamp = timestamp - (days * constants.day_in_seconds)
     new_tampstamp
 
   public function add_hours(timestamp : int, hours : int) : int = 
-    let new_tampstamp = Date.add_hours(timestamp, hours)
+    let constants : date_time_constants = get_units_of_measure()
+    let new_tampstamp = timestamp + (hours * constants.hour_in_seconds)
     new_tampstamp
 
   public function sub_hours(timestamp : int, hours : int) : int = 
-    let new_tampstamp = Date.sub_hours(timestamp, hours)
+    let constants : date_time_constants = get_units_of_measure()
+    let new_tampstamp = timestamp - (hours * constants.hour_in_seconds)
     new_tampstamp
 
   public function add_minutes(timestamp : int, minutes : int) : int = 
-    let new_tampstamp = Date.add_minutes(timestamp, minutes)
+    let constants : date_time_constants = get_units_of_measure()
+    let new_tampstamp = timestamp + (minutes * constants.minute_in_seconds)
     new_tampstamp
 
   public function sub_minutes(timestamp : int, minutes : int) : int = 
-    let new_tampstamp = Date.sub_minutes(timestamp, minutes)
+    let constants : date_time_constants = get_units_of_measure()
+    let new_tampstamp = timestamp - (minutes * constants.minute_in_seconds)
     new_tampstamp
-  
+
   public function add_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = Date.add_seconds(timestamp, seconds)
+    let new_tampstamp = timestamp + seconds
     new_tampstamp
 
   public function sub_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = Date.sub_seconds(timestamp, seconds)
+    let new_tampstamp = timestamp - seconds
     new_tampstamp
 
-  public function diff_years(from_timestamp : int, to_timestamp : int) : int = 
-    let year_diff = Date.diff_years(from_timestamp, to_timestamp)
-    year_diff
+  public function is_leap_year(year : int) : bool =
+    if(rest(year, 4) != 0)
+      false
+    elif(rest(year, 100) != 0)
+      true
+    elif(rest(year, 400) != 0)
+      false
+    else
+      true
 
-  public function diff_months(from_timestamp : int, to_timestamp : int) : int = 
-    let month_diff = Date.diff_months(from_timestamp, to_timestamp)
-    month_diff
+  private function require(expression : bool, error : string) =
+    if(!expression) 
+      abort(error)
 
-  public function diff_days(from_timestamp : int, to_timestamp : int) : int = 
-    let day_diff = Date.diff_days(from_timestamp, to_timestamp)
-    day_diff
+  private function get_units_of_measure() : date_time_constants = {
+    origin_year = 1970, 
+    day_in_seconds = 86400,
+    year_in_seconds = 31536000,
+    leap_year_in_seconds = 31622400,
+    hour_in_seconds = 3600,
+    minute_in_seconds = 60 }
 
-  public function diff_hours(from_timestamp : int, to_timestamp : int) : int = 
-    let hour_diff = Date.diff_hours(from_timestamp, to_timestamp)
-    hour_diff
+  private function init_date_time(timestamp : int, constants : date_time_constants) : date_time =
+    let year = constants.origin_year + timestamp / constants.year_in_seconds
+    let total_leap_years_before = leap_years_before(year, constants.origin_year)
+    let seconds_accounted_for = constants.leap_year_in_seconds * total_leap_years_before
+    {
+      year = year,
+      month = 0,
+      day = 0,
+      hour = 0,
+      minute = 0,
+      second = 0,
+      weekday = 0,
+      leap_years_before = total_leap_years_before,
+      seconds_accounted_for = 
+        seconds_accounted_for + constants.year_in_seconds * 
+        (year - constants.origin_year - total_leap_years_before),
+      timestamp = timestamp
+      }
 
-  public function diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
-    let min_diff = Date.diff_minutes(from_timestamp, to_timestamp)
-    min_diff
+  private function calculate_years(timestamp : int, dt : date_time) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    let days : int = days_from_date(dt.year, dt.month, dt.day)
+    (days * constants.day_in_seconds) + timestamp mod constants.day_in_seconds
 
-  public function diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
-    let sec_diff = Date.diff_seconds(from_timestamp, to_timestamp)
-    sec_diff
+  private function calculate_day(dt : date_time, days_in_month : int) : int =
+    if(dt.day > days_in_month)
+      let dt : date_time = dt { day = days_in_month }
+      dt.day
+    else
+      let dt : date_time = dt { day = dt.day }
+      dt.day
+  
+  // ------------------------------------------------------------------------
+  // Calculate year/month/day from the number of days since 1970/01/01 using
+  // the date conversion algorithm from
+  //   http://aa.usno.navy.mil/faq/docs/JD_Formula.php
+  // and adding the offset 2440588 so that 1970/01/01 is day 0
+  //
+  // int L = days + 68569 + offset
+  // int N = 4 * L / 146097
+  // L = L - (146097 * N + 3) / 4
+  // year = 4000 * (L + 1) / 1461001
+  // L = L - 1461 * year / 4 + 31
+  // month = 80 * L / 2447
+  // dd = L - 2447 * month / 80
+  // L = month / 11
+  // month = month + 2 - 12 * L
+  // year = 100 * (N - 49) + year + L
+  // ------------------------------------------------------------------------
+  private function days_to_date(days : int) : date_time = 
+    let offset_1970_0101 = 2440588
+    let l = days + 68569 + offset_1970_0101
+    let n = 4 * l / 146097
+    let l = l - (146097 * n + 3) / 4
+    let year = 4000 * (l + 1) / 1461001
+    let l = l - 1461 * year / 4 + 31
+    let month = 80 * l / 2447
+    let day = l - 2447 * month / 80
+    let l = month / 11
+    let month = month + 2 - 12 * l
+    let year = 100 * (n - 49) + year + l
+    {
+      year = year,
+      month = month,
+      day = day,
+      hour = 0,
+      minute = 0,
+      second = 0,
+      weekday = 0,
+      leap_years_before = 0,
+      seconds_accounted_for = 0,
+      timestamp = 0
+      }
 
-  public function is_valid_date(year : int, month : int, day : int) : bool =
-    let valid : bool = Date.is_valid_date(year, month, day)
-    valid
+  // ------------------------------------------------------------------------
+  // Calculate the number of days from 1970/01/01 to year/month/day using
+  // the date conversion algorithm from
+  //   http://aa.usno.navy.mil/faq/docs/JD_Formula.php
+  // and subtracting the offset 2440588 so that 1970/01/01 is day 0
+  //
+  // days = day
+  //      - 32075
+  //      + 1461 * (year + 4800 + (month - 14) / 12) / 4
+  //      + 367 * (month - 2 - (month - 14) / 12 * 12) / 12
+  //      - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
+  //      - offset
+  // ------------------------------------------------------------------------
+  private function days_from_date(year : int, month : int, day : int ) : int = 
+    let offset_1970_0101 = 2440588
+    let days : int  = day 
+      - 32075 
+      + 1461 * (year + 4800 + (month - 14) / 12) / 4 
+      + 367 * (month - 2 - (month - 14) / 12 * 12) / 12
+      - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
+      - offset_1970_0101
+    days
 
-  public function is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool =
-    let valid : bool = Date.is_valid_date_time(year, month, day, hour, minute, second)
-    valid
+  private function leap_years_before(year1 : int, year2 : int) : int  =
+    let y1 = year1 - 1
+    let y2 = year2 - 1
+    let yy1 = (y1 / 4) - (y1 / 100) + (y1 / 400)
+    let yy2 = (y2 / 4) - (y2 / 100) + (y2 / 400)
+    yy1 - yy2
 
-  public function is_week_day(timestamp : int) : bool =
-    let valid : bool = Date.is_week_day(timestamp)
-    valid
+  private function p_get_year(dt, constants : date_time_constants) : date_time =
+    if(dt.seconds_accounted_for > dt.timestamp)
+      let dt : date_time = dt{
+        seconds_accounted_for =
+        if(is_leap_year(dt.year - 1))
+          dt.seconds_accounted_for - constants.leap_year_in_seconds
+        else
+          dt.seconds_accounted_for - constants.year_in_seconds,
+        year = dt.year - 1 }
+      p_get_year(dt, constants)
+    else
+      dt
 
-  public function is_week_end(timestamp : int) : bool =
-    let valid : bool = Date.is_week_end(timestamp)
-    valid
+  private function p_get_month(dt : date_time, constants : date_time_constants) : date_time =
+    let dt : date_time = p_get_month'(1, 12, dt, constants)
+    dt
+
+  private function p_get_month'(begin : int, end : int, dt : date_time, constants : date_time_constants) : date_time =
+    let seconds_in_month = constants.day_in_seconds * get_days_in_month(begin, dt.year)
+    if((begin >= end) || (seconds_in_month + dt.seconds_accounted_for > dt.timestamp))
+      let dt = dt{month = begin}
+      dt
+    else
+      let dt : date_time = 
+        dt{seconds_accounted_for = dt.seconds_accounted_for + seconds_in_month}
+      p_get_month'(begin + 1, end, dt, constants)
+
+  private function get_days_in_month(month : int,year : int) : int =
+    if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
+      31
+    elif (month == 4 || month == 6 || month == 9 || month == 11)
+      30
+    elif (is_leap_year(year))
+      29
+    else
+      28
+
+  private function p_get_day(dt : date_time, constants : date_time_constants) : date_time =
+    p_get_day'(1, get_days_in_month(dt.month, dt.year), dt, constants)
+
+  private function p_get_day'(from : int, to : int, dt : date_time, constants : date_time_constants) : date_time =
+    if(constants.day_in_seconds + dt.seconds_accounted_for > dt.timestamp || from >= to)
+      let dt : date_time = dt{day = from}
+      dt
+    else
+      let dt : date_time = dt{seconds_accounted_for = dt.seconds_accounted_for + constants.day_in_seconds}
+      p_get_day'(from + 1, to, dt, constants)
+
+  private function rest(year : int, div : int) : int =
+    year - div * (year / div)
+
+  private function month_to_timestamp(from : int, year : int, month : int, timestamp : int, day_in_seconds : int) : int =
+    let day_in_month = {[1] = 31,
+                        [2] = if(is_leap_year(year)) 29
+                              else 28,
+                        [3] = 31,
+                        [4] = 30,
+                        [5] = 31,
+                        [6] = 30,
+                        [7] = 31,
+                        [8] = 31,
+                        [9] = 30,
+                        [10] = 31,
+                        [11] = 30,
+                        [12] = 31}
+
+    if(from =< month)
+      month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * day_in_seconds, day_in_seconds)
+    else
+      timestamp

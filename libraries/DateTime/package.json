@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "forgae-lib": "^1.0.4"
+    "forgae-lib": "^1.0.4",
+    "fs-extra": "^8.0.1"
   }
 }
