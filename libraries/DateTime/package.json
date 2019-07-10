@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "forgae-lib": "^1.0.4",
-    "fs-extra": "^8.0.1"
+    "@aeternity/aepp-sdk": "4.1.0",
+    "forgae-lib": "1.0.4",
+    "fs-extra": "^8.0.1",
+    "yarn": "1.16.0"
   }
 }

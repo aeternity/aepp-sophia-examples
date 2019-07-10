@@ -35,7 +35,7 @@ All tests should be passing.
 
 ## How to integrate the library with your contract
 
-  There are two ways you could implement DateTime in your smart contract, therefore the different implementations are separated in files. Final outcome is equal. These are the following methods:
+  There are two ways you could use DateTime in your smart contract, therefore the different implementations are separated in files. Final outcome is equal. These are the following methods:
   - by deploying it on a network
   - split DateTime as library using the namespace construct
 
@@ -81,7 +81,7 @@ Result:
 ```
 
 # DateTime as library
-1. Implement it as a namespace at the top-level of your smart contract as it is in `ExampleContract.aes`
+1. Use it as a namespace at the top-level of your smart contract as it is in `ExampleContract.aes`
 2. You should now be able to access all public functionalities of the library
 ```
 include "DateTimeLibrary.aes"

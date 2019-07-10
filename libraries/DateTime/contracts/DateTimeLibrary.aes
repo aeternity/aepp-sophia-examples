@@ -1,5 +1,7 @@
 namespace Date =
-  
+
+  datatype timeUnit = Minute | Hour | Day | Month | Year
+
   record date_time_constants = {
     origin_year : int, 
     day_in_seconds : int,
@@ -68,8 +70,8 @@ namespace Date =
     dt
 
   public function get_year(timestamp : int) : int = 
-    let year : int = parse_timestamp(timestamp).year
-    year
+    parse_timestamp(timestamp).year
+    
 
   public function diff_years(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
@@ -138,12 +140,10 @@ namespace Date =
       false
 
   public function get_month(timestamp : int) : int = 
-    let month : int = parse_timestamp(timestamp).month
-    month
+    parse_timestamp(timestamp).month
     
   public function get_day(timestamp : int) : int = 
-    let day : int = parse_timestamp(timestamp).day
-    day
+    parse_timestamp(timestamp).day
 
   public function get_hour(timestamp : int) : int = 
     rest(timestamp / 60 /60, 24)
@@ -161,14 +161,14 @@ namespace Date =
   public function add_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)
     let dt : date_time = dt { year = dt.year + years }
-    let new_tampstamp = calculate_years_in_seconds(timestamp, dt)
-    new_tampstamp
+    let new_timestamp = calculate_years_in_seconds(timestamp, dt)
+    new_timestamp
 
   public function sub_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)
     let dt : date_time = dt { year = dt.year - years }
-    let new_tampstamp = calculate_years_in_seconds(timestamp, dt)
-    new_tampstamp
+    let new_timestamp = calculate_years_in_seconds(timestamp, dt)
+    new_timestamp
 
   public function add_months(timestamp : int, months: int) : int =
     let constants : date_time_constants = get_units_of_measure()
@@ -179,8 +179,8 @@ namespace Date =
     let days_in_month = get_days_in_month(dt.month, dt.year)
     let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
     
-    let new_tampstamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
-    new_tampstamp
+    let new_timestamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
+    new_timestamp
     
   public function sub_months(timestamp : int, months: int) : int =
     let constants : date_time_constants = get_units_of_measure()
@@ -191,46 +191,46 @@ namespace Date =
     let days_in_month = get_days_in_month(dt.month, dt.year)
     let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
     
-    let new_tampstamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
-    new_tampstamp
+    let new_timestamp = days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
+    new_timestamp
   
   public function add_days(timestamp : int, days : int) : int = 
     let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp + (days * constants.day_in_seconds)
-    new_tampstamp
+    let new_timestamp = timestamp + (days * constants.day_in_seconds)
+    new_timestamp
 
   public function sub_days(timestamp : int, days : int) : int = 
     let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp - (days * constants.day_in_seconds)
-    new_tampstamp
+    let new_timestamp = timestamp - (days * constants.day_in_seconds)
+    new_timestamp
 
   public function add_hours(timestamp : int, hours : int) : int = 
     let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp + (hours * constants.hour_in_seconds)
-    new_tampstamp
+    let new_timestamp = timestamp + (hours * constants.hour_in_seconds)
+    new_timestamp
 
   public function sub_hours(timestamp : int, hours : int) : int = 
     let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp - (hours * constants.hour_in_seconds)
-    new_tampstamp
+    let new_timestamp = timestamp - (hours * constants.hour_in_seconds)
+    new_timestamp
 
   public function add_minutes(timestamp : int, minutes : int) : int = 
     let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp + (minutes * constants.minute_in_seconds)
-    new_tampstamp
+    let new_timestamp = timestamp + (minutes * constants.minute_in_seconds)
+    new_timestamp
 
   public function sub_minutes(timestamp : int, minutes : int) : int = 
     let constants : date_time_constants = get_units_of_measure()
-    let new_tampstamp = timestamp - (minutes * constants.minute_in_seconds)
-    new_tampstamp
+    let new_timestamp = timestamp - (minutes * constants.minute_in_seconds)
+    new_timestamp
 
   public function add_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = timestamp + seconds
-    new_tampstamp
+    let new_timestamp = timestamp + seconds
+    new_timestamp
 
   public function sub_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = timestamp - seconds
-    new_tampstamp
+    let new_timestamp = timestamp - seconds
+    new_timestamp
 
   public function is_leap_year(year : int) : bool =
     if(rest(year, 4) != 0)
@@ -428,3 +428,4 @@ namespace Date =
       month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * day_in_seconds, day_in_seconds)
     else
       timestamp
+

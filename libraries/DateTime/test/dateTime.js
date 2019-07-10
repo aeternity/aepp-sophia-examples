@@ -1,19 +1,42 @@
+//@ts-nocheck
 const Deployer = require('forgae-lib').Deployer
 const dateContract = "./contracts/DateTime.aes"
+const {
+  timeUnits,
+  timePeriod,
+  getRandom,
+  generateRandomDateTime,
+  generateRandomNumber,
+  generateRandomTimeStamp,
+  getMonthDifference
+} = require('./utils/dateTimeUtils')
 
-
-describe('DateTime', () => {
+describe.only('DateTime', () => {
   let deployedContract
   let deployer
 
-  let year = 2012
-  let month = 6
-  let day = 8
-  let hour = 11
-  let minute = 58
-  let second = 59
-  let weekday = 5
-  const starting_timestamp = 1339156739 //2012-06-08T11:58:59
+  const ONE_MINUTE = 60
+  const ONE_HOUR = 60 * ONE_MINUTE
+  const ONE_DAY = 24 * ONE_HOUR
+
+  let randomDate = generateRandomDateTime()
+  let year = randomDate.getFullYear()
+  let month = randomDate.getMonth() + 1
+  let day = randomDate.getDate()
+  let hour = randomDate.getHours()
+  let minute = randomDate.getMinutes()
+  let second = randomDate.getSeconds()
+  let weekday = randomDate.getDay()
+  let offset = randomDate.getTimezoneOffset()
+  let local_diff = (offset * (-1)) * 60
+  let starting_timestamp = (randomDate.getTime() / 1000) + local_diff;
+
+  let date_time
+  let dt_timestamp
+  let resultTimestamp
+  let result
+  let future_timestamp
+  let past_timestamp
 
   before(async () => {
     const ownerKeyPair = wallets[0]
@@ -27,69 +50,43 @@ describe('DateTime', () => {
     deployedContract = await deployedContract
   })
 
-  it('should parse timestamp', async () => {
-    let result = await deployedContract.parse_timestamp(starting_timestamp)
-    
-    assert.equal(result[0].value, year)
-    assert.equal(result[1].value, month)
-    assert.equal(result[2].value, day)
-    assert.equal(result[3].value, hour)
-    assert.equal(result[4].value, minute)
-    assert.equal(result[5].value, second)
-    assert.equal(result[6].value, weekday)
-  })
-
   it('should get correct year', async () => {
-    let expected_year = 2012
-    let result = await deployedContract.get_year(starting_timestamp)
-
-    assert.equal(expected_year, result)
+    result = await deployedContract.get_year(starting_timestamp)
+    assert.equal(year, result)
   })
 
   it('should get correct month', async () => {
-    let expected_month = 6
-    let result = await deployedContract.get_month(starting_timestamp)
-
-    assert.equal(expected_month, result)
+    result = await deployedContract.get_month(starting_timestamp)
+    assert.equal(month, result)
   })
 
   it('should get correct day', async () => {
-    let expected_day = 8
-    let result = await deployedContract.get_day(starting_timestamp)
-
-    assert.equal(expected_day, result)
+    result = await deployedContract.get_day(starting_timestamp)
+    assert.equal(day, result)
   })
 
   it('should get correct hour', async () => {
-    let expected_hour = 11
-    let result = await deployedContract.get_hour(starting_timestamp)
-
-    assert.equal(expected_hour, result)
+    result = await deployedContract.get_hour(starting_timestamp)
+    assert.equal(hour, result)
   })
 
   it('should get correct minute', async () => {
-    let expected_minute = 58
-    let result = await deployedContract.get_minute(starting_timestamp)
-
-    assert.equal(expected_minute, result)
+    result = await deployedContract.get_minute(starting_timestamp)
+    assert.equal(minute, result)
   })
 
   it('should get correct second', async () => {
-    let expected_second = 59
-    let result = await deployedContract.get_second(starting_timestamp)
-
-    assert.equal(expected_second, result)
+    result = await deployedContract.get_second(starting_timestamp)
+    assert.equal(second, result)
   })
 
   it('should get correct weekday', async () => {
-    let expected_weekday = 5
-    let result = await deployedContract.get_weekday(starting_timestamp)
-
-    assert.equal(expected_weekday, result)
+    result = await deployedContract.get_weekday(starting_timestamp)
+    assert.equal(weekday, result)
   })
 
   it('should convert date to timestamp', async () => {
-    const result = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    result = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
 
     assert.equal(starting_timestamp, result)
   })
@@ -105,238 +102,316 @@ describe('DateTime', () => {
   })
 
   it('should add more years to current timestamp', async () => {
-    let added_years = 20
-    let result = await deployedContract.add_years(starting_timestamp, 20)
-    let actual_year = await deployedContract.get_year(result)
-    let expected_year = year + added_years
+    let YEAR_DIFF, result
+    let actual_year, expected_year
+
+    YEAR_DIFF = generateRandomNumber()
+    result = await deployedContract.add_years(starting_timestamp, YEAR_DIFF)
+    actual_year = await deployedContract.get_year(result)
+    expected_year = year + YEAR_DIFF
 
     assert.equal(expected_year, actual_year)
   })
 
   it('should substract years from current timestamp', async () => {
-    year = 1992
+    let YEAR_DIFF
+    let actual_year, expected_year
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second) //1992-06-08T11:58:59
-    let result = await deployedContract.sub_years(starting_timestamp, 20)
+    YEAR_DIFF = generateRandomNumber()
+    result = await deployedContract.sub_years(starting_timestamp, YEAR_DIFF)
+    actual_year = await deployedContract.get_year(result)
+    expected_year = year - YEAR_DIFF
 
-    assert.equal(timestamp_to_match, result)
+    assert.equal(expected_year, actual_year)
   })
+
 
   it('should add more months to current timestamp', async () => {
-    year = 2017
+    let MONTHS_DIFF
 
-    let result = await deployedContract.add_months(starting_timestamp, 60)
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
+    date_time = generateRandomDateTime(timePeriod.past);
+    MONTHS_DIFF = generateRandomNumber();
+    dt_timestamp = date_time.getTime() / 1000
 
-    assert.equal(timestamp_to_match, result)
+    resultTimestamp = await deployedContract.add_months(dt_timestamp, MONTHS_DIFF)
+    result = getMonthDifference(resultTimestamp, dt_timestamp)
+
+    assert.equal(MONTHS_DIFF, result)
   })
 
+
   it('should substract months from current timestamp', async () => {
-    year = 2007
+    let MONTHS_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.sub_months(starting_timestamp, 60)
+    date_time = generateRandomDateTime();
+    MONTHS_DIFF = generateRandomNumber();
+    dt_timestamp = date_time.getTime() / 1000
 
-    assert.equal(timestamp_to_match, result)
+    resultTimestamp = await deployedContract.sub_months(dt_timestamp, MONTHS_DIFF)
+    result = getMonthDifference(dt_timestamp, resultTimestamp)
+
+    assert.equal(MONTHS_DIFF, result)
   })
 
   it('should add more days to current timestamp', async () => {
-    year = 2025
-    const DAY_DIFF = 4748
+    let DAYS_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.add_days(starting_timestamp, DAY_DIFF)
+    date_time = generateRandomDateTime()
+    dt_timestamp = date_time.getTime() / 1000
 
-    assert.equal(timestamp_to_match, result)
+    DAYS_DIFF = generateRandomNumber();
+    resultTimestamp = await deployedContract.add_days(dt_timestamp, DAYS_DIFF)
+    result = (resultTimestamp - dt_timestamp) / ONE_DAY
 
+    assert.equal(DAYS_DIFF, result)
   })
 
   it('should substract days from timestamp', async () => {
-    year = 1985
-    const DAY_DIFF = 9862
+    let DAYS_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.sub_days(starting_timestamp, DAY_DIFF)
+    date_time = generateRandomDateTime()
+    dt_timestamp = date_time.getTime() / 1000
 
-    assert.equal(timestamp_to_match, result)
+    DAYS_DIFF = generateRandomNumber();
+    resultTimestamp = await deployedContract.sub_days(dt_timestamp, DAYS_DIFF)
+    result = (dt_timestamp - resultTimestamp) / ONE_DAY
+
+    assert.equal(DAYS_DIFF, result)
   })
 
   it('should add hours to given timestamp', async () => {
-    year = 2021
-    const HOUR_DIFF = 78888
+    let HOUR_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.add_hours(starting_timestamp, HOUR_DIFF)
+    date_time = generateRandomDateTime();
+    HOUR_DIFF = generateRandomNumber();
 
-    assert.equal(timestamp_to_match, result)
+    dt_timestamp = date_time.getTime() / 1000
+    resultTimestamp = await deployedContract.add_hours(dt_timestamp, HOUR_DIFF)
+    result = (resultTimestamp - dt_timestamp) / ONE_HOUR
+
+    assert.equal(HOUR_DIFF, result)
   })
 
   it('should substract hours from given timestamp', async () => {
-    year = 1985
-    const HOUR_DIFF = 236688
+    let HOUR_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.sub_hours(starting_timestamp, HOUR_DIFF)
+    date_time = generateRandomDateTime();
+    HOUR_DIFF = generateRandomNumber();
 
-    assert.equal(timestamp_to_match, result)
+    dt_timestamp = date_time.getTime() / 1000
+    resultTimestamp = await deployedContract.sub_hours(dt_timestamp, HOUR_DIFF)
+    result = (dt_timestamp - resultTimestamp) / ONE_HOUR
+
+    assert.equal(HOUR_DIFF, result)
   })
 
   it('should add more minutes to current timestamp', async () => {
-    year = 2021
-    const MIN_DIFF = 4733280
+    let MIN_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.add_minutes(starting_timestamp, MIN_DIFF)
+    date_time = generateRandomDateTime();
+    MIN_DIFF = generateRandomNumber();
 
-    assert.equal(timestamp_to_match, result)
+    dt_timestamp = date_time.getTime() / 1000
+    resultTimestamp = await deployedContract.add_minutes(dt_timestamp, MIN_DIFF)
+    result = (resultTimestamp - dt_timestamp) / ONE_MINUTE
+
+    assert.equal(MIN_DIFF, result)
   })
 
   it('should substract minutes from given timestamp', async () => {
-    year = 1985
-    const MIN_DIFF = 14201280
+    let MIN_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.sub_minutes(starting_timestamp, MIN_DIFF)
+    date_time = generateRandomDateTime();
+    MIN_DIFF = generateRandomNumber();
 
-    assert.equal(timestamp_to_match, result)
+    dt_timestamp = date_time.getTime() / 1000
+    resultTimestamp = await deployedContract.sub_minutes(dt_timestamp, MIN_DIFF)
+    result = (dt_timestamp - resultTimestamp) / ONE_MINUTE
+
+    assert.equal(MIN_DIFF, result)
   })
 
   it('should add more seconds to current timestamp', async () => {
-    year = 2021
-    const SEC_DIFF = 283996800
+    let SEC_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.add_seconds(starting_timestamp, SEC_DIFF)
+    date_time = generateRandomDateTime();
+    SEC_DIFF = generateRandomNumber();
 
-    assert.equal(timestamp_to_match, result)
+    dt_timestamp = date_time.getTime() / 1000
+    resultTimestamp = await deployedContract.add_seconds(dt_timestamp, SEC_DIFF)
+    result = resultTimestamp - dt_timestamp
+
+    assert.equal(SEC_DIFF, result)
   })
 
   it('should substract seconds from given timestamp', async () => {
-    year = 1985
-    const SEC_DIFF = 852076800
+    let SEC_DIFF
 
-    let timestamp_to_match = await deployedContract.to_timestamp(year, month, day, hour, minute, second)
-    let result = await deployedContract.sub_seconds(starting_timestamp, SEC_DIFF)
+    date_time = generateRandomDateTime();
+    SEC_DIFF = generateRandomNumber();
 
-    assert.equal(timestamp_to_match, result)
+    dt_timestamp = date_time.getTime() / 1000
+    resultTimestamp = await deployedContract.sub_seconds(dt_timestamp, SEC_DIFF)
+    result = dt_timestamp - resultTimestamp
+
+    assert.equal(SEC_DIFF, result)
   })
 
   it('should check difference in years between two timestamps', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
-    let YEAR_DIFF = 27
+    let futureYear, pastYear
+    let YEAR_DIFF, result
 
-    let result = await deployedContract.diff_years(timestamp_1985, timestamp_2016)
+    futureYear = getRandom(timeUnits.year, 2354, 2020)
+    pastYear = getRandom(timeUnits.year, 2019, 1970)
+    future_timestamp = await deployedContract.to_timestamp(futureYear, 6, 8, 11, 58, 59)
+    past_timestamp = await deployedContract.to_timestamp(pastYear, 6, 8, 11, 58, 59)
+    YEAR_DIFF = futureYear - pastYear
+
+    result = await deployedContract.diff_years(past_timestamp, future_timestamp)
 
     assert.equal(YEAR_DIFF, result)
   })
 
   it('[NEGATIVE] should revert if method diff_years is called incorrectly', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let futureYear, pastYear
 
-    await assert.isRejected(deployedContract.diff_years(timestamp_2016, timestamp_1985))
+    futureYear = getRandom(timeUnits.year, 2354, 2020)
+    pastYear = getRandom(timeUnits.year, 2019, 1970)
+    future_timestamp = await deployedContract.to_timestamp(futureYear, 6, 8, 11, 58, 59)
+    past_timestamp = await deployedContract.to_timestamp(pastYear, 6, 8, 11, 58, 59)
+
+    await assert.isRejected(deployedContract.diff_years(future_timestamp, past_timestamp))
   })
 
   it('should check difference in months between two timestamps', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
-    let MONTH_DIFF = 324
+    let future_year, random_month_future_year;
+    let past_year, random_month_past_year;
+    let MONTH_DIFF
 
-    let result = await deployedContract.diff_months(timestamp_1985, timestamp_2016)
+    future_year = getRandom(timeUnits.year, 2354, 2020)
+    random_month_future_year = getRandom(timeUnits.month)
+    past_year = getRandom(timeUnits.year, 2019, 1970)
+    random_month_past_year = getRandom(timeUnits.month)
+
+    future_timestamp = await deployedContract.to_timestamp(future_year, random_month_future_year, 8, 11, 58, 59)
+    past_timestamp = await deployedContract.to_timestamp(past_year, random_month_past_year, 8, 11, 58, 59)
+
+    MONTH_DIFF = future_year * 12 + random_month_future_year - past_year * 12 - random_month_past_year
+    result = await deployedContract.diff_months(past_timestamp, future_timestamp)
 
     assert.equal(MONTH_DIFF, result)
   })
 
   it('[NEGATIVE] should revert if method diff_months is called incorrectly', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    let future_year = getRandom(timeUnits.year, 2354, 2020)
+    let past_year = getRandom(timeUnits.year, 2019, 1970)
 
-    await assert.isRejected(deployedContract.diff_months(timestamp_2016, timestamp_1985))
+    await assert.isRejected(deployedContract.diff_months(future_year, past_year))
   })
 
   it('should check difference in days between two timestamps', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
-    let DAY_DIFF = 9862
+    let DAY_DIFF
 
-    let result = await deployedContract.diff_days(timestamp_1985, timestamp_2016)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
+    DAY_DIFF = Math.floor((future_timestamp - past_timestamp) / ONE_DAY) // ONE_MINUTE / ONE_HOUR / ONE_DAY) //60,60,24
+    result = await deployedContract.diff_days(past_timestamp, future_timestamp)
 
     assert.equal(DAY_DIFF, result)
   })
 
   it('[NEGATIVE] should revert if method diff_days is called incorrectly', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
 
-    await assert.isRejected(deployedContract.diff_days(timestamp_2016, timestamp_1985))
+    await assert.isRejected(deployedContract.diff_days(future_timestamp, past_timestamp))
   })
 
   it('should check difference in hours between two timestamps', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
-    let HOUR_DIFF = 236688
+    let HOUR_DIFF, result
 
-    let result = await deployedContract.diff_hours(timestamp_1985, timestamp_2016)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
+    HOUR_DIFF = Math.floor((future_timestamp - past_timestamp) / ONE_HOUR)
+
+    result = await deployedContract.diff_hours(past_timestamp, future_timestamp)
 
     assert.equal(HOUR_DIFF, result)
   })
 
   it('[NEGATIVE] should revert if method diff_hours is called incorrectly', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
 
-    await assert.isRejected(deployedContract.diff_hours(timestamp_2016, timestamp_1985))
+    await assert.isRejected(deployedContract.diff_hours(future_timestamp, past_timestamp))
   })
 
   it('should check difference in minutes between two timestamps', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
-    let MIN_DIFF = 14201280
+    let MIN_DIFF
 
-    let result = await deployedContract.diff_minutes(timestamp_1985, timestamp_2016)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
+    MIN_DIFF = Math.floor((future_timestamp - past_timestamp) / ONE_MINUTE)
+
+    result = await deployedContract.diff_minutes(past_timestamp, future_timestamp)
 
     assert.equal(MIN_DIFF, result)
   })
 
   it('[NEGATIVE] should revert if method diff_minutes is called incorrectly', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
 
-    await assert.isRejected(deployedContract.diff_minutes(timestamp_2016, timestamp_1985))
+    await assert.isRejected(deployedContract.diff_minutes(future_timestamp, past_timestamp))
   })
 
   it('should check difference in seconds between two timestamps', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
-    let SEC_DIFF = 852076800
+    let SEC_DIFF
 
-    let result = await deployedContract.diff_seconds(timestamp_1985, timestamp_2016)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
+    SEC_DIFF = future_timestamp - past_timestamp
+
+    result = await deployedContract.diff_seconds(past_timestamp, future_timestamp)
 
     assert.equal(SEC_DIFF, result)
   })
 
   it('[NEGATIVE] should revert if method diff_seconds is called incorrectly', async () => {
-    let timestamp_2016 = await deployedContract.to_timestamp(2012, 6, 8, 11, 58, 59)
-    let timestamp_1985 = await deployedContract.to_timestamp(1985, 6, 8, 11, 58, 59)
+    future_timestamp = generateRandomTimeStamp(timePeriod.future)
+    past_timestamp = generateRandomTimeStamp(timePeriod.past)
 
-    await assert.isRejected(deployedContract.diff_seconds(timestamp_2016, timestamp_1985))
+    await assert.isRejected(deployedContract.diff_seconds(future_timestamp, past_timestamp))
   })
 
   it('should check if date is valid', async () => {
-    let valid = await deployedContract.is_valid_date(1985, 6, 7)
-    let invalid = await deployedContract.is_valid_date(1969, 14, 32)
+    let validDate
+    let invalidYear, invalidMonth, invalidDay
 
-    assert.equal(1, valid)
-    assert.equal(0, invalid)
+    validDate = await deployedContract.is_valid_date(year, month, day)
+    invalidYear = await deployedContract.is_valid_date(year - 1000, month, day)
+    invalidMonth = await deployedContract.is_valid_date(year, month + 13, day)
+    invalidDay = await deployedContract.is_valid_date(year, month, day + 32)
+
+    assert.equal(1, validDate)
+    assert.equal(0, invalidYear)
+    assert.equal(0, invalidMonth)
+    assert.equal(0, invalidDay)
   })
 
   it('should check if date time is valid', async () => {
-    let valid = await deployedContract.is_valid_date_time(1985, 6, 7, 9, 44, 44)
-    let invalid = await deployedContract.is_valid_date_time(1985, 6, 7, 73, 44, 44)
+    let validDate
+    let invalidHour, invalidMinute, invalidSecond
 
-    assert.equal(1, valid)
-    assert.equal(0, invalid)
+    validDate = await deployedContract.is_valid_date_time(year, month, day, hour, minute, second)
+    invalidHour = await deployedContract.is_valid_date_time(year, month, day, hour + 25, minute, second)
+    invalidMinute = await deployedContract.is_valid_date_time(year, month, day, hour, minute + 61, second)
+    invalidSecond = await deployedContract.is_valid_date_time(year, month, day, hour, minute, second + 61)
+
+    assert.equal(1, validDate)
+    assert.equal(0, invalidHour)
+    assert.equal(0, invalidMinute)
+    assert.equal(0, invalidSecond)
   })
 
   it('should check if the timestamp is a week day', async () => {
@@ -354,4 +429,5 @@ describe('DateTime', () => {
     assert.equal(1, valid)
     assert.equal(0, invalid)
   })
+
 })
