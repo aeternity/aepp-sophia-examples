@@ -75,9 +75,6 @@ contract DateTime =
     let dt : date_time = dt{weekday = wd}
     dt
 
-  public function get_year(timestamp : int) : int = 
-    parse_timestamp(timestamp).year
-
   public function diff_years(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
     let years : int = parse_timestamp(to_timestamp).year - parse_timestamp(from_timestamp).year
@@ -113,19 +110,13 @@ contract DateTime =
   public function is_valid_date(year : int, month : int, day : int) : bool = 
     if(year > 1970 && month > 0 && month =< 12)
       let days_in_month = get_days_in_month(month, year)
-      if(day > 0 && day =< days_in_month)
-        true
-      else
-        false
+      day > 0 && day =< days_in_month
     else
       false
 
   public function is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool = 
     if(is_valid_date(year, month, day))
-      if(hour < 24 && minute < 60 && second < 60)
-        true
-      else 
-        false
+      hour < 24 && minute < 60 && second < 60
     else
       false
 
@@ -140,6 +131,9 @@ contract DateTime =
       true
     else
       false
+
+  public function get_year(timestamp : int) : int = 
+    parse_timestamp(timestamp).year
 
   public function get_month(timestamp : int) : int = 
     parse_timestamp(timestamp).month
@@ -157,8 +151,7 @@ contract DateTime =
     rest(timestamp, 60)
   
   public function get_weekday(timestamp : int) : int = 
-    let weekday : int = parse_timestamp(timestamp).weekday
-    weekday
+    parse_timestamp(timestamp).weekday
 
   public function add_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)

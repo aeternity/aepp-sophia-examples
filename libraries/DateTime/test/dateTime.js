@@ -11,7 +11,7 @@ const {
   getMonthDifference
 } = require('./utils/dateTimeUtils')
 
-describe.only('DateTime', () => {
+describe('DateTime', () => {
   let deployedContract
   let deployer
 
