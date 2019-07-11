@@ -9,26 +9,26 @@ contract CryptoHamster =
         name: string,
         dna: int}
 
-    public stateful function init() = 
+    stateful entrypoint init() = 
         { index = 1,
           map_hamsters = {}}
 
-    public function create_hamster(hamster_name: string) =
+    stateful entrypoint create_hamster(hamster_name: string) =
         require(!name_exists(hamster_name), "Name is already taken")
         let dna : int = generate_random_dna(hamster_name)
         create_hamster_by_name_dna(hamster_name, dna)
 
-    public function name_exists(name: string) : bool =
+    entrypoint name_exists(name: string) : bool =
         Map.member(name, state.map_hamsters)
 
-    public function get_hamster_dna(name: string) : int =
+    entrypoint get_hamster_dna(name: string) : int =
         require(name_exists(name), "There is no hamster with that name!")
 
         let needed_hamster : hamster = state.map_hamsters[name]
 
         needed_hamster.dna
 
-    private function create_hamster_by_name_dna(name: string, dna: int) =
+    private stateful function create_hamster_by_name_dna(name: string, dna: int) =
         let new_hamster : hamster = {
             id = state.index,
             name = name,
@@ -38,11 +38,12 @@ contract CryptoHamster =
         put(state{index = (state.index + 1)})
 
     private function generate_random_dna(name: string) : int =
-        Chain.block_hash(Chain.block_height - 1) - Chain.timestamp + state.index
+        get_block_hash_bytes_as_int() - Chain.timestamp + state.index
 
-    public function test(name: string) : hash =
+    private function get_block_hash_bytes_as_int() : int =
+        switch(Chain.block_hash(Chain.block_height - 1))
+            None => abort("blockhash not found")
+            Some(bytes) => Bytes.to_int(bytes)
+
+    entrypoint test(name: string) : hash =
         String.sha3(name)
-
-    private function require(expression : bool, error : string) =
-        if(!expression) 
-            abort(error)
