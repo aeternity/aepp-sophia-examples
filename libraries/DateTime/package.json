@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@aeternity/aepp-sdk": "4.1.0",
+    "forgae": "2.0.1",
     "forgae-lib": "1.0.4",
     "fs-extra": "^8.0.1",
     "yarn": "1.16.0"

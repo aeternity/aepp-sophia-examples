@@ -2,36 +2,28 @@ include "DateTimeLibrary.aes"
 contract ExampleContract =
 
   public function get_year(timestamp : int) : int = 
-    let year : int = Date.get_year(timestamp)
-    year
+    Date.get_year(timestamp)
 
   public function get_month(timestamp : int) : int = 
-    let month : int = Date.get_month(timestamp)
-    month
+    Date.get_month(timestamp)
     
   public function get_day(timestamp : int) : int = 
-    let day : int = Date.get_day(timestamp)
-    day
+    Date.get_day(timestamp)
     
   public function get_hour(timestamp : int) : int = 
-    let hour : int = Date.get_hour(timestamp)
-    hour
+    Date.get_hour(timestamp)
     
   public function get_minute(timestamp : int) : int = 
-    let minute : int = Date.get_minute(timestamp)
-    minute
+    Date.get_minute(timestamp)
 
   public function get_second(timestamp : int) : int = 
-    let second : int = Date.get_second(timestamp)
-    second
+    Date.get_second(timestamp)
 
   public function get_weekday(timestamp : int) : int = 
-    let second : int = Date.get_weekday(timestamp)
-    second
+    Date.get_weekday(timestamp)
 
   public function is_leap_year(year : int) : bool = 
-    let is_leap_year : bool = Date.is_leap_year(year)
-    is_leap_year
+    Date.is_leap_year(year)
 
   public function to_timestamp(year : int,
                                month : int,
@@ -39,93 +31,71 @@ contract ExampleContract =
                                hour : int,
                                minute : int,
                                second : int) : int = 
-    let timestamp : int = Date.to_timestamp(year,month,day,hour,minute,second)
-    timestamp
+    Date.to_timestamp(year,month,day,hour,minute,second)
 
   public function add_years(timestamp : int, years : int) : int = 
-    let new_tampstamp = Date.add_years(timestamp, years)
-    new_tampstamp
+    Date.add_years(timestamp, years)
 
   public function sub_years(timestamp : int, years : int) : int = 
-    let new_tampstamp = Date.sub_years(timestamp, years)
-    new_tampstamp
+    Date.sub_years(timestamp, years)
 
   public function add_months(timestamp : int, months : int) : int = 
-    let new_tampstamp = Date.add_months(timestamp, months)
-    new_tampstamp
+    Date.add_months(timestamp, months)
 
   public function sub_months(timestamp : int, months : int) : int = 
-    let new_tampstamp = Date.sub_months(timestamp, months)
-    new_tampstamp
+    Date.sub_months(timestamp, months)
 
   public function add_days(timestamp: int, days : int) : int = 
-    let new_tampstamp = Date.add_days(timestamp, days)
-    new_tampstamp
+    Date.add_days(timestamp, days)
 
   public function sub_days(timestamp: int, days : int) : int = 
-    let new_tampstamp = Date.sub_days(timestamp, days)
-    new_tampstamp
+    Date.sub_days(timestamp, days)
 
   public function add_hours(timestamp : int, hours : int) : int = 
-    let new_tampstamp = Date.add_hours(timestamp, hours)
-    new_tampstamp
+    Date.add_hours(timestamp, hours)
 
   public function sub_hours(timestamp : int, hours : int) : int = 
-    let new_tampstamp = Date.sub_hours(timestamp, hours)
-    new_tampstamp
+    Date.sub_hours(timestamp, hours)
 
   public function add_minutes(timestamp : int, minutes : int) : int = 
-    let new_tampstamp = Date.add_minutes(timestamp, minutes)
-    new_tampstamp
+    Date.add_minutes(timestamp, minutes)
 
   public function sub_minutes(timestamp : int, minutes : int) : int = 
-    let new_tampstamp = Date.sub_minutes(timestamp, minutes)
-    new_tampstamp
+    Date.sub_minutes(timestamp, minutes)
   
   public function add_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = Date.add_seconds(timestamp, seconds)
-    new_tampstamp
+    Date.add_seconds(timestamp, seconds)
 
   public function sub_seconds(timestamp : int, seconds : int) : int = 
-    let new_tampstamp = Date.sub_seconds(timestamp, seconds)
-    new_tampstamp
+    Date.sub_seconds(timestamp, seconds)
 
   public function diff_years(from_timestamp : int, to_timestamp : int) : int = 
-    let year_diff = Date.diff_years(from_timestamp, to_timestamp)
-    year_diff
+    Date.diff_years(from_timestamp, to_timestamp)
 
   public function diff_months(from_timestamp : int, to_timestamp : int) : int = 
-    let month_diff = Date.diff_months(from_timestamp, to_timestamp)
-    month_diff
+    Date.diff_months(from_timestamp, to_timestamp)
 
   public function diff_days(from_timestamp : int, to_timestamp : int) : int = 
-    let day_diff = Date.diff_days(from_timestamp, to_timestamp)
-    day_diff
+    Date.diff_days(from_timestamp, to_timestamp)
 
   public function diff_hours(from_timestamp : int, to_timestamp : int) : int = 
-    let hour_diff = Date.diff_hours(from_timestamp, to_timestamp)
-    hour_diff
+    Date.diff_hours(from_timestamp, to_timestamp)
 
   public function diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
-    let min_diff = Date.diff_minutes(from_timestamp, to_timestamp)
-    min_diff
+    Date.diff_minutes(from_timestamp, to_timestamp)
 
   public function diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
-    let sec_diff = Date.diff_seconds(from_timestamp, to_timestamp)
-    sec_diff
+    Date.diff_seconds(from_timestamp, to_timestamp)
 
   public function is_valid_date(year : int, month : int, day : int) : bool =
-    let valid : bool = Date.is_valid_date(year, month, day)
-    valid
+    Date.is_valid_date(year, month, day)
 
   public function is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool =
-    let valid : bool = Date.is_valid_date_time(year, month, day, hour, minute, second)
-    valid
+    Date.is_valid_date_time(year, month, day, hour, minute, second)
 
   public function is_week_day(timestamp : int) : bool =
-    let valid : bool = Date.is_week_day(timestamp)
-    valid
+    Date.is_week_day(timestamp)
 
   public function is_week_end(timestamp : int) : bool =
-    let valid : bool = Date.is_week_end(timestamp)
-    valid
+    Date.is_week_end(timestamp)
+    
