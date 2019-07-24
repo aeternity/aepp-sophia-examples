@@ -77,35 +77,29 @@ contract DateTime =
 
   public function diff_years(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    let years : int = parse_timestamp(to_timestamp).year - parse_timestamp(from_timestamp).year
-    years
+    parse_timestamp(to_timestamp).year - parse_timestamp(from_timestamp).year
 
   public function diff_months(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
     let from_dt : date_time = parse_timestamp(from_timestamp)
     let to_dt : date_time = parse_timestamp(to_timestamp) 
-    let months : int = to_dt.year * 12 + to_dt.month - from_dt.year * 12 - from_dt.month
-    months
+    to_dt.year * 12 + to_dt.month - from_dt.year * 12 - from_dt.month
 
   public function diff_days(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    let days : int = (to_timestamp - from_timestamp) / state.day_in_seconds
-    days
+    (to_timestamp - from_timestamp) / state.day_in_seconds
 
   public function diff_hours(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    let hours : int = (to_timestamp - from_timestamp) / state.hour_in_seconds
-    hours
+    (to_timestamp - from_timestamp) / state.hour_in_seconds
 
   public function diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    let minutes : int = (to_timestamp - from_timestamp) / state.minute_in_seconds
-    minutes
+    (to_timestamp - from_timestamp) / state.minute_in_seconds
 
   public function diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
     require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
-    let seconds : int = to_timestamp - from_timestamp
-    seconds
+    to_timestamp - from_timestamp
 
   public function is_valid_date(year : int, month : int, day : int) : bool = 
     if(year > 1970 && month > 0 && month =< 12)
@@ -156,14 +150,12 @@ contract DateTime =
   public function add_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)
     let dt : date_time = dt { year = dt.year + years }
-    let new_timestamp = calculate_years_in_seconds(timestamp, dt)
-    new_timestamp
+    calculate_years_in_seconds(timestamp, dt)
 
   public function sub_years(timestamp : int, years: int) : int =
     let dt : date_time = parse_timestamp(timestamp)
     let dt : date_time = dt { year = dt.year - years }
-    let new_timestamp = calculate_years_in_seconds(timestamp, dt)
-    new_timestamp
+    calculate_years_in_seconds(timestamp, dt)
     
   public function add_months(timestamp : int, months: int) : int =
     let dt : date_time = days_to_date(timestamp / state.day_in_seconds)
@@ -173,8 +165,7 @@ contract DateTime =
     let days_in_month = get_days_in_month(dt.month, dt.year)
     let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
     
-    let new_timestamp = days_from_date(dt.year, dt.month, dt.day) * state.day_in_seconds + timestamp mod state.day_in_seconds
-    new_timestamp
+    days_from_date(dt.year, dt.month, dt.day) * state.day_in_seconds + timestamp mod state.day_in_seconds
     
   public function sub_months(timestamp : int, months: int) : int =
     let dt : date_time = days_to_date(timestamp / state.day_in_seconds)
@@ -184,40 +175,32 @@ contract DateTime =
     let days_in_month = get_days_in_month(dt.month, dt.year)
     let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
     
-    let new_timestamp = days_from_date(dt.year, dt.month, dt.day) * state.day_in_seconds + timestamp mod state.day_in_seconds
-    new_timestamp
+    days_from_date(dt.year, dt.month, dt.day) * state.day_in_seconds + timestamp mod state.day_in_seconds
   
   public function add_days(timestamp : int, days : int) : int = 
-    let new_timestamp = timestamp + (days * state.day_in_seconds)
-    new_timestamp
+    timestamp + (days * state.day_in_seconds)
 
   public function sub_days(timestamp : int, days : int) : int = 
-    let new_timestamp = timestamp - (days * state.day_in_seconds)
-    new_timestamp
+    timestamp - (days * state.day_in_seconds)
 
   public function add_hours(timestamp : int, hours : int) : int = 
-    let new_timestamp = timestamp + (hours * state.hour_in_seconds)
-    new_timestamp
+    timestamp + (hours * state.hour_in_seconds)
+    
 
   public function sub_hours(timestamp : int, hours : int) : int = 
-    let new_timestamp = timestamp - (hours * state.hour_in_seconds)
-    new_timestamp
+    timestamp - (hours * state.hour_in_seconds)
 
   public function add_minutes(timestamp : int, minutes : int) : int = 
-    let new_timestamp = timestamp + (minutes * state.minute_in_seconds)
-    new_timestamp
+    timestamp + (minutes * state.minute_in_seconds)
 
   public function sub_minutes(timestamp : int, minutes : int) : int = 
-    let new_timestamp = timestamp - (minutes * state.minute_in_seconds)
-    new_timestamp
+    timestamp - (minutes * state.minute_in_seconds)
 
   public function add_seconds(timestamp : int, seconds : int) : int = 
-    let new_timestamp = timestamp + seconds
-    new_timestamp
+    timestamp + seconds
 
   public function sub_seconds(timestamp : int, seconds : int) : int = 
-    let new_timestamp = timestamp - seconds
-    new_timestamp
+    timestamp - seconds
 
   public function is_leap_year(year : int) : bool =
     if(rest(year, 4) != 0)
@@ -350,8 +333,7 @@ contract DateTime =
       dt
 
   private function p_get_month(dt : date_time) : date_time =
-    let dt : date_time = p_get_month'(1, 12, dt)
-    dt
+    p_get_month'(1, 12, dt)
 
   private function p_get_month'(begin : int, end : int, dt : date_time) : date_time =
     let seconds_in_month = state.day_in_seconds * get_days_in_month(begin, dt.year)

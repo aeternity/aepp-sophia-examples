@@ -87,8 +87,7 @@ Result:
 include "DateTimeLibrary.aes"
 contract ExampleContract =
   public function main(timestamp : int, months : int) : int = 
-    let new_tampstamp = Date.add_months(timestamp, months)
-    new_tampstamp
+    Date.add_months(timestamp, months)
 ```
 3. Deploy your contract and call `main` function with following arguments: 
 ```
