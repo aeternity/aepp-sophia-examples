@@ -60,10 +60,10 @@ namespace Date =
     let dt : date_time = p_get_year(dt, constants)
     let dt : date_time = p_get_month(dt, constants)
     let dt : date_time = p_get_day(dt, constants)
-    let dt : date_time = dt{hour = rest(timestamp / 60 /60, 24)}
-    let dt : date_time = dt{minute = rest(timestamp / 60, 60)}
-    let dt : date_time = dt{second = rest(timestamp, 60)}
-    let wd : int = rest(timestamp / constants.day_in_seconds + 4, 7)
+    let dt : date_time = dt{hour = (timestamp / 60 /60) mod 24}
+    let dt : date_time = dt{minute = (timestamp / 60) mod 60}
+    let dt : date_time = dt{second = timestamp mod 60}
+    let wd : int = (timestamp / constants.day_in_seconds + 4) mod 7
     let dt : date_time = dt{weekday = wd}
     dt
 
@@ -131,13 +131,13 @@ namespace Date =
     parse_timestamp(timestamp).day
 
   public function get_hour(timestamp : int) : int = 
-    rest(timestamp / 60 /60, 24)
+    (timestamp / 60 /60) mod 24
 
   public function get_minute(timestamp : int) : int = 
-    rest(timestamp / 60, 60)
+    (timestamp / 60) mod 60
 
   public function get_second(timestamp : int) : int = 
-    rest(timestamp, 60)
+    timestamp mod 60
   
   public function get_weekday(timestamp : int) : int = 
     parse_timestamp(timestamp).weekday
@@ -205,11 +205,11 @@ namespace Date =
     timestamp - seconds
 
   public function is_leap_year(year : int) : bool =
-    if(rest(year, 4) != 0)
+    if((year mod 4) != 0)
       false
-    elif(rest(year, 100) != 0)
+    elif((year mod 100) != 0)
       true
-    elif(rest(year, 400) != 0)
+    elif((year mod 400) != 0)
       false
     else
       true
@@ -376,9 +376,6 @@ namespace Date =
     else
       let dt : date_time = dt{seconds_accounted_for = dt.seconds_accounted_for + constants.day_in_seconds}
       p_get_day'(from + 1, to, dt, constants)
-
-  private function rest(year : int, div : int) : int =
-    year - div * (year / div)
 
   private function month_to_timestamp(from : int, year : int, month : int, timestamp : int, day_in_seconds : int) : int =
     let day_in_month = {[1] = 31,
