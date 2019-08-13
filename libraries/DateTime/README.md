@@ -56,19 +56,19 @@ Decoded address (hex): 76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e
 0x76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8
 ```
 
-4. Now you are ready to add some functions from our library in your own smart contract.
+4. Now you are ready to add some entrypoints from our library in your own smart contract.
 ```
 contract Remote = 
-  function get_year : (int) => int
+  entrypoint get_year : (int) => int
 
 contract YourContract =
   type state = ()
-  function main(timestamp : int, remote : Remote) : int = 
+  entrypoint main(timestamp : int, remote : Remote) : int = 
     remote.get_year(timestamp)
 ```
-**NOTE:** In this case we will be using `get_year` function from `DateTime` library.
+**NOTE:** In this case we will be using `get_year` entrypoint from `DateTime` library.
 
-5. Deploy your contract and call `main` function with following arguments: 
+5. Deploy your contract and call `main` entrypoint with following arguments: 
 ```
 main(0, 0x76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8)
 ```
@@ -86,10 +86,10 @@ Result:
 ```
 include "DateTimeLibrary.aes"
 contract ExampleContract =
-  public function main(timestamp : int, months : int) : int = 
+  entrypoint main(timestamp : int, months : int) : int = 
     Date.add_months(timestamp, months)
 ```
-3. Deploy your contract and call `main` function with following arguments: 
+3. Deploy your contract and call `main` entrypoint with following arguments: 
 ```
 main(1339156739, 3960) // 06/08/2012 @ 11:58:59am
 ```
@@ -104,66 +104,66 @@ Result:
 ## Implemented functionality
 The library contains:
 1. `parse_timestamp(timestamp)`
-The function takes as argument a timestamp and return a date_time structure. Return type of the function is `(int, int, int, int, int, int, int, int)`.
+The entrypoint takes as argument a timestamp and return a date_time structure. Return type of the entrypoint is `(int, int, int, int, int, int, int, int)`.
 2. `get_year(timestamp)`
-The function takes as argument a timestamp and return the year of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the year of the given timestamp. Return type of the entrypoint is `int`.
 3. `get_month(timestamp)`
-The function takes as argument a timestamp and return the month of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the month of the given timestamp. Return type of the entrypoint is `int`.
 4. `get_day(timestamp)`
-The function takes as argument a timestamp and return the day of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the day of the given timestamp. Return type of the entrypoint is `int`.
 5. `get_hour(timestamp)`
-The function takes as argument a timestamp and return the hour of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the hour of the given timestamp. Return type of the entrypoint is `int`.
 6. `get_minute(timestamp)`
-The function takes as argument a timestamp and return the minute of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the minute of the given timestamp. Return type of the entrypoint is `int`.
 7. `get_second(timestamp)`
-The function takes as argument a timestamp and return the second of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the second of the given timestamp. Return type of the entrypoint is `int`.
 8. `get_weekday(timestamp)`
-The function takes as argument a timestamp and return the weekday of the given timestamp. Return type of the function is `int`.
+The entrypoint takes as argument a timestamp and return the weekday of the given timestamp. Return type of the entrypoint is `int`.
 9. `to_timestamp(year, month, day, hour, minute, second)`
-The function takes as arguments year, month, day, hour, minute, second and return the timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments year, month, day, hour, minute, second and return the timestamp. Return type of the entrypoint is `int`.
 10. `is_leap_year(year)`
-The function takes as argument year and check if it is leap or not. Return type of the function is `bool`.
+The entrypoint takes as argument year and check if it is leap or not. Return type of the entrypoint is `bool`.
 11. `add_years(timestamp, years)`
-The function takes as arguments timestamp and year and ends up adding those years to the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and year and ends up adding those years to the provided timestamp. Return type of the entrypoint is `int`.
 12. `sub_years(timestamp, years)`
-The function takes as arguments timestamp and year and ends up substracting those years from the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and year and ends up substracting those years from the provided timestamp. Return type of the entrypoint is `int`.
 13. `add_months(timestamp, months)`
-The function takes as arguments timestamp and months and ends up adding those months to the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and months and ends up adding those months to the provided timestamp. Return type of the entrypoint is `int`.
 14. `sub_months(timestamp, months)`
-The function takes as arguments timestamp and months and ends up substracting those months from the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and months and ends up substracting those months from the provided timestamp. Return type of the entrypoint is `int`.
 15. `add_days(timestamp, days)`
-The function takes as arguments timestamp and days and ends up adding those days to the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and days and ends up adding those days to the provided timestamp. Return type of the entrypoint is `int`.
 16. `sub_days(timestamp, days)`
-The function takes as arguments timestamp and days and ends up substracting those days from the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and days and ends up substracting those days from the provided timestamp. Return type of the entrypoint is `int`.
 17. `add_hours(timestamp, hours)`
-The function takes as arguments timestamp and hours and ends up adding those hours to the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and hours and ends up adding those hours to the provided timestamp. Return type of the entrypoint is `int`.
 18. `sub_hours(timestamp, hours)`
-The function takes as arguments timestamp and hours and ends up substracting those hours from the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and hours and ends up substracting those hours from the provided timestamp. Return type of the entrypoint is `int`.
 19. `add_minutes(timestamp, minutes)`
-The function takes as arguments timestamp and minutes and ends up adding those minutes to the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and minutes and ends up adding those minutes to the provided timestamp. Return type of the entrypoint is `int`.
 20. `sub_minutes(timestamp, minutes)`
-The function takes as arguments timestamp and minutes and ends up substracting those minutes from the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and minutes and ends up substracting those minutes from the provided timestamp. Return type of the entrypoint is `int`.
 21. `add_seconds(timestamp, seconds)`
-The function takes as arguments timestamp and seconds and ends up adding those seconds to the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and seconds and ends up adding those seconds to the provided timestamp. Return type of the entrypoint is `int`.
 22. `sub_seconds(timestamp, seconds)`
-The function takes as arguments timestamp and seconds and ends up substracting those seconds from the provided timestamp. Return type of the function is `int`.
+The entrypoint takes as arguments timestamp and seconds and ends up substracting those seconds from the provided timestamp. Return type of the entrypoint is `int`.
 23. `diff_years(from_timestamp, to_timestamp)`
-The function takes as arguments two timestamps for comparison and provides the difference between them in years. First timestamp must be smaller. Return type of the function is `int`.
+The entrypoint takes as arguments two timestamps for comparison and provides the difference between them in years. First timestamp must be smaller. Return type of the entrypoint is `int`.
 24. `diff_months(from_timestamp, to_timestamp)`
-The function takes as arguments two timestamps for comparison and provides the difference between them in months. First timestamp must be smaller. Return type of the function is `int`.
+The entrypoint takes as arguments two timestamps for comparison and provides the difference between them in months. First timestamp must be smaller. Return type of the entrypoint is `int`.
 25. `diff_days(from_timestamp, to_timestamp)`
-The function takes as arguments two timestamps for comparison and provides the difference between them in days. First timestamp must be smaller. Return type of the function is `int`.
+The entrypoint takes as arguments two timestamps for comparison and provides the difference between them in days. First timestamp must be smaller. Return type of the entrypoint is `int`.
 26. `diff_hours(from_timestamp, to_timestamp)`
-The function takes as arguments two timestamps for comparison and provides the difference between them in hours. First timestamp must be smaller. Return type of the function is `int`.
+The entrypoint takes as arguments two timestamps for comparison and provides the difference between them in hours. First timestamp must be smaller. Return type of the entrypoint is `int`.
 27. `diff_minutes(from_timestamp, to_timestamp)`
-The function takes as arguments two timestamps for comparison and provides the difference between them in minutes. First timestamp must be smaller. Return type of the function is `int`.
+The entrypoint takes as arguments two timestamps for comparison and provides the difference between them in minutes. First timestamp must be smaller. Return type of the entrypoint is `int`.
 28. `diff_seconds(from_timestamp, to_timestamp)`
-The function takes as arguments two timestamps for comparison and provides the difference between them in seconds. First timestamp must be smaller. Return type of the function is `int`.
+The entrypoint takes as arguments two timestamps for comparison and provides the difference between them in seconds. First timestamp must be smaller. Return type of the entrypoint is `int`.
 29. `is_valid_date(year, month, day)`
-The function takes as arguments year, month, day and checks if the provided data could form a valid date. Return type of the function is `bool`
+The entrypoint takes as arguments year, month, day and checks if the provided data could form a valid date. Return type of the entrypoint is `bool`
 30. `is_valid_date_time(year, month, day, hour, minute, second)`
-The function takes as arguments year, month, day, hour, minute, second and checks if the provided data could form a valid date time. Return type of the function is `bool`
+The entrypoint takes as arguments year, month, day, hour, minute, second and checks if the provided data could form a valid date time. Return type of the entrypoint is `bool`
 31. `is_week_day(timestamp)`
-The function takes as argument timestamp and check if the day of the week is between Monday and Friday. Return type of the function is `bool`
+The entrypoint takes as argument timestamp and check if the day of the week is between Monday and Friday. Return type of the entrypoint is `bool`
 32. `is_week_end(timestamp)`
-The function takes as argument timestamp and check if the day of the week is Saturday or Sunday. Return type of the function is `bool`
+The entrypoint takes as argument timestamp and check if the day of the week is Saturday or Sunday. Return type of the entrypoint is `bool`

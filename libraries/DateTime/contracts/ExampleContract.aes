@@ -1,31 +1,31 @@
 include "DateTimeLibrary.aes"
 contract ExampleContract =
 
-  public function get_year(timestamp : int) : int = 
+  entrypoint get_year(timestamp : int) : int = 
     Date.get_year(timestamp)
 
-  public function get_month(timestamp : int) : int = 
+  entrypoint get_month(timestamp : int) : int = 
     Date.get_month(timestamp)
     
-  public function get_day(timestamp : int) : int = 
+  entrypoint get_day(timestamp : int) : int = 
     Date.get_day(timestamp)
     
-  public function get_hour(timestamp : int) : int = 
+  entrypoint get_hour(timestamp : int) : int = 
     Date.get_hour(timestamp)
     
-  public function get_minute(timestamp : int) : int = 
+  entrypoint get_minute(timestamp : int) : int = 
     Date.get_minute(timestamp)
 
-  public function get_second(timestamp : int) : int = 
+  entrypoint get_second(timestamp : int) : int = 
     Date.get_second(timestamp)
 
-  public function get_weekday(timestamp : int) : int = 
+  entrypoint get_weekday(timestamp : int) : int = 
     Date.get_weekday(timestamp)
 
-  public function is_leap_year(year : int) : bool = 
+  entrypoint is_leap_year(year : int) : bool = 
     Date.is_leap_year(year)
 
-  public function to_timestamp(year : int,
+  entrypoint to_timestamp(year : int,
                                month : int,
                                day : int,
                                hour : int,
@@ -33,69 +33,69 @@ contract ExampleContract =
                                second : int) : int = 
     Date.to_timestamp(year,month,day,hour,minute,second)
 
-  public function add_years(timestamp : int, years : int) : int = 
+  entrypoint add_years(timestamp : int, years : int) : int = 
     Date.add_years(timestamp, years)
 
-  public function sub_years(timestamp : int, years : int) : int = 
+  entrypoint sub_years(timestamp : int, years : int) : int = 
     Date.sub_years(timestamp, years)
 
-  public function add_months(timestamp : int, months : int) : int = 
+  entrypoint add_months(timestamp : int, months : int) : int = 
     Date.add_months(timestamp, months)
 
-  public function sub_months(timestamp : int, months : int) : int = 
+  entrypoint sub_months(timestamp : int, months : int) : int = 
     Date.sub_months(timestamp, months)
 
-  public function add_days(timestamp: int, days : int) : int = 
+  entrypoint add_days(timestamp: int, days : int) : int = 
     Date.add_days(timestamp, days)
 
-  public function sub_days(timestamp: int, days : int) : int = 
+  entrypoint sub_days(timestamp: int, days : int) : int = 
     Date.sub_days(timestamp, days)
 
-  public function add_hours(timestamp : int, hours : int) : int = 
+  entrypoint add_hours(timestamp : int, hours : int) : int = 
     Date.add_hours(timestamp, hours)
 
-  public function sub_hours(timestamp : int, hours : int) : int = 
+  entrypoint sub_hours(timestamp : int, hours : int) : int = 
     Date.sub_hours(timestamp, hours)
 
-  public function add_minutes(timestamp : int, minutes : int) : int = 
+  entrypoint add_minutes(timestamp : int, minutes : int) : int = 
     Date.add_minutes(timestamp, minutes)
 
-  public function sub_minutes(timestamp : int, minutes : int) : int = 
+  entrypoint sub_minutes(timestamp : int, minutes : int) : int = 
     Date.sub_minutes(timestamp, minutes)
   
-  public function add_seconds(timestamp : int, seconds : int) : int = 
+  entrypoint add_seconds(timestamp : int, seconds : int) : int = 
     Date.add_seconds(timestamp, seconds)
 
-  public function sub_seconds(timestamp : int, seconds : int) : int = 
+  entrypoint sub_seconds(timestamp : int, seconds : int) : int = 
     Date.sub_seconds(timestamp, seconds)
 
-  public function diff_years(from_timestamp : int, to_timestamp : int) : int = 
+  entrypoint diff_years(from_timestamp : int, to_timestamp : int) : int = 
     Date.diff_years(from_timestamp, to_timestamp)
 
-  public function diff_months(from_timestamp : int, to_timestamp : int) : int = 
+  entrypoint diff_months(from_timestamp : int, to_timestamp : int) : int = 
     Date.diff_months(from_timestamp, to_timestamp)
 
-  public function diff_days(from_timestamp : int, to_timestamp : int) : int = 
+  entrypoint diff_days(from_timestamp : int, to_timestamp : int) : int = 
     Date.diff_days(from_timestamp, to_timestamp)
 
-  public function diff_hours(from_timestamp : int, to_timestamp : int) : int = 
+  entrypoint diff_hours(from_timestamp : int, to_timestamp : int) : int = 
     Date.diff_hours(from_timestamp, to_timestamp)
 
-  public function diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
+  entrypoint diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
     Date.diff_minutes(from_timestamp, to_timestamp)
 
-  public function diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
+  entrypoint diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
     Date.diff_seconds(from_timestamp, to_timestamp)
 
-  public function is_valid_date(year : int, month : int, day : int) : bool =
+  entrypoint is_valid_date(year : int, month : int, day : int) : bool =
     Date.is_valid_date(year, month, day)
 
-  public function is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool =
+  entrypoint is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool =
     Date.is_valid_date_time(year, month, day, hour, minute, second)
 
-  public function is_week_day(timestamp : int) : bool =
+  entrypoint is_week_day(timestamp : int) : bool =
     Date.is_week_day(timestamp)
 
-  public function is_week_end(timestamp : int) : bool =
+  entrypoint is_week_end(timestamp : int) : bool =
     Date.is_week_end(timestamp)
     

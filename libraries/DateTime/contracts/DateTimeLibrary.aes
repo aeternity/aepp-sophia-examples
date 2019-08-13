@@ -214,10 +214,6 @@ namespace Date =
     else
       true
 
-  private function require(expression : bool, error : string) =
-    if(!expression) 
-      abort(error)
-
   private function get_units_of_measure() : date_time_constants = {
     origin_year = 1970, 
     day_in_seconds = 86400,
