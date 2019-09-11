@@ -28,7 +28,7 @@ contract CryptoHamster =
 
         needed_hamster.dna
 
-    private stateful function create_hamster_by_name_dna(name: string, dna: int) =
+    stateful function create_hamster_by_name_dna(name: string, dna: int) =
         let new_hamster : hamster = {
             id = state.index,
             name = name,
@@ -37,10 +37,10 @@ contract CryptoHamster =
         put(state{map_hamsters[name] = new_hamster})
         put(state{index = (state.index + 1)})
 
-    private function generate_random_dna(name: string) : int =
+    function generate_random_dna(name: string) : int =
         get_block_hash_bytes_as_int() - Chain.timestamp + state.index
 
-    private function get_block_hash_bytes_as_int() : int =
+    function get_block_hash_bytes_as_int() : int =
         switch(Chain.block_hash(Chain.block_height - 1))
             None => abort("blockhash not found")
             Some(bytes) => Bytes.to_int(bytes)
