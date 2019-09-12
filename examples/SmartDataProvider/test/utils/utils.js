@@ -57,12 +57,6 @@ const getClient = async function (Universal, clientConfig, keyPair) {
     return client;
 }
 
-function publicKeyToHex (crypto, publicKey) {
-    let byteArray = crypto.decodeBase58Check(publicKey.split('_')[1]);
-    let asHex = '#' + byteArray.toString('hex');
-    return asHex;
-}
-
 const execute = async (cli, command, args, options = {}) => {
     const child = spawn(cli, [command, ...args], options)
     let result = '';
