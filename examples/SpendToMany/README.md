@@ -4,16 +4,16 @@
 This contract allows user to spend tokens to another accounts, by just calling `spend_to_many(map_of_users)` function. 
 
 ## Prerequisites
-Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+Ensure that you have installed [AE project](https://github.com/aeternity/aepp-aeproject-js)
 
 ## How to deploy the contract
-`forgae deploy`
+`aeproject deploy`
 
 This command will deploy the contract in the local network.
 The configuration of deployment is written in `deploy.js` file.
 
 ## How to run the tests
-`forgae test`
+`aeproject test`
 
 All tests should be passing.
 
