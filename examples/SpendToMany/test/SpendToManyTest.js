@@ -15,13 +15,6 @@ const SPEND_TO_MANY_CONTRACT_FILE_PATH = "./../contracts/spend-to-many.aes";
 
 const spendToManyContractSource = utils.readFileRelative(`./contracts/${SPEND_TO_MANY_CONTRACT_FILE_PATH}`, 'utf-8')
 
-function decodeAddress (key) {
-  const decoded58addres = Crypto.decodeBase58Check(key.split('_')[1]).toString(
-    'hex'
-  )
-  return `0x${decoded58addres}`
-}
-
 describe('Contracts', () => {
   
   let client, spendToManyContractInstance;
