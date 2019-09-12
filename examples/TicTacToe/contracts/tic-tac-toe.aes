@@ -1,15 +1,15 @@
 contract TicTacToe =
+
   type state = map(int, int)
-  public function init() : state = 
-    {[11] = 0, [12] = 0, [13] = 0,
-     [21] = 0, [22] = 0, [23] = 0,
-     [31] = 0, [32] = 0, [33] = 0,
-     [00] = 0, // last player move info
-     [01] = 0 // counter
-     }
+
+  entrypoint init() : state = { [11] = 0, [12] = 0, [13] = 0,
+                                [21] = 0, [22] = 0, [23] = 0,
+                                [31] = 0, [32] = 0, [33] = 0,
+                                [00] = 0, // last player move info
+                                [01] = 0 } // counter
     
 
-  public stateful function make_move(position, player) : string =
+  stateful entrypoint make_move(position, player) : string =
     // check if given player is only either 1 or 2 
     require(player == 1 || player == 2, "Invalid player!")
     // check if the position is correct
@@ -31,12 +31,12 @@ contract TicTacToe =
     // check if the player win
     check_win(position, player)
 
-  private function opposite_player(player)=
+  function opposite_player(player)=
     switch(player)
       1 => 2
       2 => 1
 
-  private function check_win(position, player) : string =
+  function check_win(position, player) : string =
     if(position == 11)
       if(state[11] == player && state[12] == player && state[13] == player)
         winner_msg(player)
@@ -122,14 +122,12 @@ contract TicTacToe =
         "Game continues. The other player's turn."
     else
       "Position does not exist!"
-  private function winner_msg(player : int) : string = 
+  
+  function winner_msg(player : int) : string = 
     String.concat("You are the winner! Congratulations player ", Int.to_str(player))
-  private function check_free_space() : string =
+  
+  function check_free_space() : string =
     if(state[01] == 9)
       "Game is over. Nobody won!"
     else
       "Game continues. The other player's turn."
- 
-  private function require(condition, error) =
-    if(!condition)
-      abort(error) 
