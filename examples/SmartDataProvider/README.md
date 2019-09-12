@@ -9,16 +9,16 @@ When server contract is deployed, contract's address will be registered as an or
 Server makes validations of the request and returns a requested data.
 
 ## Prerequisites
-Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+Ensure that you have installed [AE project](https://github.com/aeternity/aepp-aeproject-js)
 
 ## How to deploy the contract
-`forgae deploy`
+`aeproject deploy`
 
 This command will deploy the contract in the local network.
 The configuration of deployment is written in `deploy.js` file.
 
 ## How to run the tests
-`forgae test`
+`aeproject test`
 
 All tests should be passing.
 
