@@ -1,6 +1,6 @@
 # Ignore node_modules
 /*/*/node_modules/
-/*/*/.aeproject-store/
+*/*/.aeproject-store/
 .DS_Store
 dist
 node_modules
