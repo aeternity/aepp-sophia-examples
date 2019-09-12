@@ -1,0 +1,31 @@
+contract SellerInterface =
+  entrypoint received_item : () => bool
+  entrypoint seller_contract_balance : () => int
+  entrypoint check_item_status : () => string
+
+contract TransportInterface = 
+  entrypoint check_courier_status : () => string
+  entrypoint check_courier_location : () => string
+  entrypoint check_courier_timestamp : () => int
+  
+contract Buyer =
+  stateful entrypoint deposit_to_seller_contract(price : int, key : address) : () =
+    Chain.spend(key, price)
+    
+  entrypoint received_item(remote : SellerInterface) : bool =
+    remote.received_item()
+    
+  entrypoint seller_contract_balance(remote : SellerInterface) : int =
+    remote.seller_contract_balance()
+    
+  entrypoint check_item_status(remote : SellerInterface) : string =
+    remote.check_item_status()
+
+  entrypoint check_courier_status(remote : TransportInterface) : string =
+    remote.check_courier_status()
+
+  entrypoint check_courier_location(remote : TransportInterface) : string =
+    remote.check_courier_location()
+
+  entrypoint check_courier_timestamp(remote : TransportInterface) : int =
+    remote.check_courier_timestamp()

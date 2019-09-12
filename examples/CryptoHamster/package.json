@@ -9,11 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "3.1.0",
+    "@aeternity/aepp-sdk": "^4.6.0",
+    "aeproject-lib": "1.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "forgae": "^1.0.2",
-    "promisify-child-process": "^3.1.0"
+    "promisify-child-process": "^3.1.0",
+    "yarn": "1.17.3"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^1.7.0",

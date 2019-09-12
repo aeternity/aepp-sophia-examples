@@ -1,5 +1,6 @@
 # Ignore node_modules
 /*/*/node_modules/
+*/*/.aeproject-store/
 .DS_Store
 dist
 node_modules
@@ -14,4 +15,4 @@ erc721.aes.deploy*
 /*/*/package-lock.json
 .vscode
 .forgae-store
-
+.aeproject-store

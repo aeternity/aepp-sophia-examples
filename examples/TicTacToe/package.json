@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "1.3.2",
-    "forgae": "1.1.1"
+    "@aeternity/aepp-sdk": "4.5.0",
+    "aeproject-lib": "1.0.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "yarn": "1.17.3"
   }
 }

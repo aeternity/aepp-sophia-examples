@@ -22,16 +22,16 @@ The player who succeeds in placing three of their marks in a horizontal, vertica
 - After all positions are taken and if there is no winner, the code will throw `Game is over. Nobody won!`
 
 ## Prerequisites
-Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+Ensure that you have installed [AE project](https://github.com/aeternity/aepp-aeproject-js)
 
 ## How to deploy the contract
-`forgae deploy`
+`aeproject deploy`
 
 This command will deploy the contract in the local network.
 The configuration of deployment is written in `deploy.js` file.
 
 ## How to run the tests
-`forgae test`
+`aeproject test`
 
 All tests should be passing.
 

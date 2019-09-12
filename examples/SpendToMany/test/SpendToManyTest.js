@@ -1,145 +1,69 @@
-const Ae = require('@aeternity/aepp-sdk').Universal
-const Crypto = require('@aeternity/aepp-sdk').Crypto
+const path = require('path');
+const chai = require('chai');
+let chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
+const assert = chai.assert;
 
-const config = {
-  host: 'http://localhost:3001/',
-  internalHost: 'http://localhost:3001/internal/',
-  gas: 200000,
-  ttl: 55
-}
+const AeSDK = require('@aeternity/aepp-sdk');
+const Crypto = require('@aeternity/aepp-sdk').Crypto;
+const Universal = AeSDK.Universal;
+const config = require("./constants/config.json")
+const utils = require('./utils/utils');
+const getClient = utils.getClient;
 
-async function deployContract (contractName, ...params) {
-  const [owner, gas, deployObj] = [params[0], params[1], params[2]]
-  const contractSource = utils.readFileRelative(
-    `./contracts/${contractName}.aes`,
-    'utf-8'
-  )
-  const compileContract = await owner.contractCompile(contractSource, gas)
-  const deployPromiseContract = await compileContract.deploy(deployObj)
-  return deployPromiseContract
-}
+const SPEND_TO_MANY_CONTRACT_FILE_PATH = "./../contracts/spend-to-many.aes";
 
-function decodeAddress (key) {
-  const decoded58addres = Crypto.decodeBase58Check(key.split('_')[1]).toString(
-    'hex'
-  )
-  return `0x${decoded58addres}`
-}
+const spendToManyContractSource = utils.readFileRelative(`./contracts/${SPEND_TO_MANY_CONTRACT_FILE_PATH}`, 'utf-8')
 
-async function callContract(
-  contract,
-  functionName,
-  args,
-  decodeType = 'string'
-) {
-  const result = await contract.call(functionName, args)
-  const decodedResult = await result.decode(decodeType)
-  return decodedResult.value
-}
+describe('Contracts', () => {
+  
+  let client, spendToManyContractInstance;
 
-describe('SpendToMany Contract', () => {
-  let owner
-  let SpendToMany
+  beforeEach(async () => {
+      client = await getClient(Universal, config, config.ownerKeyPair);
+  });
 
-  before(async () => {
-    const ownerKeyPair = wallets[0]
-    owner = await Ae({
-      url: config.host,
-      internalUrl: config.internalHost,
-      keypair: ownerKeyPair,
-      nativeMode: true,
-      networkId: 'ae_devnet'
-    })
-  })
 
-  describe('Deploy contract', () => {
-    it('should deploy SpendToMany contract', async () => {
-      const gas = { gas: config.gas }
-      const deployObj = { options: { ttl: config.ttl } }
-      SpendToMany = await deployContract('SpendToMany', owner, gas, deployObj)
-      assert(SpendToMany.hasOwnProperty('address'))
-      assert(SpendToMany.hasOwnProperty('owner'))
+  describe('Deploy contracts', () => {
+
+    it('should deploy Spend To Many contract', async () => {
+      spendToManyContractInstance = await client.getContractInstance(spendToManyContractSource);
+      const init = await spendToManyContractInstance.deploy([]);
+      assert.equal(init.result.returnType, 'ok');
     })
   })
 
   describe('Interact with the contract', async () => {
-    let sophiaMap = ''
+    let sophiaMap = [];
     let genRandomTokensAmount
     let totalTokens = 0
 
     for (let i = 0; i < wallets.length; i++) {
-      if (i + 1 == wallets.length) {
         genRandomTokensAmount = Math.floor(Math.random() * 1000) + 1
         totalTokens = totalTokens + genRandomTokensAmount
-        sophiaMap =
-          sophiaMap +
-          `[${decodeAddress(wallets[i].publicKey)}] =  ${genRandomTokensAmount}`
-      } else {
-        genRandomTokensAmount = Math.floor(Math.random() * 1000) + 1
-        totalTokens = totalTokens + genRandomTokensAmount
-        sophiaMap =
-          sophiaMap +
-          `[${decodeAddress(
-            wallets[i].publicKey
-          )}] =  ${genRandomTokensAmount}, `
-      }
+        sophiaMap.push([wallets[i].publicKey, genRandomTokensAmount])
     }
 
     it('should spend to multiple addresses with valid amount', async () => {
-      const args = {
-        args: `{${sophiaMap}}`,
-        options: { ttl: 55, amount: 10000 },
-        abi: 'sophia'
-      }
-
-      const result = await callContract(
-        SpendToMany,
-        'spend_to_many',
-        args,
-        'int'
-      )
-      assert.equal(result, totalTokens)
+      const result = await spendToManyContractInstance.methods.spend_to_many(sophiaMap, {amount: 10000})
+      assert.equal(result.decodedResult, totalTokens)
     })
 
     it('should spend and check balance again', async () => {
-      let current_balance = await owner.balance(`${wallets[1].publicKey}`)
-
-      const args_ = {
-        args: `{[${decodeAddress(wallets[1].publicKey)}] = 200}`,
-        options: { ttl: 55, amount: 10000 },
-        abi: 'sophia'
-      }
-      await callContract(SpendToMany, 'spend_to_many', args_, 'int')
-
-      let balance_after_spend = await owner.balance(`${wallets[1].publicKey}`)
-
+      let current_balance = await client.balance(wallets[1].publicKey)
+      let args = [ [wallets[1].publicKey, 200] ]
+      await spendToManyContractInstance.methods.spend_to_many(args, {amount: 10000})
+      let balance_after_spend = await client.balance(wallets[1].publicKey)
       assert.equal(balance_after_spend, parseInt(current_balance, 10) + 200)
     })
 
     it('should spend to 0 addresses', async () => {
-      const args = {
-        args: `{}`,
-        options: { ttl: 55, amount: 10000 },
-        abi: 'sophia'
-      }
-
-      const result = await callContract(
-        SpendToMany,
-        'spend_to_many',
-        args,
-        'int'
-      )
-      assert.equal(result, 0)
+      const result = await spendToManyContractInstance.methods.spend_to_many([], {amount: 10000})
+      assert.equal(result.decodedResult, 0)
     })
 
     it('should spend to multiple addresses with invalid amount', async () => {
-      const args = {
-        args: `{${sophiaMap}}`,
-        options: { ttl: 55, amount: 1 },
-        abi: 'sophia'
-      }
-
-      const result = callContract(SpendToMany, 'spend_to_many', args, 'int')
+      const result = spendToManyContractInstance.methods.spend_to_many(sophiaMap, {amount: 1})
       await assert.isRejected(result)
     })
   })
