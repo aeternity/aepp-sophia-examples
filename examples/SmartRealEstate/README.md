@@ -6,10 +6,10 @@ This project implements basic back-end functionality for managing real estate.
 This smart contract has functionality to add a new owner, add a new owner to a new property, add a new property, changing and removing owners and owner's properties. When the contract is deployed, there will be a default record, where the deployer's key will be the owner of some predefined property.
 
 ## Prerequisites
-Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+Ensure that you have installed [AE project](https://github.com/aeternity/aepp-aeproject-js)
 
 ## How to deploy the contract
-`forgae deploy`
+`aeproject deploy`
 
 This command will deploy the contract in the local network.
 The configuration of deployment is written in `deploy.js` file.
@@ -30,7 +30,7 @@ It should return the address in hex, which now can be used in your contract. You
 ```
 
 ## How to run the tests
-`forgae test`
+`aeproject test`
 
 All tests should be passing.
 
