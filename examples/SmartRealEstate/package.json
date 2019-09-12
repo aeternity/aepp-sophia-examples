@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "1.0.1",
-    "forgae": "git+https://github.com/aeternity/aepp-forgae-js.git"
+    "@aeternity/aepp-sdk": "^4.6.0",
+    "aeproject-lib": "1.0.0",
+    "yarn": "1.17.3"
   }
 }
