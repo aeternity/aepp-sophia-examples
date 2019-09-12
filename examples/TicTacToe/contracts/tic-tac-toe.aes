@@ -31,7 +31,7 @@ contract TicTacToe =
     // check if the player win
     check_win(position, player)
 
-  function opposite_player(player)=
+  function opposite_player(player) : () =
     switch(player)
       1 => 2
       2 => 1

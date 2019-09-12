@@ -7,7 +7,7 @@ contract ExchangeMarket =
   type oracle_id = oracle(query_type, answer_type)
   type query_id = oracle_query(query_type, answer_type)
 
-  stateful entrypoint init(ae_price': int, token_price': int) = 
+  stateful entrypoint init(ae_price': int, token_price': int) : state = 
     require(ae_price' > 0 , "The price for the AE must be greater than zero ")
     require(token_price' > 0 , "The price for the token must be greater than zero")
     { assets = { ["ae"] = ae_price', ["token"] = token_price' }}
@@ -41,7 +41,7 @@ contract ExchangeMarket =
       None => 0
       Some(response) => response
 
-  stateful function update_price(new_price: int, asset: string) =
+  stateful function update_price(new_price: int, asset: string) : () =
     require(asset == "ae" || asset == "token", "Unrecognized asset")
     require(new_price > 0, "The new price must be greater than zero")
     put(state{assets[asset] = new_price})

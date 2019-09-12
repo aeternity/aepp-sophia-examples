@@ -6,10 +6,10 @@ contract Transport =
   stateful entrypoint init(timestamp : int, city : string) : state =
     { location = city, timestamp = timestamp, status = "on_way" }
   
-  stateful entrypoint change_location(timestamp : int, city : string) =
+  stateful entrypoint change_location(timestamp : int, city : string) : () =
     put(state{ location = city, timestamp = timestamp })
     
-  stateful entrypoint delivered_item(timestamp : int, city : string) =
+  stateful entrypoint delivered_item(timestamp : int, city : string) : () =
     put(state{ location = city, timestamp = timestamp, status = "delivered" })
     
   entrypoint check_courier_status() : string =

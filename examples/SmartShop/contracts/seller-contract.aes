@@ -7,7 +7,7 @@ contract Seller =
   stateful entrypoint init(bc : address, price : int) : state =
     {seller_key = Call.caller, buyer_contract = bc, status = "undefined", price = price }
     
-  stateful entrypoint send_item() =
+  stateful entrypoint send_item() : () =
     require(check_money(), "Not enough money")
     put(state{ status = "sent_to_transport_courier" })
       
@@ -23,7 +23,7 @@ contract Seller =
   entrypoint seller_contract_balance() : int =
     Contract.balance
     
-  entrypoint check_item_status() =
+  entrypoint check_item_status() : string =
     state.status
 
   function check_money() : bool =

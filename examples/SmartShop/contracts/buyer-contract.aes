@@ -9,7 +9,7 @@ contract TransportInterface =
   entrypoint check_courier_timestamp : () => int
   
 contract Buyer =
-  stateful entrypoint deposit_to_seller_contract(price : int, key : address) =
+  stateful entrypoint deposit_to_seller_contract(price : int, key : address) : () =
     Chain.spend(key, price)
     
   entrypoint received_item(remote : SellerInterface) : bool =

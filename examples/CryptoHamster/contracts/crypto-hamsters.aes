@@ -13,7 +13,7 @@ contract CryptoHamster =
         { index = 1,
           map_hamsters = {}}
 
-    stateful entrypoint create_hamster(hamster_name: string) =
+    stateful entrypoint create_hamster(hamster_name: string) : () =
         require(!name_exists(hamster_name), "Name is already taken")
         let dna : int = generate_random_dna(hamster_name)
         create_hamster_by_name_dna(hamster_name, dna)
@@ -23,12 +23,10 @@ contract CryptoHamster =
 
     entrypoint get_hamster_dna(name: string) : int =
         require(name_exists(name), "There is no hamster with that name!")
-
         let needed_hamster : hamster = state.map_hamsters[name]
-
         needed_hamster.dna
 
-    stateful function create_hamster_by_name_dna(name: string, dna: int) =
+    stateful function create_hamster_by_name_dna(name: string, dna: int) : () =
         let new_hamster : hamster = {
             id = state.index,
             name = name,

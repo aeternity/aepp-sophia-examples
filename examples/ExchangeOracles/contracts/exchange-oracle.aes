@@ -21,7 +21,7 @@ contract ExchangeOracle =
 
   entrypoint get_oracle() : oracle_id = state.exchange_oracle
 
-  stateful function respond_to_question(query_id: query_id, response: int)  =
+  stateful function respond_to_question(query_id: query_id, response: int) : () =
     Oracle.respond(state.exchange_oracle, query_id, response)
 
   stateful function create_query(question: query_type, query_fee: int, query_ttl: int, relative_ttl: int) : query_id =
