@@ -14,9 +14,7 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-const Ae = require('@aeternity/aepp-sdk').Universal;
-const Deployer = require('forgae').Deployer;
-const gasLimit = 1000000;
+const Deployer = require('forgae-lib').Deployer;
 
 const deploy = async (network, privateKey) => {
 	let deployer = new Deployer(network, privateKey)

@@ -1,6 +1,18 @@
 //@ts-nocheck
+const fs = require('fs-extra')
+const path = require('path')
 const Deployer = require('forgae-lib').Deployer
-const dateContract = "./contracts/DateTime.aes"
+const contractDirectory = `${process.cwd()}/contracts/`
+const exampleContract = 'ExampleContract.aes'
+const contract = fs.readFileSync(path.resolve(`${contractDirectory}/${exampleContract}`), 'utf-8')
+const actualContractName = 'ExampleWithLibrary.aes'
+const actualContractPath = contractDirectory + actualContractName
+const {
+  createActualContract,
+  removeFiles
+} = require('./utils/utils')
+
+
 const {
   timeUnits,
   timePeriod,
@@ -11,7 +23,8 @@ const {
   getMonthDifference
 } = require('./utils/dateTimeUtils')
 
-describe('DateTime', () => {
+
+describe('DateTime Library', () => {
   let deployedContract
   let deployer
 
@@ -30,7 +43,7 @@ describe('DateTime', () => {
   let offset = randomDate.getTimezoneOffset()
   let local_diff = (offset * (-1)) * 60
   let starting_timestamp = (randomDate.getTime() / 1000) + local_diff;
-
+  
   let date_time
   let dt_timestamp
   let resultTimestamp
@@ -38,14 +51,17 @@ describe('DateTime', () => {
   let future_timestamp
   let past_timestamp
 
+
   before(async () => {
     const ownerKeyPair = wallets[0]
 
     deployer = new Deployer('local', ownerKeyPair.secretKey)
-    deployedContract = deployer.deploy(dateContract)
+    createActualContract(contract, contractDirectory, actualContractPath)
+    deployedContract = deployer.deploy(actualContractPath)
   })
+  
 
-  it('should deploy the contract', async () => {
+  it('should deploy the contract', async() => {
     assert.isFulfilled(deployedContract, 'Could not deploy the ExampleContract Smart Contract')
     deployedContract = await deployedContract
   })
@@ -104,7 +120,7 @@ describe('DateTime', () => {
   it('should add more years to current timestamp', async () => {
     let YEAR_DIFF, result
     let actual_year, expected_year
-
+    
     YEAR_DIFF = generateRandomNumber()
     result = (await deployedContract.add_years(starting_timestamp, YEAR_DIFF)).decodedResult
     actual_year = (await deployedContract.get_year(result)).decodedResult
@@ -116,19 +132,19 @@ describe('DateTime', () => {
   it('should substract years from current timestamp', async () => {
     let YEAR_DIFF
     let actual_year, expected_year
-
+    
     YEAR_DIFF = generateRandomNumber()
     result = (await deployedContract.sub_years(starting_timestamp, YEAR_DIFF)).decodedResult
     actual_year = (await deployedContract.get_year(result)).decodedResult
     expected_year = year - YEAR_DIFF
-
+    
     assert.equal(expected_year, actual_year)
   })
 
 
   it('should add more months to current timestamp', async () => {
     let MONTHS_DIFF
-
+    
     date_time = generateRandomDateTime(timePeriod.past);
     MONTHS_DIFF = generateRandomNumber();
     dt_timestamp = date_time.getTime() / 1000
@@ -142,7 +158,7 @@ describe('DateTime', () => {
 
   it('should substract months from current timestamp', async () => {
     let MONTHS_DIFF
-
+    
     date_time = generateRandomDateTime();
     MONTHS_DIFF = generateRandomNumber();
     dt_timestamp = date_time.getTime() / 1000
@@ -158,7 +174,7 @@ describe('DateTime', () => {
 
     date_time = generateRandomDateTime()
     dt_timestamp = date_time.getTime() / 1000
-
+        
     DAYS_DIFF = generateRandomNumber();
     resultTimestamp = (await deployedContract.add_days(dt_timestamp, DAYS_DIFF)).decodedResult
     result = (resultTimestamp - dt_timestamp) / ONE_DAY
@@ -181,9 +197,9 @@ describe('DateTime', () => {
 
   it('should add hours to given timestamp', async () => {
     let HOUR_DIFF
-
+   
     date_time = generateRandomDateTime();
-    HOUR_DIFF = generateRandomNumber();
+    HOUR_DIFF= generateRandomNumber();
 
     dt_timestamp = date_time.getTime() / 1000
     resultTimestamp = (await deployedContract.add_hours(dt_timestamp, HOUR_DIFF)).decodedResult
@@ -194,46 +210,46 @@ describe('DateTime', () => {
 
   it('should substract hours from given timestamp', async () => {
     let HOUR_DIFF
-
+    
     date_time = generateRandomDateTime();
     HOUR_DIFF = generateRandomNumber();
 
     dt_timestamp = date_time.getTime() / 1000
     resultTimestamp = (await deployedContract.sub_hours(dt_timestamp, HOUR_DIFF)).decodedResult
-    result = (dt_timestamp - resultTimestamp) / ONE_HOUR
+    result = (dt_timestamp -resultTimestamp) / ONE_HOUR
 
     assert.equal(HOUR_DIFF, result)
   })
 
   it('should add more minutes to current timestamp', async () => {
     let MIN_DIFF
-
+    
     date_time = generateRandomDateTime();
     MIN_DIFF = generateRandomNumber();
 
     dt_timestamp = date_time.getTime() / 1000
     resultTimestamp = (await deployedContract.add_minutes(dt_timestamp, MIN_DIFF)).decodedResult
     result = (resultTimestamp - dt_timestamp) / ONE_MINUTE
-
+    
     assert.equal(MIN_DIFF, result)
   })
 
   it('should substract minutes from given timestamp', async () => {
     let MIN_DIFF
-
+    
     date_time = generateRandomDateTime();
     MIN_DIFF = generateRandomNumber();
 
     dt_timestamp = date_time.getTime() / 1000
     resultTimestamp = (await deployedContract.sub_minutes(dt_timestamp, MIN_DIFF)).decodedResult
     result = (dt_timestamp - resultTimestamp) / ONE_MINUTE
-
+    
     assert.equal(MIN_DIFF, result)
   })
 
   it('should add more seconds to current timestamp', async () => {
     let SEC_DIFF
-
+    
     date_time = generateRandomDateTime();
     SEC_DIFF = generateRandomNumber();
 
@@ -246,13 +262,13 @@ describe('DateTime', () => {
 
   it('should substract seconds from given timestamp', async () => {
     let SEC_DIFF
-
+    
     date_time = generateRandomDateTime();
     SEC_DIFF = generateRandomNumber();
 
     dt_timestamp = date_time.getTime() / 1000
     resultTimestamp = (await deployedContract.sub_seconds(dt_timestamp, SEC_DIFF)).decodedResult
-    result = dt_timestamp - resultTimestamp
+    result = dt_timestamp - resultTimestamp 
 
     assert.equal(SEC_DIFF, result)
   })
@@ -260,7 +276,7 @@ describe('DateTime', () => {
   it('should check difference in years between two timestamps', async () => {
     let futureYear, pastYear
     let YEAR_DIFF, result
-
+    
     futureYear = getRandom(timeUnits.year, 2354, 2020)
     pastYear = getRandom(timeUnits.year, 2019, 1970)
     future_timestamp = (await deployedContract.to_timestamp(futureYear, 6, 8, 11, 58, 59)).decodedResult
@@ -274,7 +290,7 @@ describe('DateTime', () => {
 
   it('[NEGATIVE] should revert if method diff_years is called incorrectly', async () => {
     let futureYear, pastYear
-
+    
     futureYear = getRandom(timeUnits.year, 2354, 2020)
     pastYear = getRandom(timeUnits.year, 2019, 1970)
     future_timestamp = (await deployedContract.to_timestamp(futureYear, 6, 8, 11, 58, 59)).decodedResult
@@ -287,7 +303,7 @@ describe('DateTime', () => {
     let future_year, random_month_future_year;
     let past_year, random_month_past_year;
     let MONTH_DIFF
-
+    
     future_year = getRandom(timeUnits.year, 2354, 2020)
     random_month_future_year = getRandom(timeUnits.month)
     past_year = getRandom(timeUnits.year, 2019, 1970)
@@ -295,10 +311,10 @@ describe('DateTime', () => {
 
     future_timestamp = (await deployedContract.to_timestamp(future_year, random_month_future_year, 8, 11, 58, 59)).decodedResult
     past_timestamp = (await deployedContract.to_timestamp(past_year, random_month_past_year, 8, 11, 58, 59)).decodedResult
-
+  
     MONTH_DIFF = future_year * 12 + random_month_future_year - past_year * 12 - random_month_past_year
     result = (await deployedContract.diff_months(past_timestamp, future_timestamp)).decodedResult
-
+    
     assert.equal(MONTH_DIFF, result)
   })
 
@@ -316,7 +332,7 @@ describe('DateTime', () => {
     past_timestamp = generateRandomTimeStamp(timePeriod.past)
     DAY_DIFF = Math.floor((future_timestamp - past_timestamp) / ONE_DAY) // ONE_MINUTE / ONE_HOUR / ONE_DAY) //60,60,24
     result = (await deployedContract.diff_days(past_timestamp, future_timestamp)).decodedResult
-
+  
     assert.equal(DAY_DIFF, result)
   })
 
@@ -329,7 +345,7 @@ describe('DateTime', () => {
 
   it('should check difference in hours between two timestamps', async () => {
     let HOUR_DIFF, result
-
+    
     future_timestamp = generateRandomTimeStamp(timePeriod.future)
     past_timestamp = generateRandomTimeStamp(timePeriod.past)
     HOUR_DIFF = Math.floor((future_timestamp - past_timestamp) / ONE_HOUR)
@@ -348,7 +364,7 @@ describe('DateTime', () => {
 
   it('should check difference in minutes between two timestamps', async () => {
     let MIN_DIFF
-
+    
     future_timestamp = generateRandomTimeStamp(timePeriod.future)
     past_timestamp = generateRandomTimeStamp(timePeriod.past)
     MIN_DIFF = Math.floor((future_timestamp - past_timestamp) / ONE_MINUTE)
@@ -367,7 +383,7 @@ describe('DateTime', () => {
 
   it('should check difference in seconds between two timestamps', async () => {
     let SEC_DIFF
-
+    
     future_timestamp = generateRandomTimeStamp(timePeriod.future)
     past_timestamp = generateRandomTimeStamp(timePeriod.past)
     SEC_DIFF = future_timestamp - past_timestamp
@@ -430,4 +446,7 @@ describe('DateTime', () => {
     assert.equal(0, invalid)
   })
 
+  after(async () => {
+    removeFiles(actualContractPath)
+  })
 })
