@@ -1,7 +1,7 @@
 //@ts-nocheck
 const fs = require('fs-extra')
 const path = require('path')
-const Deployer = require('forgae-lib').Deployer
+const Deployer = require('aeproject-lib').Deployer
 const contractDirectory = `${process.cwd()}/contracts/`
 const exampleContract = 'ExampleContract.aes'
 const contract = fs.readFileSync(path.resolve(`${contractDirectory}/${exampleContract}`), 'utf-8')

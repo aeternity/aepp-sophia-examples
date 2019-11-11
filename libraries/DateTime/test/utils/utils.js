@@ -1,5 +1,5 @@
 const path = require('path');
-const utils = require('forgae-utils');
+const utils = require('aeproject-utils');
 const fs = require('fs-extra');
 
 

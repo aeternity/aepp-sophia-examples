@@ -1,5 +1,5 @@
 //@ts-nocheck
-const Deployer = require('forgae-lib').Deployer
+const Deployer = require('aeproject-lib').Deployer
 const dateContract = "./contracts/DateTime.aes"
 const {
   timeUnits,
