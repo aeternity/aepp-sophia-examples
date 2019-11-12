@@ -14,7 +14,7 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-const Deployer = require('forgae-lib').Deployer;
+const Deployer = require('aeproject-lib').Deployer;
 
 const deploy = async (network, privateKey) => {
 	let deployer = new Deployer(network, privateKey)
