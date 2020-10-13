@@ -14,18 +14,20 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-const Ae = require('@aeternity/aepp-sdk').Universal;
-const Deployer = require('forgae').Deployer;
-const gasLimit = 1000000;
+const Deployer = require('aeproject-lib').Deployer;
 
-const deploy = async (network, privateKey) => {
-	let deployer = new Deployer(network, privateKey)
+const deploy = async (network, privateKey, compiler, networkId) => {
+  let deployer = new Deployer(network, privateKey, compiler, networkId)
 
-	let buyer = await deployer.deploy("./contracts/BuyerContract.aes")
-	let seller = await deployer.deploy("./contracts/SellerContract.aes")
-	let transport = await deployer.deploy("./contracts/TransportsContract.aes")
+	let seller = (await deployer.deploy("./contracts/SellerContract.aes")).result.contractId
+  let transport = (await deployer.deploy("./contracts/TransportContract.aes", ["Lagos"])).result.contractId
+  let buyer = (await deployer.deploy("./contracts/BuyerContract.aes", [seller, transport])).result.contractId
+  
+  console.log("Seller Contract Address: " + seller)
+  console.log("Tranport Contract Address: " + transport)
+  console.log("Buyer Contract Address: " + buyer)
 };
 
 module.exports = {
-	deploy
+  deploy
 };

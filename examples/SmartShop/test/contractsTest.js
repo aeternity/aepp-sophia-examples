@@ -1,193 +1,145 @@
-const path = require('path');
-const chai = require('chai');
-let chaiAsPromised = require("chai-as-promised");
-chai.use(chaiAsPromised);
-const assert = chai.assert;
+/*
+ * ISC License (ISC)
+ * Copyright (c) 2018 aeternity developers
+ *
+ *  Permission to use, copy, modify, and/or distribute this software for any
+ *  purpose with or without fee is hereby granted, provided that the above
+ *  copyright notice and this permission notice appear in all copies.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ *  REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ *  AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ *  INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ *  LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ *  PERFORMANCE OF THIS SOFTWARE.
+ */
 
-const AeSDK = require('@aeternity/aepp-sdk');
-const Universal = AeSDK.Universal;
-const config = require("./constants/config.json")
-const utils = require('./utils/utils');
-const getClient = utils.getClient;
+const Deployer = require('aeproject-lib').Deployer;
+const BUYER_CONTRACT_PATH = "./contracts/BuyerContract.aes";
+const SELLER_CONTRACT_PATH = "./contracts/SellerContract.aes";
+const TRANSPORT_CONTRACT_PATH = "./contracts/TransportContract.aes";
 
-const BUYER_CONTRACT_FILE_PATH = "./../contracts/buyer-contract.aes";
-const SELLER_CONTRACT_FILE_PATH = "./../contracts/seller-contract.aes";
-const TRANSPORT_CONTRACT_FILE_PATH = "./../contracts/transport-contract.aes";
+describe('SmartShop Contract', () => {
 
-const buyerContractSource = utils.readFileRelative(`./contracts/${BUYER_CONTRACT_FILE_PATH}`, 'utf-8')
-const sellerContractSource = utils.readFileRelative(`./contracts/${SELLER_CONTRACT_FILE_PATH}`, 'utf-8')
-const transportContractSource = utils.readFileRelative(`./contracts/${TRANSPORT_CONTRACT_FILE_PATH}`, 'utf-8')
+  let deployer;
+  let ownerKeyPair = wallets[0];
 
-
-describe('Contracts', () => {
-  
-  let client, buyerContractInstance, sellerContractInstance, transportContractInstance;
-
-  beforeEach(async () => {
-      client = await getClient(Universal, config, config.ownerKeyPair);
-  });
-
+  before(async () => {
+    deployer = new Deployer('local', ownerKeyPair.secretKey)
+  })
 
   describe('Deploy contracts', () => {
+    let sellerContractAddress, transportContractAddress;
 
-    it('should deploy Buyer contract', async () => {
-      buyerContractInstance = await client.getContractInstance(buyerContractSource);
-      const init = await buyerContractInstance.deploy([]);
-      assert.equal(init.result.returnType, 'ok');
+    it('Deploying Seller Contract', async () => {
+      const sellerDeployedPromise = deployer.deploy(SELLER_CONTRACT_PATH) // Deploy it
+  
+      await assert.isFulfilled(sellerDeployedPromise, 'Could not deploy the SellerContract.aes Smart Contract'); // Check whether it's deployed
+      sellerContractAddress = (await Promise.resolve(sellerDeployedPromise)).address
     })
 
-    it('should deploy Seller contract', async () => {
-        sellerContractInstance = await client.getContractInstance(sellerContractSource);
-        const init = await sellerContractInstance.deploy([config.ownerKeyPair.publicKey, 100]);
-        assert.equal(init.result.returnType, 'ok');
-    })
-    
-    it('should deploy Transport contract', async () => {
-      transportContractInstance = await client.getContractInstance(transportContractSource);
-      const init = await transportContractInstance.deploy([1548074338, "Varna"]);
-      assert.equal(init.result.returnType, 'ok');
+    it('Deploying Transport Contract', async () => {
+      const transportDeployedPromise = deployer.deploy(TRANSPORT_CONTRACT_PATH, ["Lagos"]) // Deploy it
+  
+      await assert.isFulfilled(transportDeployedPromise, 'Could not deploy the TransportContract.aes Smart Contract'); // Check whether it's deployed
+      transportContractAddress = (await Promise.resolve(transportDeployedPromise)).address
     })
 
+    it('Deploying Buyer Contract', async () => {
+      const buyerDeployedPromise = deployer.deploy(BUYER_CONTRACT_PATH, [sellerContractAddress, transportContractAddress]) // Deploy it
+  
+      await assert.isFulfilled(buyerDeployedPromise, 'Could not deploy the BuyerContract.aes Smart Contract'); // Check whether it's deployed
+      await Promise.resolve(buyerDeployedPromise)
+    })
   })
 
   describe('Interact with contracts', () => {
-  //   let addressSeller
-  //   let addressTransport
-  //   before (() => {
-  //     addressSeller = decodeContractAddress(SellerContract)
-  //     addressTransport = decodeContractAddress(TransportContract)
-  //   })
-  //   it("should deposit tokens to seller's contract", async () => {
-  //     const args = {
-  //       args: `(2000, ${addressSeller})`,
-  //       options: { ttl: 55, amount: 2000 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(BuyerContract, 'deposit_to_seller_contract', args)
-  //     assert.equal(result, [])
-  //   })
+    let BuyerContract, SellerContract, addressSeller, TransportContract, addressTransport;
 
-  //   it("should check seller's contract balance", async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(SellerContract, 'seller_contract_balance', args)
-  //     assert.equal(result, 2000)
-  //   })
+    before(async () => {
+      const deployedSeller = deployer.deploy(SELLER_CONTRACT_PATH)
+      SellerContract = await Promise.resolve(deployedSeller)
+      addressSeller = SellerContract.address
 
-  //   it('should send item', async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(SellerContract, 'send_item', args)
-  //     assert.equal(result, [])
-  //   })
+      const deployedTransport = deployer.deploy(TRANSPORT_CONTRACT_PATH, ["Lagos"])
+      TransportContract = await Promise.resolve(deployedTransport)
+      addressTransport = TransportContract.address
 
-  //   it('should check item status', async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(SellerContract, 'check_item_status', args, 'string')
-  //     assert.equal(result, 'sent_to_transport_courier')
-  //   })
+      const deployedBuyer = deployer.deploy(BUYER_CONTRACT_PATH, [addressSeller, addressTransport])
+      BuyerContract = await Promise.resolve(deployedBuyer)
+    });
 
-  //   it('should change location', async () => {
-  //     const args = {
-  //       args: `(1548157482, "Burgas")`,
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(TransportContract, 'change_location', args, 'bool')
-  //     assert.equal(result, [])
-  //   })
+    it("Should deposit tokens to seller's contract", async () => {
+      let result = await BuyerContract.deposit_to_seller_contract({amount: 100})
 
-  //   it('should check courier status', async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(TransportContract, 'check_courier_status', args, 'string')
-  //     assert.equal(result, 'on_way')
-  //   })
+      assert.isOk(result)
+    })
 
-  //   it('should check courier location', async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(TransportContract, 'check_courier_location', args, 'string')
-  //     assert.equal(result, 'Burgas')
-  //   })
+    it("Should check seller's contract balance", async () => {
+      let result = (await SellerContract.seller_contract_balance()).decodedResult
 
-  //   it('should check courier timestamp', async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(TransportContract, 'check_courier_timestamp', args)
-  //     assert.equal(result, 1548157482)
-  //   })
+      assert.equal(result, 100)
+    })
 
-  //   it('should deliver item', async () => {
-  //     const args = {
-  //       args: `(1548157980, "Sofia")`,
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(TransportContract, 'delivered_item', args, 'bool')
-  //     assert.equal(result, [])
-  //   })
+    it("Should send item", async () => {
+      let result = await SellerContract.send_item()
 
-  //   it('should check courier location from Buyer contract', async () => {
-  //     const args = {
-  //       args: `${addressTransport}`,
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(BuyerContract, 'check_courier_location', args, 'string')
-  //     assert.equal(result, 'Sofia')
-  //   })
+      assert.isOk(result)
+    })
 
-  //   it('should check courier status from Buyer contract', async () => {
-  //     const args = {
-  //       args: `${addressTransport}`,
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(BuyerContract, 'check_courier_status', args, 'string')
-  //     assert.equal(result, 'delivered')
-  //   })
+    it("Should check item status", async () => {
+      let result = (await SellerContract.check_item_status()).decodedResult
 
-  //   it('should check courier timestamp from Buyer contract', async () => {
-  //     const args = {
-  //       args: `${addressTransport}`,
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(BuyerContract, 'check_courier_timestamp', args)
-  //     assert.equal(result, 1548157980)
-  //   })
+      assert.equal(result, 'sent_to_transport_courier')
+    })
 
-  //   it('should recieve item from Buyer contract', async () => {
-  //     const args = {
-  //       args: `(${addressSeller})`,
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(BuyerContract, 'received_item', args, 'bool')
-  //     assert.equal(result, true)
-  //   })
-    
-  //   it('should check seller ballance', async () => {
-  //     const args = {
-  //       options: { ttl: 55 },
-  //       abi: 'sophia'
-  //     }
-  //     const result = await callContract(SellerContract, 'seller_contract_balance', args)
-  //     assert.equal(result, 0)
-  //   })
+    it("Should change courier location", async () => {
+      let result = await TransportContract.change_location("Abuja")
+
+      assert.isOk(result)
+    })
+
+    it("Should check courier status", async () => {
+      let result = (await TransportContract.check_courier_status()).decodedResult
+
+      assert.equal(result, 'on_way')
+    })
+
+    it("Should check courier location", async () => {
+      let result = (await TransportContract.check_courier_location()).decodedResult
+
+      assert.equal(result, 'Abuja')
+    })
+
+    it("Should deliver item", async () => {
+      let result = await TransportContract.delivered_item("Jos")
+
+      assert.isOk(result)
+    })
+
+    it("Should check courier location from Buyer contract", async () => {
+      let result = (await BuyerContract.check_courier_location()).decodedResult
+
+      assert.equal(result, 'Jos')
+    })
+
+    it("Should check courier status from Buyer contract", async () => {
+      let result = (await BuyerContract.check_courier_status()).decodedResult
+
+      assert.equal(result, 'delivered')
+    })
+
+    it("Should recieve item from Buyer contract", async () => {
+      let result = (await BuyerContract.received_item()).decodedResult
+
+      assert.equal(result, true)
+    })
+
+    it("Should check seller's contract balance", async () => {
+      let result = (await SellerContract.seller_contract_balance()).decodedResult
+
+      assert.equal(result, 0)
+    })
   })
 })
