@@ -1,0 +1,36 @@
+contract SellerInterface =
+  payable stateful entrypoint received_item : () => bool
+  entrypoint get_contract_address : () => address
+  entrypoint seller_contract_balance : () => int
+  entrypoint check_item_status : () => string
+
+contract TransportInterface = 
+  entrypoint check_courier_status : () => string
+  entrypoint check_courier_location : () => string
+  
+payable contract Buyer =
+  record state = { 
+      seller : SellerInterface,
+      transport : TransportInterface }
+
+  entrypoint init(sc : SellerInterface, tc : TransportInterface) = { 
+      seller = sc,
+      transport = tc }
+      
+  payable stateful entrypoint deposit_to_seller_contract() =
+    Chain.spend(state.seller.get_contract_address(), Call.value)
+
+  payable stateful entrypoint received_item() : bool =
+    state.seller.received_item()
+    
+  entrypoint seller_contract_balance() : int =
+    state.seller.seller_contract_balance()
+    
+  entrypoint check_item_status() : string =
+    state.seller.check_item_status()
+
+  entrypoint check_courier_status() : string =
+    state.transport.check_courier_status()
+
+  entrypoint check_courier_location() : string =
+    state.transport.check_courier_location()

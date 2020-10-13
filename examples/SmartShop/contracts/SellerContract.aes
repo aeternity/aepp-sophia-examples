@@ -1,0 +1,35 @@
+payable contract Seller =
+  record state = 
+    { seller_address : address,
+      status : string,
+      contract_address : address }
+  
+  stateful entrypoint init() : state =
+    { seller_address = Call.caller,
+      status = "undefined",
+      contract_address = Contract.address }
+
+  function check_money() : bool =
+    Contract.balance > 0
+    
+  stateful entrypoint send_item() : string =
+    require(check_money(), "Not enough money")
+    put(state{status = "sent_to_transport_courier"})
+    state.status
+      
+  payable stateful entrypoint received_item() : bool =
+    put(state{status = "delivered" })
+    Chain.spend(state.seller_address, Contract.balance)
+    true
+
+  entrypoint key_balance() : int =
+    Chain.balance(Call.caller)
+    
+  entrypoint seller_contract_balance() : int =
+    Contract.balance
+
+  entrypoint get_contract_address() : address =
+    state.contract_address
+    
+  entrypoint check_item_status() : string =
+    state.status
