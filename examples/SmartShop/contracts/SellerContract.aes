@@ -18,19 +18,14 @@ payable contract Seller =
     require(check_money(), "Not enough money")
     put(state{status = "sent_to_transport_courier"})
     state.status
-
-  function check_buyer() : bool =
-    state.seller_address != state.buyer_address
       
   stateful entrypoint received_item() : unit =
-    require(check_buyer(), "Buyer Only Function")
+    require(Call.origin == state.buyer_address, "Buyer Only Function")
     put(state{status = "delivered" })
     Chain.spend(state.seller_address, Contract.balance)
 
-  entrypoint key_balance() : int = Chain.balance(Call.caller)
-    
+  entrypoint caller_balance() : int = Chain.balance(Call.caller)
+
   entrypoint seller_contract_balance() : int = Contract.balance
 
-  entrypoint seller_contract_address() : address = Contract.address
-    
   entrypoint check_item_status() : string = state.status

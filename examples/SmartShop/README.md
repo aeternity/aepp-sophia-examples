@@ -11,25 +11,24 @@ This project implements basic **Seller**, **Transport** and **Buyer** behaviors.
 - `delivered_item(city : string)` - finishes the delivery process of the item and updates the timestamp.
 
 3. **BuyerContract** implements following functions: 
-- `deposit_to_seller_contract(seller : SellerInterface)` - the passing argument is the seller's contract address.
+- `deposit_to_seller_contract()` - will deposite item price to the seller contract.
 
 There are functions implemented in Transport and Seller contracts, that we can call from Buyer contract, to check status of the item:
-- `received_item(seller : SellerInterface)` - will change the item status to _delivered_ and send the deposited price to the seller.
-- `seller_contract_balance(seller : SellerInterface)` - will return deposited price of the order.
-- `check_item_status(seller : SellerInterface)` - will return the item status of the order.
-- `check_courier_status(transport : TransportInterface)` - will return the courier delivery status of the order.
-- `check_courier_location(transport : TransportInterface)` - will return the current delivery location of the order
+- `received_item()` - will change the item status to _delivered_ and send the deposited price to the seller.
+- `seller_contract_balance()` - will return the seller contract balance.
+- `check_item_status()` - will return the item status of the order.
+- `check_courier_status()` - will return the courier delivery status of the order.
+- `check_courier_location()` - will return the current delivery location of the order
 
 ## Workflow
-1. The Buyer shoud deploy the BuyerContract first.
+1. The Seller shoud deploy the SellerContract first by passing the buyer public address and item price as arguments.
 2. The Transport Courier should deploy the TransportContract passing `location` as an argument.  
-3. The Seller shoud pass buyer owner address(publicKey) and price of the item as arguments when deploying SellerContract.
-4. The Buyer should deposit the needed amount, by calling `deposit_to_seller_contract(seller : SellerInterface)`, which takes an arguments of the seller_contract_address and price of the item as `Call.value`.
+3. The Buyer shoud pass seller contract address and transport contract address as arguments when deploying BuyerContract.
+4. The Buyer should deposit the needed amount, by calling `deposit_to_seller_contract()`, which takes the price of the item as `Call.value`.
 5. The seller now should send the item, which will be redirected to transport courier. The function is `send_item()`. It checks if buyer had deposited the price of the item to the seller's contract.
 6. Buyer can track the status of the item:
-- `check_courier_status(transport : TransportInterface)` - returns current delivery status 
-- `check_courier_location(transport : TransportInterface)` - returns current location status
+- `check_courier_status()` - returns current delivery status 
+- `check_courier_location()` - returns current location status
 7. Once the item is delivered, the courier should call `delivered_item(city : string)` function, with current `location`.
-8. To finalize the order, buyer should call `received_item(seller : SellerInterface)` function, with SellerContract address.
-
-The amount of tokens, payed by buyer, will be sent to seller's account.
+8. To finalize the order, buyer should call `received_item()` function, with SellerContract address.
+9. The amount of tokens, payed by buyer, will be sent to seller's account.
