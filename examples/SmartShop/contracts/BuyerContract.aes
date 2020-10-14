@@ -1,6 +1,6 @@
 contract SellerInterface =
-  payable stateful entrypoint received_item : () => bool
-  entrypoint get_contract_address : () => address
+  entrypoint received_item : () => unit
+  entrypoint seller_contract_address : () => address
   entrypoint seller_contract_balance : () => int
   entrypoint check_item_status : () => string
 
@@ -9,28 +9,20 @@ contract TransportInterface =
   entrypoint check_courier_location : () => string
   
 payable contract Buyer =
-  record state = { 
-      seller : SellerInterface,
-      transport : TransportInterface }
+  payable stateful entrypoint deposit_to_seller_contract(seller : SellerInterface) : unit =
+    Chain.spend(seller.seller_contract_address(), Call.value)
 
-  entrypoint init(sc : SellerInterface, tc : TransportInterface) = { 
-      seller = sc,
-      transport = tc }
-      
-  payable stateful entrypoint deposit_to_seller_contract() =
-    Chain.spend(state.seller.get_contract_address(), Call.value)
-
-  payable stateful entrypoint received_item() : bool =
-    state.seller.received_item()
+  stateful entrypoint received_item(seller: SellerInterface) : unit =
+    seller.received_item()
     
-  entrypoint seller_contract_balance() : int =
-    state.seller.seller_contract_balance()
+  entrypoint seller_contract_balance(seller: SellerInterface) : int =
+    seller.seller_contract_balance()
     
-  entrypoint check_item_status() : string =
-    state.seller.check_item_status()
+  entrypoint check_item_status(seller: SellerInterface) : string =
+    seller.check_item_status()
 
-  entrypoint check_courier_status() : string =
-    state.transport.check_courier_status()
+  entrypoint check_courier_status(transport : TransportInterface) : string =
+    transport.check_courier_status()
 
-  entrypoint check_courier_location() : string =
-    state.transport.check_courier_location()
+  entrypoint check_courier_location(transport : TransportInterface) : string =
+    transport.check_courier_location()

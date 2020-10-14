@@ -19,13 +19,9 @@ const Deployer = require('aeproject-lib').Deployer;
 const deploy = async (network, privateKey, compiler, networkId) => {
   let deployer = new Deployer(network, privateKey, compiler, networkId)
 
-	let seller = (await deployer.deploy("./contracts/SellerContract.aes")).result.contractId
-  let transport = (await deployer.deploy("./contracts/TransportContract.aes", ["Lagos"])).result.contractId
-  let buyer = (await deployer.deploy("./contracts/BuyerContract.aes", [seller, transport])).result.contractId
-  
-  console.log("Seller Contract Address: " + seller)
-  console.log("Tranport Contract Address: " + transport)
-  console.log("Buyer Contract Address: " + buyer)
+  let buyerAddress = (await deployer.deploy("./contracts/BuyerContract.aes")).owner
+  await deployer.deploy("./contracts/TransportContract.aes", ["Lagos"])
+	await deployer.deploy("./contracts/SellerContract.aes", [buyerAddress, 100])
 };
 
 module.exports = {
