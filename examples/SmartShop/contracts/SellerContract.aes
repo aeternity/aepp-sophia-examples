@@ -7,7 +7,7 @@ payable contract Seller =
   
   entrypoint init(buyer_address' : address, price' : int) : state =
     { seller_address = Call.caller,
-      buyer_address = ba,
+      buyer_address = buyer_address',
       status = "undefined",
       price = price' }
 
