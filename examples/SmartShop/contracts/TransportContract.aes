@@ -9,14 +9,12 @@ contract Transport =
       timestamp = Chain.timestamp,
       status = "on_way" }
   
-  stateful entrypoint change_location(city : string) =
+  stateful entrypoint change_location(city : string) : unit =
     put(state{ location = city, timestamp = Chain.timestamp })
     
-  stateful entrypoint delivered_item(city : string) =
+  stateful entrypoint delivered_item(city : string) : unit =
     put(state{ location = city, timestamp = Chain.timestamp, status = "delivered" })
     
-  entrypoint check_courier_status() : string =
-    state.status
+  entrypoint check_courier_status() : string = state.status
 
-  entrypoint check_courier_location() : string =
-    state.location
+  entrypoint check_courier_location() : string = state.location

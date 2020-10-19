@@ -22,43 +22,42 @@ const TRANSPORT_CONTRACT_PATH = "./contracts/TransportContract.aes";
 
 describe('SmartShop Contract', () => {
 
-  let deployer;
-  let ownerKeyPair = wallets[0];
+  let deployer, buyerDeployer;
+  let ownerKeyPair = wallets[0], buyerKeyPair = wallets[1];
 
   before(async () => {
     deployer = new Deployer('local', ownerKeyPair.secretKey)
+    buyerDeployer = new Deployer('local', buyerKeyPair.secretKey)
   })
 
-  describe('Deploy contracts', () => {
-    let sellerContractAddress, transportContractAddress;
+  describe('Deploy Contracts', () => {
+    let addressSeller, addressTransport;
 
-    it('Deploying Seller Contract', async () => {
-      const sellerDeployedPromise = deployer.deploy(SELLER_CONTRACT_PATH) // Deploy it
-  
-      await assert.isFulfilled(sellerDeployedPromise, 'Could not deploy the SellerContract.aes Smart Contract'); // Check whether it's deployed
-      sellerContractAddress = (await Promise.resolve(sellerDeployedPromise)).address
+    it('Deploying SellerContract', async () => {
+      const sellerDeployedPromise = deployer.deploy(SELLER_CONTRACT_PATH, [buyerKeyPair.publicKey, 100]) // Deploy it
+      addressSeller = (await Promise.resolve(sellerDeployedPromise)).address // Get contract Address
+
+      await assert.isFulfilled(sellerDeployedPromise, 'Could not deploy the SellerContract'); // Check whether it's deployed
     })
 
-    it('Deploying Transport Contract', async () => {
+    it('Deploying TransportContract', async () => {
       const transportDeployedPromise = deployer.deploy(TRANSPORT_CONTRACT_PATH, ["Lagos"]) // Deploy it
-  
-      await assert.isFulfilled(transportDeployedPromise, 'Could not deploy the TransportContract.aes Smart Contract'); // Check whether it's deployed
-      transportContractAddress = (await Promise.resolve(transportDeployedPromise)).address
+      addressTransport = (await Promise.resolve(transportDeployedPromise)).address // Get contract Address
+
+      await assert.isFulfilled(transportDeployedPromise, 'Could not deploy the TransportContract'); // Check whether it's deployed
     })
 
-    it('Deploying Buyer Contract', async () => {
-      const buyerDeployedPromise = deployer.deploy(BUYER_CONTRACT_PATH, [sellerContractAddress, transportContractAddress]) // Deploy it
-  
-      await assert.isFulfilled(buyerDeployedPromise, 'Could not deploy the BuyerContract.aes Smart Contract'); // Check whether it's deployed
-      await Promise.resolve(buyerDeployedPromise)
+    it('Deploying BuyerContract', async () => {
+      const buyerDeployedPromise = buyerDeployer.deploy(BUYER_CONTRACT_PATH, [addressSeller, addressTransport]) // Deploy it
+      await assert.isFulfilled(buyerDeployedPromise, 'Could not deploy the BuyerContract'); // Check whether it's deployed
     })
   })
 
   describe('Interact with contracts', () => {
-    let BuyerContract, SellerContract, addressSeller, TransportContract, addressTransport;
+    let SellerContract, addressSeller, TransportContract, addressTransport, BuyerContract;
 
     before(async () => {
-      const deployedSeller = deployer.deploy(SELLER_CONTRACT_PATH)
+      const deployedSeller = deployer.deploy(SELLER_CONTRACT_PATH, [buyerKeyPair.publicKey, 100])
       SellerContract = await Promise.resolve(deployedSeller)
       addressSeller = SellerContract.address
 
@@ -66,78 +65,78 @@ describe('SmartShop Contract', () => {
       TransportContract = await Promise.resolve(deployedTransport)
       addressTransport = TransportContract.address
 
-      const deployedBuyer = deployer.deploy(BUYER_CONTRACT_PATH, [addressSeller, addressTransport])
+      const deployedBuyer = buyerDeployer.deploy(BUYER_CONTRACT_PATH, [addressSeller, addressTransport])
       BuyerContract = await Promise.resolve(deployedBuyer)
     });
 
-    it("Should deposit tokens to seller's contract", async () => {
+    it("Should deposit item price to SellerContract from the BuyerContract", async () => {
       let result = await BuyerContract.deposit_to_seller_contract({amount: 100})
 
       assert.isOk(result)
     })
 
-    it("Should check seller's contract balance", async () => {
+    it("Should check SellerContract balance from the SellerContract", async () => {
       let result = (await SellerContract.seller_contract_balance()).decodedResult
 
       assert.equal(result, 100)
     })
 
-    it("Should send item", async () => {
+    it("Should send item from the SellerContract", async () => {
       let result = await SellerContract.send_item()
 
       assert.isOk(result)
     })
 
-    it("Should check item status", async () => {
+    it("Should check item status from the SellerContract", async () => {
       let result = (await SellerContract.check_item_status()).decodedResult
 
       assert.equal(result, 'sent_to_transport_courier')
     })
 
-    it("Should change courier location", async () => {
+    it("Should change courier location from the TransportContract", async () => {
       let result = await TransportContract.change_location("Abuja")
 
       assert.isOk(result)
     })
 
-    it("Should check courier status", async () => {
+    it("Should check courier status from the TransportContract", async () => {
       let result = (await TransportContract.check_courier_status()).decodedResult
 
       assert.equal(result, 'on_way')
     })
 
-    it("Should check courier location", async () => {
+    it("Should check courier location from the TransportContract", async () => {
       let result = (await TransportContract.check_courier_location()).decodedResult
 
       assert.equal(result, 'Abuja')
     })
 
-    it("Should deliver item", async () => {
+    it("Should deliver item from the TransportContract", async () => {
       let result = await TransportContract.delivered_item("Jos")
 
       assert.isOk(result)
     })
 
-    it("Should check courier location from Buyer contract", async () => {
+    it("Should check courier location from BuyerContract", async () => {
       let result = (await BuyerContract.check_courier_location()).decodedResult
 
       assert.equal(result, 'Jos')
     })
 
-    it("Should check courier status from Buyer contract", async () => {
+    it("Should check courier status from BuyerContract", async () => {
       let result = (await BuyerContract.check_courier_status()).decodedResult
 
       assert.equal(result, 'delivered')
     })
 
-    it("Should recieve item from Buyer contract", async () => {
-      let result = (await BuyerContract.received_item()).decodedResult
+    it("Should recieve item from BuyerContract", async () => {
+      let result = await BuyerContract.received_item()
 
-      assert.equal(result, true)
+      assert.isOk(result)
     })
 
-    it("Should check seller's contract balance", async () => {
-      let result = (await SellerContract.seller_contract_balance()).decodedResult
+    it("Should check SellerContract balance from BuyerContract", async () => {
+      let result = (await BuyerContract.seller_contract_balance()).decodedResult
 
       assert.equal(result, 0)
     })
