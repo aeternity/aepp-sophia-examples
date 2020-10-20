@@ -1,0 +1,131 @@
+contract DateLibrary =
+  entrypoint get_year : (int) => int
+  entrypoint get_month : (int) => int
+  entrypoint get_day : (int) => int
+  entrypoint get_hour : (int) => int
+  entrypoint get_minute : (int) => int
+  entrypoint get_second : (int) => int
+  entrypoint get_weekday : (int) => int
+  entrypoint is_leap_year : (int) => bool
+  entrypoint to_timestamp : (int, int, int, int, int, int) => int
+  entrypoint add_years : (int, int) => int
+  entrypoint sub_years : (int, int) => int
+  entrypoint add_months : (int, int) => int
+  entrypoint sub_months : (int, int) => int
+  entrypoint add_days : (int, int) => int
+  entrypoint sub_days : (int, int) => int
+  entrypoint add_hours : (int, int) => int
+  entrypoint sub_hours : (int, int) => int
+  entrypoint add_minutes : (int, int) => int
+  entrypoint sub_minutes : (int, int) => int
+  entrypoint add_seconds : (int, int) => int
+  entrypoint sub_seconds : (int, int) => int
+  entrypoint diff_years : (int, int) => int
+  entrypoint diff_months : (int, int) => int
+  entrypoint diff_days : (int, int) => int
+  entrypoint diff_hours : (int, int) => int
+  entrypoint diff_minutes : (int, int) => int
+  entrypoint diff_seconds : (int, int) => int
+  entrypoint is_valid_date : (int, int, int) => bool
+  entrypoint is_valid_date_time : (int, int, int, int, int, int) => bool
+  entrypoint is_week_day : (int) => bool
+  entrypoint is_week_end : (int) => bool
+
+contract DateTimeWithLibrary =
+  record state = { date : DateLibrary }
+
+  entrypoint init(date_contract : DateLibrary) : state =
+    { date = date_contract }
+  
+  entrypoint get_year(timestamp : int) : int = 
+    state.date.get_year(timestamp)
+
+  entrypoint get_month(timestamp : int) : int = 
+    state.date.get_month(timestamp)
+    
+  entrypoint get_day(timestamp : int) : int = 
+    state.date.get_day(timestamp)
+    
+  entrypoint get_hour(timestamp : int) : int = 
+    state.date.get_hour(timestamp)
+    
+  entrypoint get_minute(timestamp : int) : int = 
+    state.date.get_minute(timestamp)
+
+  entrypoint get_second(timestamp : int) : int = 
+    state.date.get_second(timestamp)
+
+  entrypoint get_weekday(timestamp : int) : int = 
+    state.date.get_weekday(timestamp)
+
+  entrypoint is_leap_year(year : int) : bool = 
+    state.date.is_leap_year(year)
+
+  entrypoint to_timestamp(year : int, month : int, day : int, hour : int, minute : int, second : int) : int = 
+    state.date.to_timestamp(year,month,day,hour,minute,second)
+
+  entrypoint add_years(timestamp : int, years : int) : int = 
+    state.date.add_years(timestamp, years)
+
+  entrypoint sub_years(timestamp : int, years : int) : int = 
+    state.date.sub_years(timestamp, years)
+
+  entrypoint add_months(timestamp : int, months : int) : int = 
+    state.date.add_months(timestamp, months)
+
+  entrypoint sub_months(timestamp : int, months : int) : int = 
+    state.date.sub_months(timestamp, months)
+
+  entrypoint add_days(timestamp: int, days : int) : int = 
+    state.date.add_days(timestamp, days)
+
+  entrypoint sub_days(timestamp: int, days : int) : int = 
+    state.date.sub_days(timestamp, days)
+
+  entrypoint add_hours(timestamp : int, hours : int) : int = 
+    state.date.add_hours(timestamp, hours)
+
+  entrypoint sub_hours(timestamp : int, hours : int) : int = 
+    state.date.sub_hours(timestamp, hours)
+
+  entrypoint add_minutes(timestamp : int, minutes : int) : int = 
+    state.date.add_minutes(timestamp, minutes)
+
+  entrypoint sub_minutes(timestamp : int, minutes : int) : int = 
+    state.date.sub_minutes(timestamp, minutes)
+  
+  entrypoint add_seconds(timestamp : int, seconds : int) : int = 
+    state.date.add_seconds(timestamp, seconds)
+
+  entrypoint sub_seconds(timestamp : int, seconds : int) : int = 
+    state.date.sub_seconds(timestamp, seconds)
+
+  entrypoint diff_years(from_timestamp : int, to_timestamp : int) : int = 
+    state.date.diff_years(from_timestamp, to_timestamp)
+
+  entrypoint diff_months(from_timestamp : int, to_timestamp : int) : int = 
+    state.date.diff_months(from_timestamp, to_timestamp)
+
+  entrypoint diff_days(from_timestamp : int, to_timestamp : int) : int = 
+    state.date.diff_days(from_timestamp, to_timestamp)
+
+  entrypoint diff_hours(from_timestamp : int, to_timestamp : int) : int = 
+    state.date.diff_hours(from_timestamp, to_timestamp)
+
+  entrypoint diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
+    state.date.diff_minutes(from_timestamp, to_timestamp)
+
+  entrypoint diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
+    state.date.diff_seconds(from_timestamp, to_timestamp)
+
+  entrypoint is_valid_date(year : int, month : int, day : int) : bool =
+    state.date.is_valid_date(year, month, day)
+
+  entrypoint is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool =
+    state.date.is_valid_date_time(year, month, day, hour, minute, second)
+
+  entrypoint is_week_day(timestamp : int) : bool =
+    state.date.is_week_day(timestamp)
+
+  entrypoint is_week_end(timestamp : int) : bool =
+    state.date.is_week_end(timestamp)
