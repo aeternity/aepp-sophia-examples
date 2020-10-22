@@ -14,7 +14,6 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-
 const Deployer = require('aeproject-lib').Deployer
 const DATETIME_CONTRACT_PATH = "./contracts/DateTime.aes"
 const {
@@ -61,9 +60,9 @@ describe('DateTime Contract', () => {
 
   it('Should deploy the DateTime contract', async () => {
     const deployedPromise = deployer.deploy(DATETIME_CONTRACT_PATH)
-    DateTimeContract = await Promise.resolve(deployedPromise)
 
     assert.isFulfilled(deployedPromise, 'Could not deploy the DateTime Smart Contract')
+    DateTimeContract = await Promise.resolve(deployedPromise)
   })
 
   it('Should get correct year', async () => {

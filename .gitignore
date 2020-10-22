@@ -14,5 +14,6 @@ nonce.txt
 erc721.aes.deploy*
 /*/*/package-lock.json
 .vscode
+.editorconfig
 .forgae-store
 .aeproject-store

@@ -64,17 +64,17 @@ describe('DateTime With Library', () => {
   
   it('Should deploy the DateTimeLibrary contract', async () => {
     const deployedPromise = deployer.deploy(LIBRARY_CONTRACT_PATH)
-    let LibraryContract = await Promise.resolve(deployedPromise)
-    libraryAddress = LibraryContract.address
 
     assert.isFulfilled(deployedPromise, 'Could not deploy the DateTimeLibary Smart Contract')
+    let LibraryContract = await Promise.resolve(deployedPromise)
+    libraryAddress = LibraryContract.address
   })
 
   it('Should deploy the DateTime contract', async () => {
     const deployedPromise = deployer.deploy(DATETIME_CONTRACT_PATH,[libraryAddress])
-    DateTimeContract = await Promise.resolve(deployedPromise)
 
     assert.isFulfilled(deployedPromise, 'Could not deploy the DateTime Smart Contract')
+    DateTimeContract = await Promise.resolve(deployedPromise)
   })
 
   it('Should get correct year', async () => {
