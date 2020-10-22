@@ -1,15 +1,20 @@
-contract SmartRealEstate =
-  record rent = { tenant : address
-                , price : int
-                , is_paid : bool
-                , property_address : string }
+payable contract SmartRealEstate =
+  record rent = 
+    { tenant : address,
+      price : int,
+      is_paid : bool,
+      property_address : string }
 
   type state = map(address, map(string, rent))
   
-  entrypoint init(price : int, name : string, address : string) : state = 
-    {[Call.caller] = {[name] = {tenant = Call.caller, price = price, is_paid = false, property_address = address}}}
+  entrypoint init(name : string, price' : int, property_address' : string) : state = 
+    { [Call.caller] = { [name] = {
+        tenant = Call.caller,
+        price = price',
+        is_paid = false,
+        property_address = property_address' }}}
     
-  stateful entrypoint pay_rent(owner : address, name : string) : () =
+  payable stateful entrypoint pay_rent(owner : address, name : string) : unit =
     // check if key of the owner exists
     require(Map.member(owner, state), "Owner does not exist")
 
@@ -33,32 +38,32 @@ contract SmartRealEstate =
     let updated_record = owner_property{tenant = Call.caller, is_paid = true}  
     put(state{[owner][name] = updated_record})
     
-  stateful entrypoint add_owner(name : string, price : int, property_address' : string) : () = 
+  stateful entrypoint add_owner(name : string, price : int, property_address' : string) : unit = 
     require(!Map.member(Call.caller, state), "The owner is already in the list of owners")
     put(state{[Call.caller]  =  {[name] = {tenant = Call.caller, price = price, is_paid = false , property_address = property_address'}}})
 
-  stateful entrypoint delete_owner() =
+  stateful entrypoint delete_owner() : unit =
    require(Map.member(Call.caller, state), "Owner does not exist")
    put(Map.delete(Call.caller, state))
   
-  stateful entrypoint add_property(name : string, price : int, property_address' : string) : () =
+  stateful entrypoint add_property(name : string, price : int, property_address' : string) : unit =
     require(!Map.member(name, state[Call.caller]), "The property is already in the list!")  
     put(state{[Call.caller] @ current = current{[name] = {tenant = Call.caller, price = price, is_paid = false , property_address = property_address'}}})
 
-  stateful entrypoint delete_property(name : string) : () =
+  stateful entrypoint delete_property(name : string) : unit =
     require(Map.member(name, state[Call.caller]), "Property does not exist")
     let updated_owners_properties = Map.delete(name, state[Call.caller])
     put(state{[Call.caller] = updated_owners_properties})
 
-  stateful entrypoint change_address(name : string, property_address' : string) : () = 
+  stateful entrypoint change_address(name : string, property_address' : string) : unit = 
     require(is_owner(name), "You don't own this property")
     put(state{[Call.caller][name] @ current = current{property_address = property_address'}})
   
-  stateful entrypoint change_price(name : string, price : int) : () = 
+  stateful entrypoint change_price(name : string, price : int) : unit = 
     require(is_owner(name), "You don't own this property")
     put(state{[Call.caller][name] @ current = current{price = price}})
 
-  stateful entrypoint change_tenant(name : string, tenant : address) : () =
+  stateful entrypoint change_tenant(name : string, tenant : address) : unit =
     require(is_owner(name), "You don't own this property")
     put(state{[Call.caller][name] @ current = current{tenant = tenant}})
       
@@ -88,4 +93,3 @@ contract SmartRealEstate =
 
   function is_owner(name) : bool =
     Map.member(name, state[Call.caller])
-      

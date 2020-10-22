@@ -1,120 +1,118 @@
-const path = require('path');
-const chai = require('chai');
-let chaiAsPromised = require("chai-as-promised");
-chai.use(chaiAsPromised);
-const assert = chai.assert;
+/*
+ * ISC License (ISC)
+ * Copyright (c) 2018 aeternity developers
+ *
+ *  Permission to use, copy, modify, and/or distribute this software for any
+ *  purpose with or without fee is hereby granted, provided that the above
+ *  copyright notice and this permission notice appear in all copies.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ *  REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ *  AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ *  INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ *  LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ *  PERFORMANCE OF THIS SOFTWARE.
+ */
 
-const AeSDK = require('@aeternity/aepp-sdk');
-const Crypto = require('@aeternity/aepp-sdk').Crypto;
-const Universal = AeSDK.Universal;
-const config = require("./constants/config.json")
-const utils = require('./utils/utils');
-const getClient = utils.getClient;
-
-const SMART_REAL_ESTATE_CONTRACT_FILE_PATH = "./../contracts/smart-real-estate.aes";
-
-const smartRealEstateContractSource = utils.readFileRelative(`./contracts/${SMART_REAL_ESTATE_CONTRACT_FILE_PATH}`, 'utf-8')
+const Deployer = require('aeproject-lib').Deployer;
+const SMARTREALESTATE_CONTRACT_PATH = "./contracts/SmartRealEstate.aes";
 
 describe('SmartRealEstate Contract', () => {
-
-  let client, smartRealEstateContractInstance;
+  let deployer, instance;
+  let ownerKeyPair = wallets[0];
+  let newTenantAddress = wallets[1].publicKey;
 
   beforeEach(async () => {
-      client = await getClient(Universal, config, config.ownerKeyPair);
+    deployer = new Deployer('local', ownerKeyPair.secretKey)
   });
 
-  describe('Deploy contracts', () => {
-
-    it('should deploy Smart real estate contract', async () => {
-      smartRealEstateContractInstance = await client.getContractInstance(smartRealEstateContractSource);
-      const init = await smartRealEstateContractInstance.deploy([1000, "Bohemian apartment", "Varna, 36 Str. Ikonomov"]);
-      assert.equal(init.result.returnType, 'ok');
-    })
-  })
-
   describe('Interact with the contract', () => {
-    
-    let ownerAddress = config.ownerKeyPair.publicKey
+    it('Should deploy SmartRealEstate contract', async () => {
+      const deployedPromise = deployer.deploy(SMARTREALESTATE_CONTRACT_PATH, ["Bohemian apartment", 1000, "Varna, 36 Str. Ikonomov"])
 
-    it('should delete owner', async () => {
-      const result = await smartRealEstateContractInstance.methods.delete_owner(ownerAddress)
-      assert.equal(result.decodedResult.length, 0)
+      await assert.isFulfilled(deployedPromise, 'Could not deploy the SmartRealEstate Smart Contract');
+      instance = await Promise.resolve(deployedPromise)
     })
 
-    it('should create owner', async () => {
-      const result = await smartRealEstateContractInstance.methods.add_owner("Villa Maria", 2000, "Sofia, 4 Str. K")
-      assert.equal(result.decodedResult.length, 0)
+    it('Should delete owner', async () => {
+      let result = await instance.delete_owner(ownerKeyPair.publicKey)
+      assert.isOk(result)
     })
 
-    it('should delete property', async () => {
-      const result = await smartRealEstateContractInstance.methods.delete_property("Villa Maria")
-      assert.equal(result.decodedResult.length, 0)
+    it('Should create owner', async () => {
+      let result = await instance.add_owner("Villa Maria", 2000, "Sofia, 4 Str. K")
+      assert.isOk(result)
     })
 
-    it('should add property', async () => {
-      const result = await smartRealEstateContractInstance.methods.add_property("Artur apartment", 1000, "Varna, 123 Str. A")
-      assert.equal(result.decodedResult.length, 0)
+    it('Should delete property', async () => {
+      let result = await instance.delete_property("Villa Maria")
+      assert.isOk(result)
     })
 
-    it('should get property address', async () => {
-      const result = await smartRealEstateContractInstance.methods.get_property_address(ownerAddress, "Artur apartment")
+    it('Should add property', async () => {
+      let result = await instance.add_property("Artur apartment", 1000, "Varna, 123 Str. A")
+      assert.isOk(result)
+    })
+
+    it('Should get property address', async () => {
+      let result = await instance.get_property_address(ownerKeyPair.publicKey, "Artur apartment")
       assert.equal(result.decodedResult, 'Varna, 123 Str. A')
     })
 
-    it("should get property's paymentstatus", async () => {
-      const result = await smartRealEstateContractInstance.methods.get_payment_status(ownerAddress, "Artur apartment")
-      assert.equal(result.decodedResult, false)
+    it("Should get property's paymentstatus", async () => {
+      let result = await instance.get_payment_status(ownerKeyPair.publicKey, "Artur apartment")
+      assert.isFalse(result.decodedResult)
     })
 
-    it("should get property's tenant", async () => {
-      const result = await smartRealEstateContractInstance.methods.get_tenant(ownerAddress, "Artur apartment")
-      assert.equal(result.decodedResult,"ak_2mwRmUeYmfuW93ti9HMSUJzCk1EYcQEfikVSzgo6k2VghsWhgU")
+    it("Should get property's tenant", async () => {
+      let result = await instance.get_tenant(ownerKeyPair.publicKey, "Artur apartment")
+      assert.equal(result.decodedResult, ownerKeyPair.publicKey)
     })
 
-    it('should get price of the property', async () => {
-      const result = await smartRealEstateContractInstance.methods.get_price(ownerAddress, "Artur apartment")
+    it('Should get price of the property', async () => {
+      let result = await instance.get_price(ownerKeyPair.publicKey, "Artur apartment")
       assert.equal(result.decodedResult, 1000)
     })
 
-    it('should change the price of the property', async () => {
-      const result = await smartRealEstateContractInstance.methods.change_price("Artur apartment", 3000)
-      assert.equal(result.decodedResult.length, 0)
+    it('Should change the price of the property', async () => {
+      let result = await instance.change_price("Artur apartment", 3000)
+      assert.isOk(result)
     })
 
-    it('should get the new price of the property', async () => {
-      const result = await smartRealEstateContractInstance.methods.get_price(ownerAddress, "Artur apartment")
+    it('Should get the new price of the property', async () => {
+      let result = await instance.get_price(ownerKeyPair.publicKey, "Artur apartment")
       assert.equal(result.decodedResult, 3000)
     })
 
-    it('should change the address of the property', async () => {
-      const result = await smartRealEstateContractInstance.methods.change_address("Artur apartment", "Sofia, 321 Str. B")
-      assert.equal(result.decodedResult.length, 0)
+    it('Should change the address of the property', async () => {
+      let result = await instance.change_address("Artur apartment", "Sofia, 321 Str. B")
+      assert.isOk(result)
     })
 
-    it('should get the new address of the property', async () => {
-      const result = await smartRealEstateContractInstance.methods.get_property_address(ownerAddress, "Artur apartment")
+    it('Should get the new address of the property', async () => {
+      let result = await instance.get_property_address(ownerKeyPair.publicKey, "Artur apartment")
       assert.equal(result.decodedResult, 'Sofia, 321 Str. B')
     })
 
-    it('should change the tenant of the property', async () => {
-      let newTenantAddress = "ak_gLYH5tAexTCvvQA6NpXksrkPJKCkLnB9MTDFTVCBuHNDJ3uZv"
-      const result = await smartRealEstateContractInstance.methods.change_tenant("Artur apartment", newTenantAddress)
-      assert.equal(result.decodedResult.length, 0)
+    it('Should change the tenant of the property', async () => {
+      let result = await instance.change_tenant("Artur apartment", newTenantAddress)
+      assert.isOk(result)
     })
 
-    it('should get the new tenant of the property', async () => {
-      const result = await smartRealEstateContractInstance.methods.get_tenant(ownerAddress, "Artur apartment")
-      assert.equal(result.decodedResult,"ak_gLYH5tAexTCvvQA6NpXksrkPJKCkLnB9MTDFTVCBuHNDJ3uZv")
+    it('Should get the new tenant of the property', async () => {
+      let result = await instance.get_tenant(ownerKeyPair.publicKey, "Artur apartment")
+      assert.equal(result.decodedResult, newTenantAddress)
     })
 
-    it('should pay the rent', async () => {
-      const result = await smartRealEstateContractInstance.methods.pay_rent(ownerAddress, "Artur apartment", {amount: 3000})
-      assert.equal(result.decodedResult.length, 0)
+    it('Should pay the rent', async () => {
+      let result = await instance.pay_rent(ownerKeyPair.publicKey, "Artur apartment", {amount: 3000})
+      assert.isOk(result)
     })
 
-    it("should get property's paymentstatus after it was paid", async () => {
-      const result = await smartRealEstateContractInstance.methods.get_payment_status(ownerAddress, "Artur apartment")
-      assert.equal(result.decodedResult, true)
+    it("Should get property's paymentstatus after it was paid", async () => {
+      let result = await instance.get_payment_status(ownerKeyPair.publicKey, "Artur apartment")
+      assert.isTrue(result.decodedResult)
     })
   })
 })
