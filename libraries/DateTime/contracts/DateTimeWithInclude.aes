@@ -1,6 +1,5 @@
 include "DateTimeLibrary.aes"
-contract ExampleContract =
-
+contract DateTimeWithInclude =
   entrypoint get_year(timestamp : int) : int = 
     Date.get_year(timestamp)
 
@@ -25,12 +24,7 @@ contract ExampleContract =
   entrypoint is_leap_year(year : int) : bool = 
     Date.is_leap_year(year)
 
-  entrypoint to_timestamp(year : int,
-                               month : int,
-                               day : int,
-                               hour : int,
-                               minute : int,
-                               second : int) : int = 
+  entrypoint to_timestamp(year : int, month : int, day : int, hour : int, minute : int, second : int) : int = 
     Date.to_timestamp(year,month,day,hour,minute,second)
 
   entrypoint add_years(timestamp : int, years : int) : int = 
@@ -98,4 +92,3 @@ contract ExampleContract =
 
   entrypoint is_week_end(timestamp : int) : bool =
     Date.is_week_end(timestamp)
-    

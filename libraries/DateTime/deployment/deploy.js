@@ -16,10 +16,15 @@
  */
 const Deployer = require('aeproject-lib').Deployer;
 
-const deploy = async (network, privateKey) => {
-	let deployer = new Deployer(network, privateKey)
+const deploy = async (network, privateKey, compiler, networkId) => {
+  let deployer = new Deployer(network, privateKey, compiler, networkId)
 
-	let result = await deployer.deploy("./contracts/DateTime.aes")
+  // DateTime
+  await deployer.deploy("./contracts/DateTime.aes")
+
+  // DateTime with Library
+  let libraryContractAddress = (await deployer.deploy("./contracts/DateTimeLibraryContract.aes")).address
+  await deployer.deploy("./contracts/DateTimeWithLibrary.aes",[libraryContractAddress])
 };
 
 module.exports = {

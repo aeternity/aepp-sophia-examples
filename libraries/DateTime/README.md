@@ -2,22 +2,22 @@
 
 ## Sophia Date and Time smart contract overview
 Sophia contract which implements utilities that eases the work with date-time related job. There is a functionality for getting year, month, day, hour, minute, second and weekday from timestamp and vice versa. 
-The contract is made using [forgAE project](https://github.com/aeternity/aepp-forgae-js) with tests included.
+The contract is made using [AEProject project](https://github.com/aeternity/aepp-aeproject-js) with tests included.
 
 ## Prerequisites
-Ensure that you have installed [forgAE project](https://github.com/aeternity/aepp-forgae-js)
+Ensure that you have installed [AEProject project](https://github.com/aeternity/aepp-aeproject-js)
 
 ## Clone this repository
 ```
 git clone https://github.com/aeternity/aepp-sophia-examples.git
-cd DateTime
+cd libraries/DateTime
 ```
 
-## How to start the node localy
-`forgae node`
+## How to start the node and compliler localy
+`aeproject env`
 
 ## How to deploy the contract
-`forgae deploy`
+`aeproject deploy`
 
 This command will deploy the contract in the local network.
 The configuration of deployment is written in `deploy.js` file.
@@ -25,81 +25,58 @@ The configuration of deployment is written in `deploy.js` file.
 In our case the output is:
 ```
 ===== Contract: DateTime.aes has been deployed =====
+===== Contract: DateTimeLibraryContract.aes has been deployed =====
+===== Contract: DateTimeWithLibrary.aes has been deployed =====
 Your deployment script finished successfully!
 ```
 
 ## How to run the tests
-`forgae test`
+`aeproject test`
 
 All tests should be passing.
 
 ## How to integrate the library with your contract
 
-  There are two ways you could use DateTime in your smart contract, therefore the different implementations are separated in files. Final outcome is equal. These are the following methods:
+There are three ways you could use DateTime in your smart contract, therefore the different implementations are separated in files. Final outcome is equal. These are the following methods:
   - by deploying it on a network
   - split DateTime as library using the namespace construct
+  - split DateTime as library using another contract
 
-# Deploy DateTime to network
-1. `DateTime.aes` should be deployed and you have to take the address of the contract.
+### Deploy DateTime to network
+1. `DateTime.aes` should be deployed
+2. Now you are ready to call the contract entrypoints
 
-2. You should decode the address to `hex`. You can use `aecli` to decode the address, for example:
-```
-aecli crypto decode ct_uH2C1ZWkkVeteqrcP6UtQoAwG3TGbsC6uBRgwiF3YdhgDJVmE
-```
-The output is: 
-```
-Decoded address (hex): 76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8
-```
-
-3. It should return the address in hex, which now can be used in your contract. You should add `0x` before it to designate it as hex.
-```
-0x76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8
-```
-
-4. Now you are ready to add some entrypoints from our library in your own smart contract.
-```
-contract Remote = 
-  entrypoint get_year : (int) => int
-
-contract YourContract =
-  type state = ()
-  entrypoint main(timestamp : int, remote : Remote) : int = 
-    remote.get_year(timestamp)
-```
-**NOTE:** In this case we will be using `get_year` entrypoint from `DateTime` library.
-
-5. Deploy your contract and call `main` entrypoint with following arguments: 
-```
-main(0, 0x76b3153fed56f7bca175149e15bcb9e09e5e7df14f128f5c464a70f8e73b57b8)
-```
-
-6. It should return the year of `0` timestamp :
-```
-Result: 
-
-1970
-```
-
-# DateTime as library
-1. Use it as a namespace at the top-level of your smart contract as it is in `ExampleContract.aes`
+### DateTime as library using the namespace construct
+1. Use it as a namespace at the top-level of your smart contract as it is in `DateTimeWithInclude.aes`
 2. You should now be able to access all public functionalities of the library
 ```
 include "DateTimeLibrary.aes"
-contract ExampleContract =
-  entrypoint main(timestamp : int, months : int) : int = 
-    Date.add_months(timestamp, months)
+contract DateTimeWithInclude =
+  entrypoint get_year(timestamp : int) : int = 
+    Date.get_year(timestamp)
 ```
-3. Deploy your contract and call `main` entrypoint with following arguments: 
-```
-main(1339156739, 3960) // 06/08/2012 @ 11:58:59am
-```
+3. Deploy the `DateTimeWithInclude.aes` contract 
+4. Now you are ready to call the contract entrypoints using the `Date` namespace from the `DateTimeLibrary.aes` library
 
-4. It should return the timestamp of `06/08/2342 @ 11:58:59am` timestamp :
+### DateTime as library using another contract
+1. `DateTimeLibraryContract.aes` should be deployed and you have to take the address of the contract.
+2. Now you are ready to add some entrypoints from our library in your own smart contract.
 ```
-Result: 
+contract DateLibrary =
+  entrypoint get_year : (int) => int
 
-11752862339
+contract YourContract =
+  record state = { date : DateLibrary }
+
+  entrypoint init(date_contract : DateLibrary) : state =
+    { date = date_contract }
+  
+  entrypoint get_year(timestamp : int) : int = 
+    state.date.get_year(timestamp)
 ```
+**NOTE:** In this case we will be using `get_year` entrypoint from `DateLibrary` library contract.
+3. Deploy your contract and call `init` entrypoint with the `DateTimeLibraryContract.aes` contract address as an argument
+4. Now you are ready to call the `get_year` entrypoints from the `DateTimeLibraryContract.aes` contract library
 
 ## Implemented functionality
 The library contains:

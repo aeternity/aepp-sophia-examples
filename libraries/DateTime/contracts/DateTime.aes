@@ -1,16 +1,14 @@
 contract DateTime =
-  
-  record state = {
-    origin_year : int, 
-    day_in_seconds : int,
-    year_in_seconds : int,
-    leap_year_in_seconds : int,
-    hour_in_seconds : int,
-    minute_in_seconds : int }
+  record state = 
+    { origin_year : int, 
+      day_in_seconds : int,
+      year_in_seconds : int,
+      leap_year_in_seconds : int,
+      hour_in_seconds : int,
+      minute_in_seconds : int }
 
   record date_time = 
-    {
-      year : int,
+    { year : int,
       month : int,
       day : int,
       hour : int,
@@ -19,31 +17,21 @@ contract DateTime =
       weekday : int,
       timestamp : int,
       leap_years_before : int,
-      seconds_accounted_for : int
-    } 
+      seconds_accounted_for : int } 
 
   entrypoint init() : state =
-    {
-      origin_year = 1970, 
+    { origin_year = 1970, 
       day_in_seconds = 86400,
       year_in_seconds = 31536000,
       leap_year_in_seconds = 31622400,
       hour_in_seconds = 3600,
-      minute_in_seconds = 60
-      }
+      minute_in_seconds = 60 }
 
-  entrypoint to_timestamp(year : int,
-                               month : int,
-                               day : int,
-                               hour : int,
-                               minute : int,
-                               second : int) : int =
-    
+  entrypoint to_timestamp(year : int, month : int, day : int, hour : int, minute : int, second : int) : int =
     // calculate timestamp by given year
     let leap_years_in_sec = leap_years_before(year, state.origin_year) * state.leap_year_in_seconds
     
-    let years_in_sec = 
-      ((year - state.origin_year) - leap_years_before(year, state.origin_year)) * state.year_in_seconds
+    let years_in_sec = ((year - state.origin_year) - leap_years_before(year, state.origin_year)) * state.year_in_seconds
     let timestamp = leap_years_in_sec + years_in_sec
 
     // calculate timestamp by given month
@@ -59,12 +47,12 @@ contract DateTime =
     let timestamp = timestamp + minute * state.minute_in_seconds
 
     // calculate timestamp by given second
-    let timestamp = timestamp + second  
+    let timestamp = timestamp + second
+
     timestamp
 
   entrypoint parse_timestamp(timestamp : int) : date_time = 
     let dt : date_time = init_date_time(timestamp)
-    
     let dt : date_time = p_get_year(dt)
     let dt : date_time = p_get_month(dt)
     let dt : date_time = p_get_day(dt)
@@ -164,7 +152,6 @@ contract DateTime =
     let dt : date_time = dt { month = ( dt.month - 1 ) mod 12 + 1}
     let days_in_month = get_days_in_month(dt.month, dt.year)
     let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
-    
     days_from_date(dt.year, dt.month, dt.day) * state.day_in_seconds + timestamp mod state.day_in_seconds
     
   entrypoint sub_months(timestamp : int, months: int) : int =
@@ -174,7 +161,6 @@ contract DateTime =
     let dt : date_time = dt { month = (year_month mod 12) + 1}
     let days_in_month = get_days_in_month(dt.month, dt.year)
     let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
-    
     days_from_date(dt.year, dt.month, dt.day) * state.day_in_seconds + timestamp mod state.day_in_seconds
   
   entrypoint add_days(timestamp : int, days : int) : int = 
@@ -185,8 +171,7 @@ contract DateTime =
 
   entrypoint add_hours(timestamp : int, hours : int) : int = 
     timestamp + (hours * state.hour_in_seconds)
-    
-
+  
   entrypoint sub_hours(timestamp : int, hours : int) : int = 
     timestamp - (hours * state.hour_in_seconds)
 
@@ -216,8 +201,7 @@ contract DateTime =
     let year = state.origin_year + timestamp / state.year_in_seconds
     let total_leap_years_before = leap_years_before(year, state.origin_year)
     let seconds_accounted_for = state.leap_year_in_seconds * total_leap_years_before
-    {
-      year = year,
+    { year = year,
       month = 0,
       day = 0,
       hour = 0,
@@ -225,11 +209,8 @@ contract DateTime =
       second = 0,
       weekday = 0,
       leap_years_before = total_leap_years_before,
-      seconds_accounted_for = 
-        seconds_accounted_for + state.year_in_seconds * 
-        (year - state.origin_year - total_leap_years_before),
-      timestamp = timestamp
-      }
+      seconds_accounted_for = seconds_accounted_for + state.year_in_seconds * (year - state.origin_year - total_leap_years_before),
+      timestamp = timestamp }
 
   private function calculate_years_in_seconds(timestamp : int, dt : date_time) : int =
     let days : int = days_from_date(dt.year, dt.month, dt.day)
@@ -277,8 +258,7 @@ contract DateTime =
     let l = month / 11
     let month = month + 2 - 12 * l
     let year = 100 * (n - 49) + year + l
-    {
-      year = year,
+    { year = year,
       month = month,
       day = day,
       hour = 0,
@@ -287,8 +267,7 @@ contract DateTime =
       weekday = 0,
       leap_years_before = 0,
       seconds_accounted_for = 0,
-      timestamp = 0
-      }
+      timestamp = 0 }
 
   // ------------------------------------------------------------------------
   //https://archive.org/stream/131123ExplanatorySupplementAstronomicalAlmanac/131123-explanatory-supplement-astronomical-almanac_djvu.txt
@@ -371,19 +350,20 @@ contract DateTime =
       p_get_day'(from + 1, to, dt)
 
   private function month_to_timestamp(from : int, year : int, month : int, timestamp : int, day_in_seconds : int) : int =
-    let day_in_month = {[1] = 31,
-                        [2] = if(is_leap_year(year)) 29
-                              else 28,
-                        [3] = 31,
-                        [4] = 30,
-                        [5] = 31,
-                        [6] = 30,
-                        [7] = 31,
-                        [8] = 31,
-                        [9] = 30,
-                        [10] = 31,
-                        [11] = 30,
-                        [12] = 31}
+    let day_in_month = 
+      { [1] = 31,
+        [2] = if(is_leap_year(year)) 29
+              else 28,
+        [3] = 31,
+        [4] = 30,
+        [5] = 31,
+        [6] = 30,
+        [7] = 31,
+        [8] = 31,
+        [9] = 30,
+        [10] = 31,
+        [11] = 30,
+        [12] = 31 }
 
     if(from =< month)
       month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * day_in_seconds, day_in_seconds)
