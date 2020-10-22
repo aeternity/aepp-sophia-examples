@@ -14,17 +14,14 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-const Ae = require('@aeternity/aepp-sdk').Universal;
-const Deployer = require('forgae').Deployer;
-const path = require('path');
-const gasLimit = 1000000;
+const Deployer = require('aeproject-lib').Deployer;
 
-const deploy = async (network, privateKey) => {
-	let deployer = new Deployer(network, privateKey)
+const deploy = async (network, privateKey, compiler, networkId) => {
+  let deployer = new Deployer(network, privateKey, compiler, networkId)
 
-	let result = await deployer.deploy(path.resolve(__dirname, "./../contracts/crypto-hamsters.aes"));
+  await deployer.deploy("./contracts/CryptoHamster.aes")
 };
 
 module.exports = {
-	deploy
+  deploy
 };
