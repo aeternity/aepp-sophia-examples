@@ -14,59 +14,27 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-const Ae = require('@aeternity/aepp-sdk').Universal;
+const Deployer = require('aeproject-lib').Deployer;
+const LIST_CONTRACT_PATH = "./contracts/List.aes";
 
-const config = {
-    host: "http://localhost:3001/",
-    internalHost: "http://localhost:3001/internal/",
-    gas: 200000,
-    ttl: 55
-}
+describe('List Contract', () => {
+  let deployer, instance;
+  let ownerKeyPair = wallets[0];
 
-describe('Example Contract', () => {
+  before(async () => {
+    deployer = new Deployer('local', ownerKeyPair.secretKey)
+  })
 
-    let owner, contract;
+  it('Deploying List Contract', async () => {
+    const deployedPromise = deployer.deploy(LIST_CONTRACT_PATH)
 
-    before(async () => {
-        const ownerKeyPair = wallets[0];
-        owner = await Ae({
-            url: config.host,
-            internalUrl: config.internalHost,
-            keypair: ownerKeyPair,
-            nativeMode: true,
-            networkId: 'ae_devnet'
-        });
+    await assert.isFulfilled(deployedPromise, 'Could not deploy the List Smart Contract');
+    instance = await Promise.resolve(deployedPromise)
+  })
 
-    })
-
-    const staticCallDecode = async (f, a, t) => {
-        const call = await contract.callStatic(f, {args: a});
-        const decode = await call.decode(t);
-        return decode.value;
-    };
-
-
-    it('Deploying List Contract', async () => {
-        let contractSource = utils.readFileRelative('./contracts/List.aes', "utf-8"); // Read the aes file
-
-        const compiledContract = await owner.contractCompile(contractSource, { // Compile it
-            gas: config.gas
-        })
-
-        const deployPromise = compiledContract.deploy({ // Deploy it
-            options: {
-                ttl: config.ttl,
-            }
-        });
-
-        await assert.isFulfilled(deployPromise, 'Could not deploy the ExampleContract Smart Contract'); // Check it is deployed
-        contract = await deployPromise;
-    })
-
-    it('List size', async () => {
-        assert.equal(await staticCallDecode('size', '([])', 'int'), 0)
-        assert.equal(await staticCallDecode('size', '(["x"])', 'int'), 1)
-        assert.equal(await staticCallDecode('size', '([1,2,3])', 'int'), 3)
-    })
-
+  it('Should List size', async () => {
+    assert.equal((await instance.size([])).decodedResult, 0)
+    assert.equal((await instance.size(["x"])).decodedResult, 1)
+    assert.equal((await instance.size([1,2,3])).decodedResult, 3)
+  })
 })

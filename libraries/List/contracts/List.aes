@@ -1,5 +1,5 @@
 contract List =
-  function size(l : list('a)) : int = size'(l, 0)
+  entrypoint size(l : list('a)) : int = size'(l, 0)
   private function size'(l : list('a), x : int) : int =
     switch(l)
       [] => x

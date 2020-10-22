@@ -7,11 +7,9 @@ http:
   external:
     port: 3013
   internal:
+    debug_endpoints: true
     port: 3113
     listen_address: 0.0.0.0
-  endpoints:
-    debug: true
-  debug: true
 
 
 websocket:
@@ -25,6 +23,12 @@ keys:
 
 chain:
   persist: true
+  hard_forks:
+    "1": 0
+    "2": 1
+    "3": 2
+    "4": 3
+  
 
 mining:
   autostart: true
