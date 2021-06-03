@@ -34,7 +34,7 @@ describe('Crypto Hamster', async () => {
         });
         try {
             // path relative to root of project
-            const contractContent = contractUtils.getContractContent('./contracts/CryptoHamster.aes');
+            const contractContent = contractUtils.getContractContent('./contracts/CryptoHamster/CryptoHamster.aes');
             // initialize the contract instance
             cryptoHamsterInstance = await client.getContractInstance(contractContent);
             await cryptoHamsterInstance.deploy([]);
