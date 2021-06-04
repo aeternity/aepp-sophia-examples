@@ -26,7 +26,7 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 
 const contractUtils = require('../utils/contract-utils');
 
-describe('SmartProviderContract', () => {
+describe('SmartDataProvider', () => {
     const SMART_DATA_PROVIDER_BACKEND_SOURCE = './contracts/SmartDataProvider/SmartDataProviderBackend.aes';
     const SMART_DATA_PROVIDER_CLIENT_SOURCE = './contracts/SmartDataProvider/SmartDataProviderClient.aes';
 
