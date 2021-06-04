@@ -41,6 +41,6 @@ contract CryptoHamster =
         get_block_hash_bytes_as_int() - Chain.timestamp + state.index
 
     function get_block_hash_bytes_as_int() : int =
-        switch(Chain.block_hash(Chain.block_height - 1))
+        switch(Chain.block_hash(Chain.block_height))
             None => abort("blockhash not found")
             Some(bytes) => Bytes.to_int(bytes)

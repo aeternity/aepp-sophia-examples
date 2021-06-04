@@ -60,11 +60,10 @@ describe('Crypto Hamster', async () => {
 
     it('[NEGATIVE] Should NOT create hamster with same name', async () => {
         await cryptoHamsterInstance.methods.create_hamster(hamsterNames[0]);
-        await assertNode.rejects(
-            cryptoHamsterInstance.methods.create_hamster(hamsterNames[0]), (err) => {
-                assert.include(err.message, "Name is already taken");
-                return true;
-            });
+        await assertNode.rejects(cryptoHamsterInstance.methods.create_hamster(hamsterNames[0]), (err) => {
+            assert.include(err.message, "Name is already taken");
+            return true;
+        });
     });
 
     it('Hamster (name) should NOT exist', async () => {
