@@ -1,6 +1,5 @@
 const chai = require('chai');
 const assert = chai.assert;
-const assertNode = require('assert/strict');
 
 const { Universal, MemoryAccount, Node } = require('@aeternity/aepp-sdk');
 
