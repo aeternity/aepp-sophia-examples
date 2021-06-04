@@ -1,0 +1,5 @@
+@compiler >= 6
+
+contract interface SmartDataProviderBackendInterface =
+  entrypoint get_oracle_address : ()                                                      => oracle(string, string)
+  entrypoint process_response   : (oracle(string, string), oracle_query(string, string))  => unit
