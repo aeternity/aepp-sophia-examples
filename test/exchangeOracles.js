@@ -12,13 +12,10 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 const contractUtils = require('../utils/contract-utils');
 
 describe('ExchangeOracles', () => {
-	let exchangeOracleInstance;
-	let exchangeMarketInstance;
-
+	
 	const owner = WALLETS[0];
-	const notOwner = WALLETS[1]
-
 	let client;
+	let exchangeOracleInstance, exchangeMarketInstance;
 
 	before(async () => {
 		const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
@@ -30,7 +27,6 @@ describe('ExchangeOracles', () => {
             accounts: [MemoryAccount({ keypair: owner })],
             address: owner.publicKey
         });
-		await client.spend(1, notOwner.publicKey)
 		const exchangeOracleContent = contractUtils.getContractContent('./contracts/ExchangeOracles/ExchangeOracle.aes');
 		const exchangeMarketContent = contractUtils.getContractContent('./contracts/ExchangeOracles/ExchangeMarket.aes');
 		exchangeOracleInstance = await client.getContractInstance(exchangeOracleContent);
