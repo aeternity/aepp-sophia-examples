@@ -1,16 +1,12 @@
-contract SellerInterface =
-  entrypoint received_item : () => unit
-  entrypoint seller_contract_balance : () => int
-  entrypoint check_item_status : () => string
+@compiler >= 6
 
-contract TransportInterface = 
-  entrypoint check_courier_status : () => string
-  entrypoint check_courier_location : () => string
-  
+include "./SellerInterface.aes"
+include "./TransportInterface.aes"
+
 payable contract Buyer =
   record state =
-    { seller : SellerInterface,
-      transport : TransportInterface }
+    { seller : SellerInterface
+    , transport : TransportInterface }
 
   entrypoint init(seller_contract : SellerInterface, transport_contract : TransportInterface) : state =
     { seller = seller_contract,

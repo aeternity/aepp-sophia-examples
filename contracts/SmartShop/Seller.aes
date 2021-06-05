@@ -1,9 +1,11 @@
+@compiler >= 6
+
 payable contract Seller =
-  record state = 
-    { seller_address : address,
-      buyer_address : address,
-      status : string,
-      price : int }
+  record state =
+    { seller_address : address
+    , buyer_address : address
+    , status : string
+    , price : int }
   
   entrypoint init(buyer_address' : address, price' : int) : state =
     { seller_address = Call.caller,
