@@ -1,0 +1,24 @@
+@compiler >= 6
+
+// default, see https://github.com/aeternity/aesophia/blob/v6.0.0/docs/sophia_stdlib.md
+include "String.aes"
+
+// custom
+include "./lib/BaseConverter.aes"
+
+contract LibraryUsage =
+
+    entrypoint dec_to_binary(x : int) : string = 
+        BaseConverter.dec_to_binary(x)
+
+    entrypoint dec_to_oct(x : int) : string =
+        BaseConverter.dec_to_oct(x)
+
+    entrypoint dec_to_hex(x : int) : string =
+        BaseConverter.dec_to_hex(x)
+
+    entrypoint binary_to_dec(x : int) : int =
+        BaseConverter.binary_to_dec(x)
+
+    entrypoint oct_to_dec(x : int) : int =
+        BaseConverter.oct_to_dec(x)
