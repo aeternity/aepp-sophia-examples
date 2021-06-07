@@ -1,3 +1,7 @@
+@compiler >= 6
+
+include "String.aes"
+
 contract TicTacToe =
 
   type state = map(int, int)
@@ -18,7 +22,7 @@ contract TicTacToe =
     require(x > 0 && x < 4 && y > 0 && y < 4, "Incorrect position!")
   
     // check if it's your turn
-    let concat = String.concat(Int.to_str(opposite_player(player))," have to play now!")
+    let concat = String.concat(Int.to_str(opposite_player(player))," has to play now!")
     let sentence  = String.concat("It's not your turn! Player ", concat)
     require(state[00] == 0 || state[00] == opposite_player(player), sentence)
      
@@ -31,7 +35,7 @@ contract TicTacToe =
     // check if the player win
     check_win(position, player)
 
-  function opposite_player(player) : () =
+  function opposite_player(player) : int =
     switch(player)
       1 => 2
       2 => 1
