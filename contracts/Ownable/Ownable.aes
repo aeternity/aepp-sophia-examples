@@ -1,0 +1,26 @@
+@compiler >= 6
+
+include "Option.aes"
+
+contract Ownable =
+
+	record state =
+		{ owner : option(address) }
+
+	stateful entrypoint init() =
+		{ owner = Some(Call.caller) }
+
+	entrypoint owner() : option(address) =
+		state.owner
+
+	stateful entrypoint renounce_ownership() =
+		only_owner()
+		put(state{ owner = None })
+
+	stateful entrypoint transfer_ownership(new_owner: address) =
+		only_owner()
+		put(state{owner = Some(new_owner)})		
+	
+	function only_owner() =
+		require(Option.is_some(state.owner), "Ownership has been renounced")
+		require(Call.caller == Option.force(state.owner), "The caller is different than the owner")
