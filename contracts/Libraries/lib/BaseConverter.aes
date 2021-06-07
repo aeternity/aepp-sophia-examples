@@ -26,7 +26,7 @@ namespace BaseConverter =
     let l = oct_to_dec'(0, end, x, [])
     sum(l, (x) => x)
 
-  function binary_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
+  private function binary_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
     if(begin < end)
       let y = x mod 2
       let y' = y * 2 ^ begin
@@ -36,7 +36,7 @@ namespace BaseConverter =
     else 
       l
 
-  function oct_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
+  private function oct_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
     if(begin < end)
       let y = x mod 10
       let y' = y * 8 ^ begin
@@ -46,20 +46,20 @@ namespace BaseConverter =
     else 
       l
 
-  function sum(l : list('a), f : 'a => int) : int =
+  private function sum(l : list('a), f : 'a => int) : int =
     foldr((x, y) => x + y, 0, map(f, l))
 
-  function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
+  private function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
     switch(l)
       [] => z
       e :: l' => f(e, foldr(f, z, l'))
     
-  function map(f : 'a => 'b, l : list('a)) : list('b) =
+  private function map(f : 'a => 'b, l : list('a)) : list('b) =
     switch(l)
      [] => []
      e :: l' => f(e) :: map(f, l')
 
-  function divide(x : int, base : int, l : list(int))  : string =
+  private function divide(x : int, base : int, l : list(int))  : string =
     if(x != 0)
       let div = x mod base
       let l' = div :: l
@@ -67,10 +67,10 @@ namespace BaseConverter =
     else
       list_to_string(l, base)
     
-  function list_to_string(l : list(int), base : int) : string =
+  private function list_to_string(l : list(int), base : int) : string =
     make_string(l, base, "")
     
-  function make_string(l : list(int), base : int, str : string) : string =
+  private function make_string(l : list(int), base : int, str : string) : string =
     if(base != 16)
       switch(l)
         [] => str
