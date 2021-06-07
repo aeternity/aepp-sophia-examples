@@ -1,12 +1,13 @@
+// define compatible compiler versions
+@compiler >= 6
 
 contract SimpleToken =
     
     // define state variables
-    record state = {
-        total_supply : int,
-        name : string,
-        balances : map(address, int)
-        }
+    record state =
+        { total_supply : int
+        , name : string
+        , balances : map(address, int) }
     
     // initialize the contract and its state
     entrypoint init(initial_balance : int, name : string) =
