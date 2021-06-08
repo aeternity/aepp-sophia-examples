@@ -11,7 +11,6 @@ contract TicTacToe =
                                 [31] = 0, [32] = 0, [33] = 0,
                                 [00] = 0, // last player move info
                                 [01] = 0 } // counter
-    
 
   stateful entrypoint make_move(position, player) : string =
     // check if given player is only either 1 or 2 

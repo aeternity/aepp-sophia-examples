@@ -11,7 +11,11 @@ contract SmartRealEstate =
   type state = map(address, map(string, rent))
   
   entrypoint init(price : int, name : string, address : string) : state = 
-    {[Call.caller] = {[name] = {tenant = Call.caller, price = price, is_paid = false, property_address = address}}}
+    {[Call.caller] = {[name] =
+      { tenant = Call.caller,
+        price = price,
+        is_paid = false,
+        property_address = address }}}
     
   payable stateful entrypoint pay_rent(owner : address, name : string) =
     // check if key of the owner exists
@@ -23,10 +27,8 @@ contract SmartRealEstate =
 
     let owner_property = 
       switch(Map.lookup(name, state[owner]))
-        None => 
-          abort("No property")
-        Some(e) =>
-          e
+        None    => abort("No property")
+        Some(e) => e
 
     // check if there is enoght money to pay/buy this rent
     require(Contract.balance >= owner_property.price, String.concat("Not enough money to pay this rent: ", name))

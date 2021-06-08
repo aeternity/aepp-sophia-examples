@@ -2,34 +2,32 @@
 
 namespace DateTime =
 
-  record date_time_constants = {
-    origin_year : int, 
-    day_in_seconds : int,
-    year_in_seconds : int,
-    leap_year_in_seconds : int,
-    hour_in_seconds : int,
-    minute_in_seconds : int }
+  record date_time_constants =
+    { origin_year : int
+    , day_in_seconds : int
+    , year_in_seconds : int
+    , leap_year_in_seconds : int
+    , hour_in_seconds : int
+    , minute_in_seconds : int }
 
-  record date_time = 
-    {
-      year : int,
-      month : int,
-      day : int,
-      hour : int,
-      minute : int,
-      second : int,
-      weekday : int,
-      timestamp : int,
-      leap_years_before : int,
-      seconds_accounted_for : int
-    } 
+  record date_time =
+    { year : int
+    , month : int
+    , day : int
+    , hour : int
+    , minute : int
+    , second : int
+    , weekday : int
+    , timestamp : int
+    , leap_years_before : int
+    , seconds_accounted_for : int } 
 
   function to_timestamp(year : int,
-                               month : int,
-                               day : int,
-                               hour : int,
-                               minute : int,
-                               second : int) : int =
+                        month : int,
+                        day : int,
+                        hour : int,
+                        minute : int,
+                        second : int) : int =
     let constants : date_time_constants = get_units_of_measure()
     
     // calculate timestamp by given year
@@ -290,8 +288,7 @@ namespace DateTime =
     let l = month / 11
     let month = month + 2 - 12 * l
     let year = 100 * (n - 49) + year + l
-    {
-      year = year,
+    { year = year,
       month = month,
       day = day,
       hour = 0,
@@ -300,8 +297,7 @@ namespace DateTime =
       weekday = 0,
       leap_years_before = 0,
       seconds_accounted_for = 0,
-      timestamp = 0
-      }
+      timestamp = 0 }
 
   // ------------------------------------------------------------------------
   //https://archive.org/stream/131123ExplanatorySupplementAstronomicalAlmanac/131123-explanatory-supplement-astronomical-almanac_djvu.txt
