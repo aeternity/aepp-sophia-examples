@@ -110,10 +110,7 @@ namespace DateTime =
       false
 
   function is_week_day(timestamp : int) : bool = 
-    if(get_weekday(timestamp) =< 5)
-      true
-    else
-      false
+    get_weekday(timestamp) =< 5
 
   function is_week_end(timestamp : int) : bool = 
     if(get_weekday(timestamp) >= 6)
