@@ -1,0 +1,6 @@
+@compiler >= 6
+
+contract interface SellerInterface =
+  entrypoint received_item              : () => unit
+  entrypoint seller_contract_balance    : () => int
+  entrypoint check_item_status          : () => string

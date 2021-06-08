@@ -1,0 +1,5 @@
+@compiler >= 6
+
+contract interface TransportInterface = 
+  entrypoint check_courier_status   : () => string
+  entrypoint check_courier_location : () => string

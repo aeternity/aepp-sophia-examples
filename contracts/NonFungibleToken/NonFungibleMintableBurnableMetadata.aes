@@ -1,0 +1,97 @@
+@compiler >= 6
+
+include "Option.aes"
+
+contract NonFungibleMintableBurnableMetadata =
+
+  record state =
+    { name: string
+    , symbol: string
+    , owner: address
+    , map_owned_tokens_count: map(address, int)
+    , map_token_owner: map(int, address)
+    , map_token_approvals: map(int, address)
+    , map_operator_approvals: map(address, map(address, bool))
+    , map_token_uris: map(int, string) }
+
+  stateful entrypoint init(name: string, symbol: string) =
+    { name = name,
+  	  symbol = symbol,
+      owner = Call.caller,
+  	  map_owned_tokens_count = {},
+  	  map_token_owner = {},
+  	  map_token_approvals = {},
+      map_operator_approvals = {},
+      map_token_uris = {} }
+
+  entrypoint name() : string =
+    state.name
+
+  entrypoint symbol() : string =
+    state.symbol
+
+  entrypoint owner() : address =
+    state.owner
+
+  entrypoint balance_of(token_owner: address) : int =
+    Map.lookup_default(token_owner, state.map_owned_tokens_count, 0)
+
+  entrypoint owner_of(token_id: int) : option(address) =
+    Map.lookup(token_id, state.map_token_owner)
+
+  entrypoint get_approved(token_id: int) : option(address) =
+    Map.lookup(token_id, state.map_token_approvals)
+
+  entrypoint is_approved_for_all(owner: address, operator: address) : bool =
+    Map.lookup_default(operator, Map.lookup_default(owner, state.map_operator_approvals, {}), false)
+
+  entrypoint get_token_uri(token_id: int) : string =
+    Map.lookup_default(token_id, state.map_token_uris, "")
+
+  stateful entrypoint set_token_uri(token_id: int, uri: string) =
+    require(check_token_exists(token_id), "Token does not exist")
+    require(Call.caller == Option.force(Map.lookup(token_id, state.map_token_owner)), "Only token owner can set token uri")
+    put(state{map_token_uris[token_id] = uri})
+
+  stateful entrypoint mint(token_id: int, to: address) =
+    require(Call.caller == state.owner, "Only contract owner can mint")
+    require(!check_token_exists(token_id), "Token already minted")
+    put(state{map_token_owner = state.map_token_owner{[token_id] = to}})
+    put(state{map_owned_tokens_count[to] = Map.lookup_default(to, state.map_owned_tokens_count, 0) + 1})
+
+  stateful entrypoint burn(token_id: int) =
+    require(check_token_exists(token_id), "Token does not exist")
+    require(Call.caller == Option.force(Map.lookup(token_id, state.map_token_owner)), "Only token owner can burn")
+    put(state{map_owned_tokens_count[Call.caller] = Option.force(Map.lookup(Call.caller, state.map_owned_tokens_count)) - 1})
+    put(state{map_token_owner = Map.delete(token_id, state.map_token_owner)})
+    put(state{map_token_uris = Map.delete(token_id, state.map_token_uris)})
+
+  stateful entrypoint approve(token_id: int, approved: address) =
+    require(check_token_exists(token_id), "Token does not exist")
+    require(approved != Call.caller, "Cannot approve the same address")
+    let owner: option(address) = owner_of(token_id)
+    require(Call.caller == Option.force(owner) || is_approved_for_all(Option.force(owner), Call.caller), "Neither owner nor operator")
+    put(state{map_token_approvals[token_id] = approved})
+
+  stateful entrypoint transfer_from(from: address, to: address, token_id: int) =
+    require(check_token_exists(token_id), "Token does not exist")
+    require(is_approved_or_owner(Call.caller, token_id), "Neither owner nor approved")    
+    transfer(from, to, token_id)
+
+  stateful entrypoint set_approval_for_all(operator: address, approved: bool) =
+    put(state{map_operator_approvals[Call.caller = {}][operator] = approved})
+
+  function check_token_exists(token_id: int) : bool =
+    Map.member(token_id, state.map_token_owner)
+
+  stateful function transfer(from: address, to: address, token_id: int) =
+    put(state{map_token_approvals = Map.delete(token_id, state.map_token_approvals)})
+    put(state{map_owned_tokens_count[from] = Option.force(Map.lookup(from, state.map_owned_tokens_count)) - 1})
+    put(state{map_token_owner = state.map_token_owner{[token_id] = to}})
+    put(state{map_owned_tokens_count[to] = Map.lookup_default(to, state.map_owned_tokens_count, 0) + 1})
+
+  function is_approved_or_owner(spender: address, token_id: int) : bool =
+    let owner: option(address) = owner_of(token_id)
+    let approved: option(address) = get_approved(token_id)
+    Option.force(owner) == spender || is_approved_for_all(Option.force(owner), spender) ||
+      (Option.is_some(approved) && Option.force(approved) == spender)

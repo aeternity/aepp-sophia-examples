@@ -1,0 +1,32 @@
+// define compatible compiler versions
+@compiler >= 6
+
+contract SimpleToken =
+    
+    // define state variables
+    record state =
+        { total_supply : int
+        , name : string
+        , balances : map(address, int) }
+    
+    // initialize the contract and its state
+    entrypoint init(initial_balance : int, name : string) =
+        { name         = name,
+          total_supply = initial_balance,
+          balances     = {[Call.caller] = initial_balance} }
+    
+    // getter function
+    entrypoint name() : string =
+        state.name
+    
+    // getter function
+    entrypoint balance(account : address) : int =
+        state.balances[account = 0]
+
+    // state-changing transfer function
+    stateful entrypoint transfer(recipient : address, value : int) =
+        require(value >= 0, "NON_NEGATIVE_VALUE_REQUIRED")
+        require(balance(Call.caller) >= value, "Not enough funds")
+
+        put(state{ balances[Call.caller] = state.balances[Call.caller] - value })
+        put(state{ balances[recipient] = state.balances[recipient = 0] + value })

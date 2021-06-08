@@ -1,0 +1,91 @@
+@compiler >= 6
+
+namespace BaseConverter =
+  
+  // Convert decimal to binary
+  function dec_to_binary(x : int) : string =
+    divide(x, 2, [])
+
+  // Convert decimal to octal
+  function dec_to_oct(x : int) : string =
+    divide(x, 8, []) 
+
+  // Convert decimal to hexadecimal
+  function dec_to_hex(x : int) : string =
+    divide(x, 16, [])
+
+  // Convert binary to decimal
+  function binary_to_dec(x : int) : int =
+    let end = String.length(Int.to_str(x))
+    let l = binary_to_dec'(0, end, x, [])
+    sum(l, (x) => x)
+
+  // Convert oct to decimal
+  function oct_to_dec(x : int) : int =
+    let end = String.length(Int.to_str(x))
+    let l = oct_to_dec'(0, end, x, [])
+    sum(l, (x) => x)
+
+  private function binary_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
+    if(begin < end)
+      let y = x mod 2
+      let y' = y * 2 ^ begin
+      let x = x / 10
+      let l' = y' :: l
+      binary_to_dec'(begin + 1, end, x, l')
+    else 
+      l
+
+  private function oct_to_dec'(begin : int, end : int, x : int, l : list(int)) : list(int) =
+    if(begin < end)
+      let y = x mod 10
+      let y' = y * 8 ^ begin
+      let x = x / 10
+      let l' = y' :: l
+      oct_to_dec'(begin + 1, end, x, l')
+    else 
+      l
+
+  private function sum(l : list('a), f : 'a => int) : int =
+    foldr((x, y) => x + y, 0, map(f, l))
+
+  private function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
+    switch(l)
+      [] => z
+      e :: l' => f(e, foldr(f, z, l'))
+    
+  private function map(f : 'a => 'b, l : list('a)) : list('b) =
+    switch(l)
+     [] => []
+     e :: l' => f(e) :: map(f, l')
+
+  private function divide(x : int, base : int, l : list(int))  : string =
+    if(x != 0)
+      let div = x mod base
+      let l' = div :: l
+      divide(x / base, base, l')
+    else
+      list_to_string(l, base)
+    
+  private function list_to_string(l : list(int), base : int) : string =
+    make_string(l, base, "")
+    
+  private function make_string(l : list(int), base : int, str : string) : string =
+    if(base != 16)
+      switch(l)
+        [] => str
+        e :: l' => 
+          make_string(l', base, String.concat(str, Int.to_str(e)))
+    else
+      switch(l)
+        [] => str
+        e :: l' =>
+          let e  = switch(e)
+            10 => "A"
+            11 => "B"
+            12 => "C"
+            13 => "D"
+            14 => "E"
+            15 => "F"
+            e => Int.to_str(e) 
+          make_string(l', base, String.concat(str, e))

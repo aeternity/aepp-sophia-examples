@@ -1,0 +1,21 @@
+@compiler >= 6
+
+include "String.aes"
+
+contract SmartDataProviderBackend =
+  record state =
+    { exchange_oracle : oracle(string, string)
+    , exchange_rate   : map(string, string) }
+     
+  stateful entrypoint init() : state =
+    let exchange_oracle : oracle(string, string) = Oracle.register(Contract.address, 10, RelativeTTL(200))
+    {exchange_oracle = exchange_oracle, exchange_rate = {["USD"] = "1", ["EUR"] = "2"}}
+       
+  entrypoint get_oracle_address() : oracle(string, string) =
+    state.exchange_oracle
+    
+  stateful entrypoint process_response(oracle : oracle(string, string), query : oracle_query(string, string)) =
+    require(oracle == state.exchange_oracle, "Incorrect address")
+    let question : string = Oracle.get_question(oracle, query)
+    let response : string = Map.lookup_default(question, state.exchange_rate, String.concat(String.concat("Given rate :" , question), "does not exist"))
+    Oracle.respond(oracle, query, response)

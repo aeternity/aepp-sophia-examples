@@ -1,0 +1,394 @@
+@compiler >= 6
+
+namespace DateTime =
+
+  record date_time_constants =
+    { origin_year : int
+    , day_in_seconds : int
+    , year_in_seconds : int
+    , leap_year_in_seconds : int
+    , hour_in_seconds : int
+    , minute_in_seconds : int }
+
+  record date_time =
+    { year : int
+    , month : int
+    , day : int
+    , hour : int
+    , minute : int
+    , second : int
+    , weekday : int
+    , timestamp : int
+    , leap_years_before : int
+    , seconds_accounted_for : int } 
+
+  function to_timestamp(year : int,
+                        month : int,
+                        day : int,
+                        hour : int,
+                        minute : int,
+                        second : int) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    
+    // calculate timestamp by given year
+    let leap_years_in_sec = leap_years_before(year, constants.origin_year) * constants.leap_year_in_seconds
+    
+    let years_in_sec = 
+      ((year - constants.origin_year) - leap_years_before(year, constants.origin_year)) * constants.year_in_seconds
+    let timestamp = leap_years_in_sec + years_in_sec
+
+    // calculate timestamp by given month
+    let timestamp = month_to_timestamp(1, year, month - 1, timestamp, constants.day_in_seconds)
+
+    // calculate timestamp by given day
+    let timestamp = timestamp + (day - 1) * constants.day_in_seconds
+
+    // calculate timestamp by given hour
+    let timestamp = timestamp + hour * constants.hour_in_seconds
+
+    // calculate timestamp by given minute
+    let timestamp = timestamp + minute * constants.minute_in_seconds
+
+    // calculate timestamp by given second
+    let timestamp = timestamp + second  
+    timestamp
+
+  function parse_timestamp(timestamp : int) : date_time = 
+    let constants : date_time_constants = get_units_of_measure()
+    let dt : date_time = init_date_time(timestamp, constants)
+    
+    let dt : date_time = p_get_year(dt, constants)
+    let dt : date_time = p_get_month(dt, constants)
+    let dt : date_time = p_get_day(dt, constants)
+    let dt : date_time = dt{hour = (timestamp / 60 /60) mod 24}
+    let dt : date_time = dt{minute = (timestamp / 60) mod 60}
+    let dt : date_time = dt{second = timestamp mod 60}
+    let wd : int = (timestamp / constants.day_in_seconds + 4) mod 7
+    let dt : date_time = dt{weekday = wd}
+    dt
+
+  function diff_years(from_timestamp : int, to_timestamp : int) : int = 
+    require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
+    parse_timestamp(to_timestamp).year - parse_timestamp(from_timestamp).year
+
+  function diff_months(from_timestamp : int, to_timestamp : int) : int = 
+    require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
+    let from_dt : date_time = parse_timestamp(from_timestamp)
+    let to_dt : date_time = parse_timestamp(to_timestamp) 
+    to_dt.year * 12 + to_dt.month - from_dt.year * 12 - from_dt.month
+
+  function diff_days(from_timestamp : int, to_timestamp : int) : int = 
+    require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
+    let constants : date_time_constants = get_units_of_measure()
+    (to_timestamp - from_timestamp) / constants.day_in_seconds
+
+  function diff_hours(from_timestamp : int, to_timestamp : int) : int = 
+    require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
+    let constants : date_time_constants = get_units_of_measure()
+    (to_timestamp - from_timestamp) / constants.hour_in_seconds
+
+  function diff_minutes(from_timestamp : int, to_timestamp : int) : int = 
+    require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
+    let constants : date_time_constants = get_units_of_measure()
+    (to_timestamp - from_timestamp) / constants.minute_in_seconds
+
+  function diff_seconds(from_timestamp : int, to_timestamp : int) : int = 
+    require(from_timestamp =< to_timestamp, "parameter to_timestamp should be higher than from_timestamp")
+    to_timestamp - from_timestamp
+
+  function is_valid_date(year : int, month : int, day : int) : bool = 
+    if(year > 1970 && month > 0 && month =< 12)
+      let days_in_month = get_days_in_month(month, year)
+      day > 0 && day =< days_in_month
+    else
+      false
+
+  function is_valid_date_time(year : int, month : int, day : int, hour : int, minute : int, second : int) : bool = 
+    if(is_valid_date(year, month, day))
+      hour < 24 && minute < 60 && second < 60
+    else
+      false
+
+  function is_week_day(timestamp : int) : bool = 
+    get_weekday(timestamp) =< 5
+
+  function is_week_end(timestamp : int) : bool = 
+    get_weekday(timestamp) >= 6
+
+  function get_year(timestamp : int) : int = 
+    parse_timestamp(timestamp).year
+
+  function get_month(timestamp : int) : int = 
+    parse_timestamp(timestamp).month
+    
+  function get_day(timestamp : int) : int = 
+    parse_timestamp(timestamp).day
+
+  function get_hour(timestamp : int) : int = 
+    (timestamp / 60 /60) mod 24
+
+  function get_minute(timestamp : int) : int = 
+    (timestamp / 60) mod 60
+
+  function get_second(timestamp : int) : int = 
+    timestamp mod 60
+  
+  function get_weekday(timestamp : int) : int = 
+    parse_timestamp(timestamp).weekday
+
+  function add_years(timestamp : int, years: int) : int =
+    let dt : date_time = parse_timestamp(timestamp)
+    let dt : date_time = dt { year = dt.year + years }
+    calculate_years_in_seconds(timestamp, dt)
+
+  function sub_years(timestamp : int, years: int) : int =
+    let dt : date_time = parse_timestamp(timestamp)
+    let dt : date_time = dt { year = dt.year - years }
+    calculate_years_in_seconds(timestamp, dt)
+
+  function add_months(timestamp : int, months: int) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    let dt : date_time = days_to_date(timestamp / constants.day_in_seconds)
+    let dt : date_time = dt { month = dt.month + months}
+    let dt : date_time = dt { year = dt.year + (( dt.month - 1) / 12) }
+    let dt : date_time = dt { month = ( dt.month - 1 ) mod 12 + 1}
+    let days_in_month = get_days_in_month(dt.month, dt.year)
+    let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
+    
+    days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
+    
+  function sub_months(timestamp : int, months: int) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    let dt : date_time = days_to_date(timestamp / constants.day_in_seconds)
+    let year_month = dt.year * 12 + (dt.month - 1) - months
+    let dt : date_time = dt { year = year_month / 12 }
+    let dt : date_time = dt { month = (year_month mod 12) + 1}
+    let days_in_month = get_days_in_month(dt.month, dt.year)
+    let dt : date_time = dt { day = calculate_day(dt, days_in_month)}
+    
+    days_from_date(dt.year, dt.month, dt.day) * constants.day_in_seconds + timestamp mod constants.day_in_seconds
+  
+  function add_days(timestamp : int, days : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    timestamp + (days * constants.day_in_seconds)
+
+  function sub_days(timestamp : int, days : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    timestamp - (days * constants.day_in_seconds)
+
+  function add_hours(timestamp : int, hours : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    timestamp + (hours * constants.hour_in_seconds)
+
+  function sub_hours(timestamp : int, hours : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    timestamp - (hours * constants.hour_in_seconds)
+
+  function add_minutes(timestamp : int, minutes : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    timestamp + (minutes * constants.minute_in_seconds)
+
+  function sub_minutes(timestamp : int, minutes : int) : int = 
+    let constants : date_time_constants = get_units_of_measure()
+    timestamp - (minutes * constants.minute_in_seconds)
+
+  function add_seconds(timestamp : int, seconds : int) : int = 
+    timestamp + seconds
+
+  function sub_seconds(timestamp : int, seconds : int) : int = 
+    timestamp - seconds
+
+  function is_leap_year(year : int) : bool =
+    if((year mod 4) != 0)
+      false
+    elif((year mod 100) != 0)
+      true
+    elif((year mod 400) != 0)
+      false
+    else
+      true
+
+  private function get_units_of_measure() : date_time_constants = {
+    origin_year = 1970, 
+    day_in_seconds = 86400,
+    year_in_seconds = 31536000,
+    leap_year_in_seconds = 31622400,
+    hour_in_seconds = 3600,
+    minute_in_seconds = 60 }
+
+  private function init_date_time(timestamp : int, constants : date_time_constants) : date_time =
+    let year = constants.origin_year + timestamp / constants.year_in_seconds
+    let total_leap_years_before = leap_years_before(year, constants.origin_year)
+    let seconds_accounted_for = constants.leap_year_in_seconds * total_leap_years_before
+    {
+      year = year,
+      month = 0,
+      day = 0,
+      hour = 0,
+      minute = 0,
+      second = 0,
+      weekday = 0,
+      leap_years_before = total_leap_years_before,
+      seconds_accounted_for = 
+        seconds_accounted_for + constants.year_in_seconds * 
+        (year - constants.origin_year - total_leap_years_before),
+      timestamp = timestamp
+      }
+
+  private function calculate_years_in_seconds(timestamp : int, dt : date_time) : int =
+    let constants : date_time_constants = get_units_of_measure()
+    let days : int = days_from_date(dt.year, dt.month, dt.day)
+    (days * constants.day_in_seconds) + timestamp mod constants.day_in_seconds
+
+  private function calculate_day(dt : date_time, days_in_month : int) : int =
+    if(dt.day > days_in_month)
+      let dt : date_time = dt { day = days_in_month }
+      dt.day
+    else
+      let dt : date_time = dt { day = dt.day }
+      dt.day
+  
+  // ------------------------------------------------------------------------
+  // The Explanatory Supplement to the Astronomical Almanac,1992, page 604, gives an algorithm by Fliegel and Van Flandern 
+  // that calculates dates after November 23, -4713, given an integral Julian Day Number. 
+  // The algorithm is designed so that it can be directly implemented using integer arithmetic and the
+  // usual integer division.
+  //
+  // int L = days + 68569 + offset
+  // int N = 4 * L / 146097
+  // L = L - (146097 * N + 3) / 4
+  // year = 4000 * (L + 1) / 1461001
+  // L = L - 1461 * year / 4 + 31
+  // month = 80 * L / 2447
+  // dd = L - 2447 * month / 80
+  // L = month / 11
+  // month = month + 2 - 12 * L
+  // year = 100 * (N - 49) + year + L
+  //
+  // Calculate year/month/day from the number of days since 1970/01/01 using
+  // the date conversion algorithm we add 2440588 as offset so that 1970/01/01 is day 0
+  // You can read more about the algorithm here:
+  // https://archive.org/stream/131123ExplanatorySupplementAstronomicalAlmanac/131123-explanatory-supplement-astronomical-almanac_djvu.txt
+  // ------------------------------------------------------------------------
+  private function days_to_date(days : int) : date_time = 
+    let offset_1970_0101 = 2440588
+    let l = days + 68569 + offset_1970_0101
+    let n = 4 * l / 146097
+    let l = l - (146097 * n + 3) / 4
+    let year = 4000 * (l + 1) / 1461001
+    let l = l - 1461 * year / 4 + 31
+    let month = 80 * l / 2447
+    let day = l - 2447 * month / 80
+    let l = month / 11
+    let month = month + 2 - 12 * l
+    let year = 100 * (n - 49) + year + l
+    { year = year,
+      month = month,
+      day = day,
+      hour = 0,
+      minute = 0,
+      second = 0,
+      weekday = 0,
+      leap_years_before = 0,
+      seconds_accounted_for = 0,
+      timestamp = 0 }
+
+  // ------------------------------------------------------------------------
+  //https://archive.org/stream/131123ExplanatorySupplementAstronomicalAlmanac/131123-explanatory-supplement-astronomical-almanac_djvu.txt
+  //For dates in the Gregorian calendar at noon, The Explanatory Supplement to the Astronomical Almanac,1992, 
+  //page 604, gives the value for the Julian Day Number for a Gregorian Date after November 23, -4713 as:
+  // The following conversion algorithm is due to Henry F. Fliegel and Thomas C. Van Flandern
+  // We calculate the number of days from 1970/01/01 to year/month/day using
+  // the algorithm
+  // and subtracting the offset 2440588 so that 1970/01/01 is day 0
+  //
+  // days = day
+  //      - 32075
+  //      + 1461 * (year + 4800 + (month - 14) / 12) / 4
+  //      + 367 * (month - 2 - (month - 14) / 12 * 12) / 12
+  //      - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
+  //      - offset
+  // ------------------------------------------------------------------------
+  private function days_from_date(year : int, month : int, day : int ) : int = 
+    let offset_1970_0101 = 2440588
+    let days : int  = day 
+      - 32075 
+      + 1461 * (year + 4800 + (month - 14) / 12) / 4 
+      + 367 * (month - 2 - (month - 14) / 12 * 12) / 12
+      - 3 * ((year + 4900 + (month - 14) / 12) / 100) / 4
+      - offset_1970_0101
+    days
+
+  private function leap_years_before(year1 : int, year2 : int) : int  =
+    let y1 = year1 - 1
+    let y2 = year2 - 1
+    let yy1 = (y1 / 4) - (y1 / 100) + (y1 / 400)
+    let yy2 = (y2 / 4) - (y2 / 100) + (y2 / 400)
+    yy1 - yy2
+
+  private function p_get_year(dt, constants : date_time_constants) : date_time =
+    if(dt.seconds_accounted_for > dt.timestamp)
+      let dt : date_time = dt{
+        seconds_accounted_for =
+        if(is_leap_year(dt.year - 1))
+          dt.seconds_accounted_for - constants.leap_year_in_seconds
+        else
+          dt.seconds_accounted_for - constants.year_in_seconds,
+        year = dt.year - 1 }
+      p_get_year(dt, constants)
+    else
+      dt
+
+  private function p_get_month(dt : date_time, constants : date_time_constants) : date_time =
+    p_get_month'(1, 12, dt, constants)
+
+  private function p_get_month'(begin : int, end : int, dt : date_time, constants : date_time_constants) : date_time =
+    let seconds_in_month = constants.day_in_seconds * get_days_in_month(begin, dt.year)
+    if((begin >= end) || (seconds_in_month + dt.seconds_accounted_for > dt.timestamp))
+      let dt = dt{month = begin}
+      dt
+    else
+      let dt : date_time = 
+        dt{seconds_accounted_for = dt.seconds_accounted_for + seconds_in_month}
+      p_get_month'(begin + 1, end, dt, constants)
+
+  private function get_days_in_month(month : int,year : int) : int =
+    if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
+      31
+    elif (month == 4 || month == 6 || month == 9 || month == 11)
+      30
+    elif (is_leap_year(year))
+      29
+    else
+      28
+
+  private function p_get_day(dt : date_time, constants : date_time_constants) : date_time =
+    p_get_day'(1, get_days_in_month(dt.month, dt.year), dt, constants)
+
+  private function p_get_day'(from : int, to : int, dt : date_time, constants : date_time_constants) : date_time =
+    if(constants.day_in_seconds + dt.seconds_accounted_for > dt.timestamp || from >= to)
+      let dt : date_time = dt{day = from}
+      dt
+    else
+      let dt : date_time = dt{seconds_accounted_for = dt.seconds_accounted_for + constants.day_in_seconds}
+      p_get_day'(from + 1, to, dt, constants)
+
+  private function month_to_timestamp(from : int, year : int, month : int, timestamp : int, day_in_seconds : int) : int =
+    let day_in_month = {[1] = 31,
+                        [2] = if(is_leap_year(year)) 29
+                              else 28,
+                        [3] = 31,
+                        [4] = 30,
+                        [5] = 31,
+                        [6] = 30,
+                        [7] = 31,
+                        [8] = 31,
+                        [9] = 30,
+                        [10] = 31,
+                        [11] = 30,
+                        [12] = 31}
+
+    if(from =< month)
+      month_to_timestamp(from + 1, year, month, timestamp + day_in_month[from] * day_in_seconds, day_in_seconds)
+    else
+      timestamp

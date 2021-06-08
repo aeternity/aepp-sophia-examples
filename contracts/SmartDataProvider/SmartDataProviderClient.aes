@@ -1,0 +1,19 @@
+@compiler >= 6
+
+include "./SmartDataProviderBackendInterface.aes"
+
+contract SmartDataProviderClient =
+  payable stateful entrypoint get_exchange_rate(backend: SmartDataProviderBackendInterface, currency : string) =
+    let answering_oracle : oracle(string, string) = backend.get_oracle_address()
+    let query_oracle : oracle_query(string, string) = 
+      Oracle.query(answering_oracle, currency, 10, RelativeTTL(50), RelativeTTL(50))
+    process_response(backend, answering_oracle, query_oracle)
+    read_response(answering_oracle, query_oracle)
+    
+  function process_response(backend: SmartDataProviderBackendInterface, answering_oracle, query) =
+    backend.process_response(answering_oracle, query)
+    
+  function read_response(oracle: oracle(string, string), query : oracle_query(string, string)) : string =
+    switch(Oracle.get_answer(oracle, query))
+      Some(answer) => answer
+      None => "No answer from oracle"

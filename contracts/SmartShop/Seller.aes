@@ -1,0 +1,33 @@
+@compiler >= 6
+
+payable contract Seller =
+  record state =
+    { seller_address : address
+    , buyer_address : address
+    , status : string
+    , price : int }
+  
+  entrypoint init(buyer_address' : address, price' : int) : state =
+    { seller_address = Call.caller,
+      buyer_address = buyer_address',
+      status = "undefined",
+      price = price' }
+
+  function check_money() : bool =
+    Contract.balance >= state.price
+    
+  stateful entrypoint send_item() : string =
+    require(check_money(), "Not enough money")
+    put(state{status = "sent_to_transport_courier"})
+    state.status
+      
+  stateful entrypoint received_item() : unit =
+    require(Call.origin == state.buyer_address, "Buyer Only Function")
+    put(state{status = "delivered" })
+    Chain.spend(state.seller_address, Contract.balance)
+
+  entrypoint caller_balance() : int = Chain.balance(Call.caller)
+
+  entrypoint seller_contract_balance() : int = Contract.balance
+
+  entrypoint check_item_status() : string = state.status
