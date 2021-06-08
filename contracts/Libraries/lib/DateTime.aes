@@ -113,10 +113,7 @@ namespace DateTime =
     get_weekday(timestamp) =< 5
 
   function is_week_end(timestamp : int) : bool = 
-    if(get_weekday(timestamp) >= 6)
-      true
-    else
-      false
+    get_weekday(timestamp) >= 6
 
   function get_year(timestamp : int) : int = 
     parse_timestamp(timestamp).year
