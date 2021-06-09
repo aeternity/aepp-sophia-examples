@@ -18,21 +18,15 @@ contract ExchangeMarket =
   entrypoint get_token_price() : int = state.assets["token"]
 
   stateful entrypoint create_query(oracle: oracle_id, question: query_type, query_fee: int, query_ttl: int, relative_ttl: int) : query_id =
-    require(query_fee > 0 , "Query fee must be greater than zero")
-    require(query_ttl > 0 , "Query TTL must be greater than zero")
-    require(relative_ttl > 0 , "Relative TTL must be greater than zero")
+    check_query_params(query_fee, query_ttl, relative_ttl)
     Oracle.query(oracle, question, query_fee, RelativeTTL(query_ttl), RelativeTTL(relative_ttl))
 
   stateful entrypoint create_ae_price_query(oracle: oracle_id, query_fee: int, query_ttl: int, relative_ttl: int) : query_id =
-    require(query_fee > 0 , "Query fee must be greater than zero")
-    require(query_ttl > 0 , "Query TTL must be greater than zero")
-    require(relative_ttl > 0 , "Relative TTL must be greater than zero")
+    check_query_params(query_fee, query_ttl, relative_ttl)
     Oracle.query(oracle, "Give me the AE price in USD", query_fee, RelativeTTL(query_ttl), RelativeTTL(relative_ttl))
 
   stateful entrypoint create_token_price_query(oracle: oracle_id, query_fee: int, query_ttl: int, relative_ttl: int) : query_id =
-    require(query_fee > 0 , "Query fee must be greater than zero")
-    require(query_ttl > 0 , "Query TTL must be greater than zero")
-    require(relative_ttl > 0 , "Relative TTL must be greater than zero")
+    check_query_params(query_fee, query_ttl, relative_ttl)
     Oracle.query(oracle, "Give me the Token price in USD", query_fee, RelativeTTL(query_ttl), RelativeTTL(relative_ttl))
 
   entrypoint query_fee(oracle: oracle_id) : int =
@@ -47,3 +41,8 @@ contract ExchangeMarket =
     require(asset == "ae" || asset == "token", "Unrecognized asset")
     require(new_price > 0, "The new price must be greater than zero")
     put(state{assets[asset] = new_price})
+
+  function check_query_params(query_fee: int, query_ttl: int, relative_ttl: int) =
+    require(query_fee > 0 , "Query fee must be greater than zero")
+    require(query_ttl > 0 , "Query TTL must be greater than zero")
+    require(relative_ttl > 0 , "Relative TTL must be greater than zero")

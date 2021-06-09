@@ -25,8 +25,7 @@ contract CryptoHamster =
 
     entrypoint get_hamster_dna(name: string) : int =
         require(name_exists(name), "There is no hamster with that name!")
-        let needed_hamster : hamster = state.map_hamsters[name]
-        needed_hamster.dna
+        state.map_hamsters[name].dna
 
     stateful function create_hamster_by_name_dna(name: string, dna: int) =
         let new_hamster : hamster =

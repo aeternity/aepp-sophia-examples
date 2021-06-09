@@ -4,7 +4,7 @@ contract SpendToMany =
 
   // recipients_and_tokens is a map of {[publicKey1_in_hex] = some_tokens1 , ... [publicKeyN_in_hex] = some_tokensN}
   payable stateful entrypoint spend_to_many(recipients_and_tokens : map(address, int)) : int =
-    let recipients_and_tokens_list = Map.to_list(recipients_and_tokens) // transform incomming map to list of tuples
+    let recipients_and_tokens_list = Map.to_list(recipients_and_tokens) // transform incoming map to list of tuples
     require(validate_expenses(recipients_and_tokens_list), "The balance given to perform this action is not sufficient")
     let sent_tokens = spend_to_many'(recipients_and_tokens_list, 0, Call.value)
     let excess_tokens = Call.value - sent_tokens
@@ -23,15 +23,15 @@ contract SpendToMany =
 
   // comparing possible expenses and given tokens
   function validate_expenses(recipients_and_tokens) : bool = 
-    sum((x) => x, preprocess_expenses(recipients_and_tokens,[])) =< Call.value
+    sum((x) => x, pre_process_expenses(recipients_and_tokens,[])) =< Call.value
 
   /* traversing through values of given list of tuples(in the other words, tokens), 
    returns a list of integers, in order to calculate them later in sum(f,l) private function. */
-  function preprocess_expenses(recipients_and_tokens, expenses) : list(int) = 
+  function pre_process_expenses(recipients_and_tokens, expenses) : list(int) = 
     switch(recipients_and_tokens)
       [] => expenses
       (_ , tokens) :: l' =>
-        preprocess_expenses(l', tokens :: expenses)
+        pre_process_expenses(l', tokens :: expenses)
  
   // traverses through list, returns a sum of elements
   function sum(f : 'a => int, l : list('a)) : int = 

@@ -15,7 +15,7 @@ contract ExchangeOracle =
     require(query_fee > 0 , "Qfee must be passed as an argument and should be greater than zero")
     require(ttl > 0 , "TTL must be passed as an argument and should be greater than zero")
     let exchange_oracle': oracle(string, int) = register_oracle(query_fee,ttl)
-    {exchange_oracle = exchange_oracle', oracle_fee = query_fee}
+    { exchange_oracle = exchange_oracle', oracle_fee = query_fee }
 
   stateful function register_oracle(query_fee: int, ttl: int) : oracle_id =
     require(query_fee > 0, "The fee is too low")
@@ -30,7 +30,7 @@ contract ExchangeOracle =
   stateful entrypoint create_query(question: query_type, query_fee: int, query_ttl: int, relative_ttl: int) : query_id =
     require(question != "", "The question can't be empty")
     require(query_fee > state.oracle_fee, "The fee is too low")
-    require(query_ttl > 0 && relative_ttl > 0, "The TTL params must be greater than zero"  )
+    require(query_ttl > 0 && relative_ttl > 0, "The TTL params must be greater than zero")
     Oracle.query(state.exchange_oracle, question, query_fee, RelativeTTL(query_ttl), RelativeTTL(relative_ttl))
 
   entrypoint get_question(query_id: query_id) : string =
