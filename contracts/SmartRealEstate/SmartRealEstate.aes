@@ -67,28 +67,20 @@ contract SmartRealEstate =
     put(state{[Call.caller][name] @ current = current{tenant = tenant}})
       
   entrypoint get_payment_status(owner : address, name : string) : bool =
-    if(Map.member(name, state[owner]))
-   	  state[owner][name].is_paid
-    else 
-      abort("Owner does not have this property")
+    require(Map.member(name, state[owner]), "Owner does not have this property")
+   	state[owner][name].is_paid
    	
   entrypoint get_property_address(owner : address, name : string) : string =
-    if(Map.member(name, state[owner]))
-   	  state[owner][name].property_address
-    else 
-      abort("Owner does not have this property")
+    require(Map.member(name, state[owner]), "Owner does not have this property")
+   	state[owner][name].property_address
     
   entrypoint get_tenant(owner : address, name : string) : address =
-    if(Map.member(name, state[owner]))
-   	  state[owner][name].tenant
-    else 
-      abort("Owner does not have this property")
+    require(Map.member(name, state[owner]), "Owner does not have this property")
+   	state[owner][name].tenant
 
   entrypoint get_price(owner : address, name : string) : int =
-    if(Map.member(name, state[owner]))
-   	  state[owner][name].price
-    else 
-      abort("Owner does not have this property")
+    require(Map.member(name, state[owner]), "Owner does not have this property")
+   	state[owner][name].price
 
   function is_owner(name) : bool =
     Map.member(name, state[Call.caller])
