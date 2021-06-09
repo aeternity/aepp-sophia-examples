@@ -3,13 +3,13 @@
 contract CryptoHamster =
 
     record state =
-        { index         : int
-        , map_hamsters  : map(string, hamster) }
+        { index         : int,
+        map_hamsters  : map(string, hamster) }
 
     record hamster =
-        { id    : int
-        , name  : string
-        , dna   : int }
+        { id    : int, 
+        name  : string, 
+        dna   : int }
 
     stateful entrypoint init() = 
         { index = 1,
@@ -44,3 +44,4 @@ contract CryptoHamster =
         switch(Chain.block_hash(Chain.block_height))
             None        => abort("blockhash not found")
             Some(bytes) => Bytes.to_int(bytes)
+            
