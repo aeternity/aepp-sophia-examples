@@ -1,7 +1,7 @@
 # aepp-sophia-examples
 
 ## AEproject
-The project structure follows the default structure of [AEproject](https://github.com/aeternity/aepp-aeproject-js) which allows developers to easily run a local dev environment, test & deploy their Smart Contracts written in [Sophia](https://github.com/aeternity/aesophia/blob/v6.0.0/docs/sophia.md).
+The project structure follows the default structure of [AEproject](https://github.com/aeternity/aepp-aeproject-js) which allows developers to easily run a local dev environment, test & deploy their Smart Contracts written in [Sophia](https://github.com/aeternity/aesophia/blob/v6.0.2/docs/sophia.md).
 
 ***Note***
 - This repository doesn't provide any deployment scripts as it is only intended to showcase Sophia Smart Contracts
@@ -17,6 +17,13 @@ The project structure follows the default structure of [AEproject](https://githu
 The [LibraryUsage.aes](contracts/Libraries/LibraryUsage.aes) contract shows how to include default and custom libraries in a Smart Contract. The example currently includes following custom libraries:
 - [BaseConverter.aes](contracts/Libraries/lib/BaseConverter.aes)
 - [DateTime.aes](contracts/Libraries/lib/DateTime.aes)
+
+### Delegation signatures
+It is possible to delegate the right to perform certain `AENS` or `Oracle` related actions to a contract. Check out the following examples and corresponding tests to see how you can use it:
+
+- [AensDelegation.aes](contracts/DelegationSignature/AensDelegation.aes)
+    - Delegation signatures for `AENS` functions can e.g. be used to create an AENS marketplace
+- [OracleDelegation.aes](contracts/DelegationSignature/OracleDelegation.aes)
 
 ### Oracles
 

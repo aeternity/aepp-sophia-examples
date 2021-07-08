@@ -1,0 +1,31 @@
+@compiler >= 6
+
+contract OracleDelegation =
+
+    stateful payable entrypoint register_oracle(acct : address,
+                                                sign : signature,
+                                                qfee : int,
+                                                ttl  : Chain.ttl) : oracle(string, string) =
+        Oracle.register(acct, qfee, ttl, signature = sign)
+
+    stateful payable entrypoint extend_oracle(o   : oracle(string, string),
+                                             sign : signature,
+                                             ttl  : Chain.ttl) =
+        Oracle.extend(o, signature = sign, ttl)
+
+    payable stateful entrypoint create_query(o    : oracle(string, string),
+                                             q    : string,
+                                             qttl : Chain.ttl,
+                                             rttl : Chain.ttl) : oracle_query(string, string) =
+        require(Oracle.check(o), "oracle not valid")
+        require(Call.value =< Oracle.query_fee(o), "insufficient value for qfee")
+        Oracle.query(o, q, Oracle.query_fee(o), qttl, rttl)
+
+    stateful entrypoint respond(o    : oracle(string, string),
+                                q    : oracle_query(string, string),
+                                sign : signature,
+                                r    : string) =
+        Oracle.respond(o, q, signature = sign, r)
+
+    entrypoint query_fee(o : oracle(string, string)) : int =
+        Oracle.query_fee(o)
