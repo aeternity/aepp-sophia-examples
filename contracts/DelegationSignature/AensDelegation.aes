@@ -1,0 +1,56 @@
+@compiler >= 6
+
+include "Option.aes"
+
+contract AensDelegation =
+
+    stateful entrypoint pre_claim(owner: address, commitment_hash: hash, sig: signature) =
+        AENS.preclaim(owner, commitment_hash, signature = sig)
+
+    stateful entrypoint claim(owner: address, name : string, salt: int, name_fee: int, sig: signature) =
+        AENS.claim(owner, name, salt, name_fee, signature = sig)
+
+    stateful entrypoint extend(addr: address, name: string, sig: signature, ttl: option(Chain.ttl)) =
+        switch(AENS.lookup(name))
+            None => ()
+            Some(AENS.Name(_, _, _)) =>
+                AENS.update(addr, name, Some(Option.default(RelativeTTL(180000), ttl)), None, None, signature = sig)
+
+    stateful entrypoint add_key(addr: address, name: string, key: string,
+                                  pt : AENS.pointee, sig : signature) =
+        switch(AENS.lookup(name))
+            None => ()
+            Some(AENS.Name(_, _, ptrs)) =>
+                AENS.update(addr, name, None, None, Some(ptrs{[key] = pt}), signature = sig)
+
+    stateful entrypoint delete_key(addr: address, name: string, key: string, sig: signature) =
+        switch(AENS.lookup(name))
+            None => ()
+            Some(AENS.Name(_, _, ptrs)) =>
+                let ptrs = Map.delete(key, ptrs)
+                AENS.update(addr, name, None, None, Some(ptrs), signature = sig)
+
+    stateful entrypoint transfer(owner: address, new_owner: address, name: string, sig: signature) =
+        switch(AENS.lookup(name))
+            None => ()
+            Some(AENS.Name(_, _, _)) =>
+                AENS.transfer(owner, new_owner, name, signature = sig)
+
+    stateful entrypoint revoke(addr: address, name: string, sig: signature) =
+        switch(AENS.lookup(name))
+            None => ()
+            Some(AENS.Name(_, _, _)) =>
+                AENS.revoke(addr, name, signature = sig)
+
+    entrypoint get_name(name : string) : option(AENS.name) =
+        AENS.lookup(name)
+
+    entrypoint get_owner(name: string): option(address) =
+        switch(AENS.lookup(name))
+            None => None
+            Some(AENS.Name(owner, _, _)) => Some(owner)
+
+    entrypoint get_pointers(name : string) : map(string, AENS.pointee) =
+        switch(AENS.lookup(name))
+            None => {}
+            Some(AENS.Name(_, _, ptrs)) => ptrs
