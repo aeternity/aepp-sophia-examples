@@ -79,5 +79,6 @@ There also exist reference implementations of [Aeternity Expansions](https://git
 If you face a problem or have other questions please pick one of the following places:
 - https://forum.aeternity.com/c/sophia-smart-contracts/38
 - https://stackoverflow.com/questions/tagged/aeternity-blockchain
+- [æternity Discord / Sophia Channel](https://discord.gg/HP6BMvBEdb)
 
 We are happy to help!
