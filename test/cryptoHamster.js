@@ -18,12 +18,12 @@ const hamsterNames = [
     'peter'
 ];
 
-describe('Crypto Hamster', async () => {
+xdescribe('Crypto Hamster', async () => {
 
     let cryptoHamsterInstance;
 
     beforeEach(async () => {
-        const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+        const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
         const client = await Universal({
             nodes: [
               { name: NETWORK_NAME, instance: node },

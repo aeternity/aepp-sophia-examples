@@ -10,12 +10,12 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 
 const contractUtils = require('../utils/contract-utils');
 
-describe('SmartRealEstate Contract', () => {
+xdescribe('SmartRealEstate Contract', () => {
   let smartRealEstateContractInstance;
   const owner = WALLETS[0];
 
   before(async () => {
-    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
     const client = await Universal({
         nodes: [
           { name: NETWORK_NAME, instance: node },

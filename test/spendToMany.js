@@ -11,12 +11,12 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 
 const contractUtils = require('../utils/contract-utils');
 
-describe('SpendToMany', () => {
+xdescribe('SpendToMany', () => {
   let client;
   let spendToManyContractInstance;
 
   before(async () => {
-    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
     client = await Universal({
         nodes: [
           { name: NETWORK_NAME, instance: node },

@@ -11,14 +11,14 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 
 const contractUtils = require('../utils/contract-utils');
 
-describe('ExchangeOracles', () => {
+xdescribe('ExchangeOracles', () => {
 	
 	const owner = WALLETS[0];
 	let client;
 	let exchangeOracleInstance, exchangeMarketInstance;
 
 	before(async () => {
-		const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+		const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
         client = await Universal({
             nodes: [
               { name: NETWORK_NAME, instance: node },

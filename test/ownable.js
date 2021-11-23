@@ -11,14 +11,14 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 
 const contractUtils = require('../utils/contract-utils');
 
-describe('Ownable', () => {
+xdescribe('Ownable', () => {
   let ownableInstance;
   const owner = WALLETS[0];
   const nonOwner = WALLETS[1];
   const newOwner = WALLETS[2];
 
   before(async () => {
-    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
     const client = await Universal({
         nodes: [
           { name: NETWORK_NAME, instance: node },

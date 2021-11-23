@@ -20,11 +20,11 @@ const {
   getMonthDifference
 } = require('../utils/datetime-utils');
 
-describe('LibraryUsage', () => {
+xdescribe('LibraryUsage', () => {
   let libraryUsageInstance;
 
   before(async () => {
-    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
     const client = await Universal({
       nodes: [
         { name: NETWORK_NAME, instance: node },

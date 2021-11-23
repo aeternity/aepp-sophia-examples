@@ -26,7 +26,7 @@ const {defaultWallets: WALLETS} = require('../config/wallets.json');
 
 const contractUtils = require('../utils/contract-utils');
 
-describe('SmartDataProvider', () => {
+xdescribe('SmartDataProvider', () => {
     const SMART_DATA_PROVIDER_BACKEND_SOURCE = './contracts/SmartDataProvider/SmartDataProviderBackend.aes';
     const SMART_DATA_PROVIDER_CLIENT_SOURCE = './contracts/SmartDataProvider/SmartDataProviderClient.aes';
 
@@ -34,7 +34,7 @@ describe('SmartDataProvider', () => {
     let backendContractInstance, clientContractInstance;
 
     before(async () => {
-        const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
+        const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
         client = await Universal({
             nodes: [
               { name: NETWORK_NAME, instance: node },
