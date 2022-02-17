@@ -1,7 +1,7 @@
-const { assert } = require('chai');
-const { utils, wallets, networks } = require('@aeternity/aeproject');
+const { utils, wallets } = require('@aeternity/aeproject');
+const { Crypto, AmountFormatter, TxBuilderHelper, SCHEMA } = require('@aeternity/aepp-sdk');
 
-const { Universal, MemoryAccount, Node, Crypto, AmountFormatter, TxBuilderHelper, SCHEMA } = require('@aeternity/aepp-sdk');
+const { assert } = require('chai');
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -10,7 +10,7 @@ function getRandomInt(min, max) {
 }
 
 describe('AensDelegation', () => {
-    let client;
+    let aeSdk;
     let contract;
     let salt;
     let aensDelegationSignature;
@@ -23,33 +23,25 @@ describe('AensDelegation', () => {
     console.log(testName);
 
     before(async () => {
-        // individually initialize Universal stamp
-        // instead of using utils.getClient()
-        client = await Universal.compose({
-            deepProps: { Ae: { defaults: { interval: 50 } } },
-        })({
-            nodes: [{ name: 'node', instance: await Node({ url: networks.devmode.nodeUrl, ignoreVersion: true }) }],
-            compilerUrl: networks.devmode.compilerUrl,
-            accounts: [MemoryAccount({ keypair: delegateKeypair }), MemoryAccount({ keypair: nameOwnerKeypair })],
-        });
+        aeSdk = await utils.getClient();
         try {
             // path relative to root of project
             const contractContent = utils.getContractContent('./contracts/DelegationSignature/AensDelegation.aes');
             // initialize the contract instance with sourcecode
-            contract = await client.getContractInstance({ source: contractContent });
+            contract = await aeSdk.getContractInstance({ source: contractContent });
         } catch(err) {
             console.error(err);
             assert.fail('Could not initialize contract instance');
         }
         // fund account of nameOwner with 4 AE (some funds are required to cover the name fee)
-        await client.spend(4, nameOwnerKeypair.publicKey, {
+        await aeSdk.spend(4, nameOwnerKeypair.publicKey, {
             onAccount: mainKeypair,
             denomination: AmountFormatter.AE_AMOUNT_FORMATS.AE
         });
 
         // fund newOwner with 1 AE as there is currently an issue (shouldn't be required for delegated actions)
         // see https://github.com/aeternity/aeternity/issues/3674
-        await client.spend(1, newOwnerKeypair.publicKey, {
+        await aeSdk.spend(1, newOwnerKeypair.publicKey, {
             onAccount: mainKeypair,
             denomination: AmountFormatter.AE_AMOUNT_FORMATS.AE
         });
@@ -66,46 +58,49 @@ describe('AensDelegation', () => {
             salt = Crypto.salt();
             const commitmentHashEncoded = TxBuilderHelper.commitmentHash(testName, salt);
             const commitmentHashDecoded = TxBuilderHelper.decode(commitmentHashEncoded, 'cm');
-            const preClaimSignature = await client.createAensDelegationSignature({ contractId: contract.deployInfo.address }, { onAccount: nameOwnerKeypair });
+            const preClaimSignature = await aeSdk.createAensDelegationSignature({ contractId: contract.deployInfo.address }, { onAccount: nameOwnerKeypair });
             await contract.methods.pre_claim(nameOwnerKeypair.publicKey, commitmentHashDecoded, preClaimSignature, { onAccount: delegateKeypair });
         });
         it('should claim a name', async () => {
-            aensDelegationSignature = await client.createAensDelegationSignature({ contractId: contract.deployInfo.address, name: testName}, { onAccount: nameOwnerKeypair });
-            // https://github.com/aeternity/aepp-sdk-js/issues/1251 (BigNumber as param?)
-            // https://github.com/aeternity/aepp-sdk-js/issues/1252 (wrong minimum name fee for names with length >= 31)
+            aensDelegationSignature = await aeSdk.createAensDelegationSignature({ contractId: contract.deployInfo.address, name: testName}, { onAccount: nameOwnerKeypair });
             const minimumNameFee = TxBuilderHelper.getMinimumNameFee(testName);
-            await contract.methods.claim(nameOwnerKeypair.publicKey, testName, salt, 3000000000000000000, aensDelegationSignature, { onAccount: delegateKeypair });
+            await contract.methods.claim(nameOwnerKeypair.publicKey, testName, salt, minimumNameFee, aensDelegationSignature, { onAccount: delegateKeypair });
         });
         it('should extend a name', async () => {
-            let nameResult = await client.aensQuery(testName);
+            let nameResult = await aeSdk.aensQuery(testName);
             const oldTtlHeight = nameResult.ttl;
-            const currentHeight = await client.height();
+            const currentHeight = await aeSdk.height();
             const newTtlHeight = currentHeight + 500;
-            const fixedTtl = {'FixedTTL':[newTtlHeight]};
-            // we can use the same signature as obtained via `delegateNameClaimSignature` (only pre-claim signature is different)
-            // see https://github.com/aeternity/aepp-sdk-js/issues/1237
+            const fixedTtl = { 'FixedTTL': [newTtlHeight] };
             await contract.methods.extend(nameOwnerKeypair.publicKey, testName, aensDelegationSignature, fixedTtl, { onAccount: delegateKeypair });
-            nameResult = await client.aensQuery(testName);
+            nameResult = await aeSdk.aensQuery(testName);
             assert.notDeepEqual(nameResult.ttl, oldTtlHeight);
             assert.equal(nameResult.ttl, newTtlHeight)
         });
-        // excluded due to unsupported AENS types
-        // see https://github.com/aeternity/aepp-sdk-js/issues/1253
         it('should add and get pointers correctly', async () => {
+            // a little bit inconvenient right now, we're discussing how to deal with that in the following issue
+            // => https://github.com/aeternity/aepp-sdk-js/issues/1332
             const accountPointerKey = SCHEMA.NAME_ID_KEY['ak'];
             const oraclePointerKey = SCHEMA.NAME_ID_KEY['ok'];
             const contractPointerKey = SCHEMA.NAME_ID_KEY['ct'];
             const channelPointerKey = SCHEMA.NAME_ID_KEY['ch'];
+            const expectedPointerResult = new Map();
             let getPointersResult = await contract.methods.get_pointers(testName);
-            console.log(getPointersResult.decodedResult);
-            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, accountPointerKey, {'AENS.AccountPt':[nameOwnerKeypair.publicKey]}, aensDelegationSignature, { onAccount: delegateKeypair });
-            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, oraclePointerKey, {'AENS.OraclePt':[nameOwnerKeypair.publicKey]}, aensDelegationSignature, { onAccount: delegateKeypair });
-            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, contractPointerKey, {'AENS.ContractPt':[nameOwnerKeypair.publicKey]}, aensDelegationSignature, { onAccount: delegateKeypair });
-            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, channelPointerKey, {'AENS.ChannelPt':[nameOwnerKeypair.publicKey]}, aensDelegationSignature, { onAccount: delegateKeypair });
-            let aensName = await contract.methods.get_name(testName);
-            console.log(aensName.decodedResult);
-            pointers = await contract.methods.get_pointers(testName);
-            console.log(pointers.decodedResult);
+            assert.deepEqual(getPointersResult.decodedResult, expectedPointerResult);
+            const accountPt = { 'AENS.AccountPt': [nameOwnerKeypair.publicKey] };
+            const contractPt = { 'AENS.ContractPt': [nameOwnerKeypair.publicKey] }; // faked contract (can be set!)
+            const oraclePt = { 'AENS.OraclePt': [nameOwnerKeypair.publicKey] }; // faked oracle (can be set!)
+            const channelPt = { 'AENS.ChannelPt': [nameOwnerKeypair.publicKey] }; // faked channel (can be set!)
+            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, accountPointerKey, accountPt, aensDelegationSignature, { onAccount: delegateKeypair });
+            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, contractPointerKey, contractPt, aensDelegationSignature, { onAccount: delegateKeypair });
+            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, oraclePointerKey, oraclePt, aensDelegationSignature, { onAccount: delegateKeypair });
+            await contract.methods.add_key(nameOwnerKeypair.publicKey, testName, channelPointerKey, channelPt, aensDelegationSignature, { onAccount: delegateKeypair });
+            expectedPointerResult.set('account_pubkey', accountPt);
+            expectedPointerResult.set('contract_pubkey', contractPt)
+            expectedPointerResult.set('oracle_pubkey', oraclePt);
+            expectedPointerResult.set('channel', channelPt);
+            getPointersResult = await contract.methods.get_pointers(testName);
+            assert.deepEqual(getPointersResult.decodedResult, expectedPointerResult);
         });
         it('should transfer a name', async () => {
             let getOwnerDryRun = await contract.methods.get_owner(testName);
@@ -116,10 +111,10 @@ describe('AensDelegation', () => {
         });
         it('should revoke a name', async () => {
             // you need a signature from the new owner now ;)
-            aensDelegationSignature = await client.createAensDelegationSignature({ contractId: contract.deployInfo.address, name: testName }, { onAccount: newOwnerKeypair });
+            aensDelegationSignature = await aeSdk.createAensDelegationSignature({ contractId: contract.deployInfo.address, name: testName }, { onAccount: newOwnerKeypair });
             await contract.methods.revoke(newOwnerKeypair.publicKey, testName, aensDelegationSignature, {onAccount: delegateKeypair});
             try {
-                nameResult = await client.aensQuery(testName);
+                nameResult = await aeSdk.aensQuery(testName);
             } catch(e) {
                 assert.equal(e.response.body.reason, 'Name revoked');
             }

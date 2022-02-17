@@ -1,37 +1,18 @@
+const { utils, wallets } = require('@aeternity/aeproject');
+
 const chai = require('chai');
 const assert = chai.assert;
 const assertNode = require('assert').strict;
 
-const { Universal, MemoryAccount, Node } = require('@aeternity/aepp-sdk');
+const owner = wallets[0], nonOwner = wallets[1], operator = wallets[3];
 
-const NETWORKS = require('../config/network.json');
-const NETWORK_NAME = "local";
-
-const {defaultWallets: WALLETS} = require('../config/wallets.json');
-
-const contractUtils = require('../utils/contract-utils');
-
-const owner = WALLETS[0], nonOwner = WALLETS[1], operator = WALLETS[3];
-
-xdescribe('Non Fungible Token - Mintable/Burnable/Metadata', () => {
+describe('Non Fungible Token - Mintable/Burnable/Metadata', () => {
     let nonFungibleMintableBurnableInstance;
 
     before(async () => {
-        const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
-        const client = await Universal({
-            nodes: [
-              { name: NETWORK_NAME, instance: node },
-            ],
-            compilerUrl: NETWORKS[NETWORK_NAME].compilerUrl,
-            accounts: [
-                MemoryAccount({ keypair: owner }),
-                MemoryAccount({ keypair: nonOwner }),
-                MemoryAccount({ keypair: operator })
-            ],
-            address: owner.publicKey
-        });
-        const contractContent = contractUtils.getContractContent('./contracts/NonFungibleToken/NonFungibleMintableBurnableMetadata.aes');
-        nonFungibleMintableBurnableInstance = await client.getContractInstance(contractContent);
+        const aeSdk = await utils.getClient();
+        const contractContent = utils.getContractContent('./contracts/NonFungibleToken/NonFungibleMintableBurnableMetadata.aes');
+        nonFungibleMintableBurnableInstance = await aeSdk.getContractInstance({ source: contractContent });
     });
 
     describe('Deploy contract', async () => {

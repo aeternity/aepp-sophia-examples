@@ -1,15 +1,9 @@
+const { utils } = require('@aeternity/aeproject');
+
 const chai = require('chai');
 const assert = chai.assert;
 const assertNode = require('assert').strict;
 
-const { Universal, MemoryAccount, Node } = require('@aeternity/aepp-sdk');
-
-const NETWORKS = require('../config/network.json');
-const NETWORK_NAME = "local";
-
-const {defaultWallets: WALLETS} = require('../config/wallets.json');
-
-const contractUtils = require('../utils/contract-utils');
 const {
   timeUnits,
   timePeriod,
@@ -20,27 +14,19 @@ const {
   getMonthDifference
 } = require('../utils/datetime-utils');
 
-xdescribe('LibraryUsage', () => {
+describe('LibraryUsage', () => {
   let libraryUsageInstance;
 
   before(async () => {
-    const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl, ignoreVersion: true });
-    const client = await Universal({
-      nodes: [
-        { name: NETWORK_NAME, instance: node },
-      ],
-      compilerUrl: NETWORKS[NETWORK_NAME].compilerUrl,
-      accounts: [MemoryAccount({ keypair: WALLETS[0] })],
-      address: WALLETS[0].publicKey
-    });
+    const aeSdk = await utils.getClient();
     try {
       // path relative to root of project
       const LIBRARY_USAGE_SOURCE = './contracts/Libraries/LibraryUsage.aes';
       // get filesystem for includes
-      const filesystem = contractUtils.getFilesystem(LIBRARY_USAGE_SOURCE)
-      const contractContent = contractUtils.getContractContent(LIBRARY_USAGE_SOURCE);
+      const filesystem = utils.getFilesystem(LIBRARY_USAGE_SOURCE)
+      const contractContent = utils.getContractContent(LIBRARY_USAGE_SOURCE);
       // initialize the contract instance
-      libraryUsageInstance = await client.getContractInstance(contractContent, {filesystem});
+      libraryUsageInstance = await aeSdk.getContractInstance({ source: contractContent, filesystem });
     } catch(err) {
       console.error(err);
       assert.fail('Could not initialize contract instance');
@@ -180,7 +166,7 @@ xdescribe('LibraryUsage', () => {
       dt_timestamp = date_time.getTime() / 1000;
   
       resultTimestamp = (await libraryUsageInstance.methods.add_months(dt_timestamp, MONTHS_DIFF)).decodedResult;
-      result = getMonthDifference(resultTimestamp, dt_timestamp);
+      result = getMonthDifference(Number(resultTimestamp), dt_timestamp);
   
       assert.equal(result, MONTHS_DIFF);
     });
@@ -192,7 +178,7 @@ xdescribe('LibraryUsage', () => {
       dt_timestamp = date_time.getTime() / 1000;
   
       resultTimestamp = (await libraryUsageInstance.methods.sub_months(dt_timestamp, MONTHS_DIFF)).decodedResult;
-      result = getMonthDifference(dt_timestamp, resultTimestamp);
+      result = getMonthDifference(dt_timestamp, Number(resultTimestamp));
   
       assert.equal(result, MONTHS_DIFF);
     });
@@ -203,7 +189,7 @@ xdescribe('LibraryUsage', () => {
 
       const DAYS_DIFF = generateRandomNumber();
       resultTimestamp = (await libraryUsageInstance.methods.add_days(dt_timestamp, DAYS_DIFF)).decodedResult;
-      result = (resultTimestamp - dt_timestamp) / ONE_DAY;
+      result = (Number(resultTimestamp) - dt_timestamp) / ONE_DAY;
 
       assert.equal(result, DAYS_DIFF);
     });
@@ -214,7 +200,7 @@ xdescribe('LibraryUsage', () => {
 
       const DAYS_DIFF = generateRandomNumber();
       resultTimestamp = (await libraryUsageInstance.methods.sub_days(dt_timestamp, DAYS_DIFF)).decodedResult;
-      result = (dt_timestamp - resultTimestamp) / ONE_DAY;
+      result = (dt_timestamp - Number(resultTimestamp)) / ONE_DAY;
 
       assert.equal(result, DAYS_DIFF);
     });
@@ -225,7 +211,7 @@ xdescribe('LibraryUsage', () => {
   
       dt_timestamp = date_time.getTime() / 1000;
       resultTimestamp = (await libraryUsageInstance.methods.add_hours(dt_timestamp, HOUR_DIFF)).decodedResult;
-      result = (resultTimestamp - dt_timestamp) / ONE_HOUR;
+      result = (Number(resultTimestamp) - dt_timestamp) / ONE_HOUR;
   
       assert.equal(result, HOUR_DIFF);
     });
@@ -236,7 +222,7 @@ xdescribe('LibraryUsage', () => {
   
       dt_timestamp = date_time.getTime() / 1000;
       resultTimestamp = (await libraryUsageInstance.methods.sub_hours(dt_timestamp, HOUR_DIFF)).decodedResult;
-      result = (dt_timestamp - resultTimestamp) / ONE_HOUR;
+      result = (dt_timestamp - Number(resultTimestamp)) / ONE_HOUR;
   
       assert.equal(result, HOUR_DIFF);
     });
@@ -247,7 +233,7 @@ xdescribe('LibraryUsage', () => {
   
       dt_timestamp = date_time.getTime() / 1000
       resultTimestamp = (await libraryUsageInstance.methods.add_minutes(dt_timestamp, MIN_DIFF)).decodedResult;
-      result = (resultTimestamp - dt_timestamp) / ONE_MINUTE;
+      result = (Number(resultTimestamp) - dt_timestamp) / ONE_MINUTE;
   
       assert.equal(result, MIN_DIFF);
     });
@@ -258,7 +244,7 @@ xdescribe('LibraryUsage', () => {
   
       dt_timestamp = date_time.getTime() / 1000;
       resultTimestamp = (await libraryUsageInstance.methods.sub_minutes(dt_timestamp, MIN_DIFF)).decodedResult;
-      result = (dt_timestamp - resultTimestamp) / ONE_MINUTE;
+      result = (dt_timestamp - Number(resultTimestamp)) / ONE_MINUTE;
   
       assert.equal(result, MIN_DIFF);
     });
@@ -269,7 +255,7 @@ xdescribe('LibraryUsage', () => {
   
       dt_timestamp = date_time.getTime() / 1000;
       resultTimestamp = (await libraryUsageInstance.methods.add_seconds(dt_timestamp, SEC_DIFF)).decodedResult;
-      result = resultTimestamp - dt_timestamp;
+      result = Number(resultTimestamp) - dt_timestamp;
   
       assert.equal(result, SEC_DIFF);
     });
@@ -280,7 +266,7 @@ xdescribe('LibraryUsage', () => {
   
       dt_timestamp = date_time.getTime() / 1000;
       resultTimestamp = (await libraryUsageInstance.methods.sub_seconds(dt_timestamp, SEC_DIFF)).decodedResult;
-      result = dt_timestamp - resultTimestamp;
+      result = dt_timestamp - Number(resultTimestamp);
   
       assert.equal(result, SEC_DIFF);
     });

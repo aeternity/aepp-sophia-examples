@@ -85,9 +85,9 @@ function generateRandomTimeStamp(period) {
     return Date.parse(dateTime) / 1000
 }
 
-function getMonthDifference(fromTimestamap, toTimestamp) {
+function getMonthDifference(fromTimestamp, toTimestamp) {
     let toDate = new Date(toTimestamp * 1000)
-    let fromDate = new Date(fromTimestamap * 1000)
+    let fromDate = new Date(fromTimestamp * 1000)
     
     let yearDiff = (fromDate.getFullYear() - toDate.getFullYear()) * 12
     
