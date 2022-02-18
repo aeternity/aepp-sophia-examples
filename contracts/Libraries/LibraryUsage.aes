@@ -1,6 +1,6 @@
 @compiler >=6
 
-// default, see https://github.com/aeternity/aesophia/blob/v6.0.0/docs/sophia_stdlib.md
+// default, see https://github.com/aeternity/aesophia/blob/v6.0.2/docs/sophia_stdlib.md
 include "String.aes"
 
 // custom

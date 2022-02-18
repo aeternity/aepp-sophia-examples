@@ -1,46 +1,21 @@
+const { utils, wallets } = require('@aeternity/aeproject');
+
 const chai = require('chai');
 const assert = chai.assert;
 const assertNode = require('assert').strict;
 
-const { Universal, MemoryAccount, Node } = require('@aeternity/aepp-sdk');
-
-const NETWORKS = require('../config/network.json');
-const NETWORK_NAME = "local";
-
-const {defaultWallets: WALLETS} = require('../config/wallets.json');
-
-const contractUtils = require('../utils/contract-utils');
-
 describe('ExchangeOracles', () => {
 	
-	const owner = WALLETS[0];
-	let client;
+	let aeSdk;
+	const exchangeOracleContent = utils.getContractContent('./contracts/ExchangeOracles/ExchangeOracle.aes');
+	const exchangeMarketContent = utils.getContractContent('./contracts/ExchangeOracles/ExchangeMarket.aes');
+	const owner = wallets[0];
 	let exchangeOracleInstance, exchangeMarketInstance;
 
 	before(async () => {
-		const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
-        client = await Universal({
-            nodes: [
-              { name: NETWORK_NAME, instance: node },
-            ],
-            compilerUrl: NETWORKS[NETWORK_NAME].compilerUrl,
-            accounts: [MemoryAccount({ keypair: owner })],
-            address: owner.publicKey
-        });
-		const exchangeOracleContent = contractUtils.getContractContent('./contracts/ExchangeOracles/ExchangeOracle.aes');
-		const exchangeMarketContent = contractUtils.getContractContent('./contracts/ExchangeOracles/ExchangeMarket.aes');
-		exchangeOracleInstance = await client.getContractInstance(exchangeOracleContent);
-		exchangeMarketInstance = await client.getContractInstance(exchangeMarketContent);
-	});
-
-	it('deploying oracle successfully', async () => {
-		const result = await exchangeOracleInstance.deploy([50, 1000]);
-		assert.equal(result.owner, owner.publicKey);
-	});
-
-	it('deploying market successfully', async () => {
-		const result = await exchangeMarketInstance.deploy([100, 150]);
-		assert.equal(result.owner, owner.publicKey);
+        aeSdk = await utils.getClient();
+		exchangeOracleInstance = await aeSdk.getContractInstance({ source: exchangeOracleContent });
+		exchangeMarketInstance = await aeSdk.getContractInstance({ source: exchangeMarketContent });
 	});
 
 	it('should throw when deploying oracle contract with zero qfee', async () => {
@@ -71,9 +46,27 @@ describe('ExchangeOracles', () => {
         });
 	});
 
+	it('deploying oracle successfully', async () => {
+		const result = await exchangeOracleInstance.deploy([50, 1000]);
+		assert.equal(result.owner, owner.publicKey);
+	});
+
+	it('deploying market successfully', async () => {
+		const result = await exchangeMarketInstance.deploy([100, 150]);
+		assert.equal(result.owner, owner.publicKey);
+	});
+
 	describe('Oracle smart contract tests', () => {
-		beforeEach(async () => {
+		before(async () => {
+			exchangeOracleInstance = await aeSdk.getContractInstance({ source: exchangeOracleContent });
 			await exchangeOracleInstance.deploy([50, 500], {amount: 100000})
+			// create a snapshot of the blockchain state
+			await utils.createSnapshot(aeSdk);
+		});
+
+		// after each test roll back to initial state
+		afterEach(async () => {
+			await utils.rollbackSnapshot(aeSdk);
 		});
 
 		it('should register an oracle successfully  ', async () => {
@@ -102,11 +95,21 @@ describe('ExchangeOracles', () => {
 
 	describe('Exchange Market smart contract tests', () => {
 		let oracleId;
-		beforeEach(async () => {
+
+		before(async () => {
+			exchangeOracleInstance = await aeSdk.getContractInstance({ source: exchangeOracleContent });
+			exchangeMarketInstance = await aeSdk.getContractInstance({ source: exchangeMarketContent });
 			await exchangeOracleInstance.deploy([50, 1000], {amount: 100000});
 			await exchangeMarketInstance.deploy([100, 150], {amount: 100000});
 			const result = await exchangeOracleInstance.methods.get_oracle();
 			oracleId = result.decodedResult;
+			// create a snapshot of the blockchain state
+			await utils.createSnapshot(aeSdk);
+		});
+
+		// after each test roll back to initial state
+		afterEach(async () => {
+			await utils.rollbackSnapshot(aeSdk);
 		});
 
 		it("should get the query_fee", async () => {

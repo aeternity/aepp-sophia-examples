@@ -2,19 +2,17 @@
   "name": "aepp-sophia-examples",
   "version": "1.0.0",
   "description": "providing basic and advanced Sophia contract examples",
-  "main": "index.js",
   "scripts": {
-    "test": "mocha ./test/**/*.js --timeout 0 --exit",
-    "aetest": "aeproject test"
+    "test": "mocha ./test/**/*.js --timeout 0 --exit"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "8.1.0",
-    "prompts": "^2.4.1"
+    "@aeternity/aepp-sdk": "github:aeternity/aepp-sdk-js.git#develop"
   },
   "devDependencies": {
+    "@aeternity/aeproject": "^4.0.0-beta.3",
     "chai": "^4.3.4",
-    "mocha": "^8.4.0"
+    "mocha": "^9.1.3"
   }
 }

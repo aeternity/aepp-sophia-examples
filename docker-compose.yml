@@ -1,16 +1,23 @@
-version: '3'
+version: '3.6'
 services:
-  node:
-    image: 'aeternity/aeternity:${NODE_TAG}'
+
+  aeproject_node:
+    image: aeternity/aeternity:${NODE_TAG}-bundle
     hostname: node
     environment:
       AETERNITY_CONFIG: /home/aeternity/aeternity.yaml
-    command: |
-      bin/aeternity console -noinput -aehttp enable_debug_endpoints true
     volumes:
       - './docker/aeternity.yaml:/home/aeternity/aeternity.yaml'
-  proxy:
-    image: 'nginx:1.13.8'
+      - './docker/accounts.json:/home/aeternity/node/data/aecore/.genesis/accounts_test.json'
+
+  aeproject_compiler:
+    image: aeternity/aesophia_http:${COMPILER_TAG}
+    hostname: compiler
+    ports:
+      - '3080:3080'
+
+  aeproject_proxy:
+    image: nginx:latest
     hostname: proxy
     ports:
       - '3001:3001'

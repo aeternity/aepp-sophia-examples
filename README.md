@@ -1,11 +1,21 @@
 # aepp-sophia-examples
 
 ## AEproject
-The project structure follows the default structure of [AEproject](https://github.com/aeternity/aepp-aeproject-js) which allows developers to easily run a local dev environment, test & deploy their Smart Contracts written in [Sophia](https://github.com/aeternity/aesophia/blob/v6.0.0/docs/sophia.md).
+[AEproject](https://github.com/aeternity/aeproject) is the testing framework for [Sophia](https://aeternity.com/aesophia) Smart Contract development and allows developers to easily run a local dev environment & test their Smart Contracts.
+
+The structure of this repository follows the default structure that AEproject provides if you initialize a new project.
 
 ***Note***
-- This repository doesn't provide any deployment scripts as it is only intended to showcase Sophia Smart Contracts
-- All Sophia examples are provided with corresponding tests written in Javascript which can be found under [./test](test)
+- This repository doesn't provide any deployment scripts as it is only intended to showcase Sophia Smart Contracts & how to test those.
+- All Sophia examples are provided with corresponding tests written in JavaScript which can be found under [./test](test).
+
+## Standards (Aeternity Expansions) & Reference Implementations
+The [Aeternity Expansions](https://github.com/aeternity/AEXs#aeternity-expansions) (AEX) are standards on aeternity proposed by the community. If you have a good idea or face common requirements you can also submit a new AEX proposal for which a reference implementation can be developed.
+
+- [AEX-9: Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-9.md)
+    - [Reference Implementation](https://github.com/aeternity/aeternity-fungible-token)
+- [AEX-141: Non Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-141.md)
+    - Reference Implementation in progress
 
 ## Smart Contract Examples
 
@@ -17,6 +27,13 @@ The project structure follows the default structure of [AEproject](https://githu
 The [LibraryUsage.aes](contracts/Libraries/LibraryUsage.aes) contract shows how to include default and custom libraries in a Smart Contract. The example currently includes following custom libraries:
 - [BaseConverter.aes](contracts/Libraries/lib/BaseConverter.aes)
 - [DateTime.aes](contracts/Libraries/lib/DateTime.aes)
+
+### Delegation signatures
+It is possible to delegate the right to perform certain `AENS` or `Oracle` related actions to a contract. Check out the following examples and corresponding tests to see how you can use it:
+
+- [AensDelegation.aes](contracts/DelegationSignature/AensDelegation.aes)
+    - Delegation signatures for `AENS` functions can e.g. be used to create an AENS marketplace
+- [OracleDelegation.aes](contracts/DelegationSignature/OracleDelegation.aes)
 
 ### Oracles
 
@@ -34,9 +51,10 @@ There also exists another repository [ae-oracle-pricefeed](https://github.com/ae
 An even more complex example which aggregates answers of multiple oracles is included in [tipping-oracle-service](https://github.com/aeternity/tipping-oracle-service). The contracts in this repository are being used by https://superhero.com.
 
 ### NFTs (Non Fungible Tokens)
-Currently there doesn't exist an official NFT standard for aeternity. There is currently an active [Grant application](https://forum.aeternity.com/t/active-aeternity-nft-standard-and-implementation/9146) running where a NFT standard will be defined and implemented.
+The [AEX-141: Non Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-141.md) standard was published in January 2022 and should be considered when implementing NFT contracts.
 
-To get some inspiration how NFTs on aeternity could look like following examples are provided:
+The following examples are old and independent examples. We **DO NOT recommend** to use those!
+
 - [NonFungibleMintableBurnable.aes](contracts/NonFungibleToken/NonFungibleMintableBurnable.aes)
 - [NonFungibleMintableBurnableMetadata.aes](contracts/NonFungibleToken/NonFungibleMintableBurnableMetadata.aes)
 
@@ -69,11 +87,6 @@ The contracts in the folder [contracts/Training](contracts/Training) are simple 
 
 - [SimpleToken.aes](contracts/Training/SimpleToken.aes)
     - This is just a simple example. If you want to create a Fungible Token for your project you should take a look at the [Fungible Token Standard](https://github.com/aeternity/aeternity-fungible-token)
-
-## Reference Implementations
-There also exist reference implementations of [Aeternity Expansions](https://github.com/aeternity/AEXs#aeternity-expansions) (AEX), the standards on aeternity proposed by the community. If you have a good idea or face common requirements you can also submit a new AEX proposal for which a reference implementation can be developed.
-
-- [AEX-9: Fungible Token Standard](https://github.com/aeternity/aeternity-fungible-token)
 
 ## Problems / Questions
 If you face a problem or have other questions please pick one of the following places:

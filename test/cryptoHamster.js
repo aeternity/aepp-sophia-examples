@@ -1,15 +1,8 @@
+const { utils } = require('@aeternity/aeproject');
+
 const chai = require('chai');
 const assert = chai.assert;
 const assertNode = require('assert').strict;
-
-const { Universal, MemoryAccount, Node } = require('@aeternity/aepp-sdk');
-
-const NETWORKS = require('../config/network.json');
-const NETWORK_NAME = "local";
-
-const {defaultWallets: WALLETS} = require('../config/wallets.json');
-
-const contractUtils = require('../utils/contract-utils');
 
 const hamsterNames = [
     'aleks',
@@ -19,24 +12,16 @@ const hamsterNames = [
 ];
 
 describe('Crypto Hamster', async () => {
-
+    let aeSdk;
     let cryptoHamsterInstance;
 
     beforeEach(async () => {
-        const node = await Node({ url: NETWORKS[NETWORK_NAME].nodeUrl });
-        const client = await Universal({
-            nodes: [
-              { name: NETWORK_NAME, instance: node },
-            ],
-            compilerUrl: NETWORKS[NETWORK_NAME].compilerUrl,
-            accounts: [MemoryAccount({ keypair: WALLETS[0] })],
-            address: WALLETS[0].publicKey
-        });
+        aeSdk = await utils.getClient();
         try {
             // path relative to root of project
-            const contractContent = contractUtils.getContractContent('./contracts/CryptoHamster/CryptoHamster.aes');
+            const contractContent = utils.getContractContent('./contracts/CryptoHamster/CryptoHamster.aes');
             // initialize the contract instance
-            cryptoHamsterInstance = await client.getContractInstance(contractContent);
+            cryptoHamsterInstance = await aeSdk.getContractInstance({ source: contractContent });
             await cryptoHamsterInstance.deploy([]);
         } catch(err) {
             console.error(err);
@@ -82,8 +67,7 @@ describe('Crypto Hamster', async () => {
         }
     });
 
-    // excluded because it randomly fails too frequently
-    xit('Hamsters DNA should not match', async () => {
+    it('Hamsters DNA should not match', async () => {
         const dnas = [];
         for (let i = 0; i < hamsterNames.length; i++) {
             await cryptoHamsterInstance.methods.create_hamster(hamsterNames[i]);
