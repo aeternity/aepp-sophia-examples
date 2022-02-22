@@ -1,5 +1,5 @@
 const { utils, wallets } = require('@aeternity/aeproject');
-const { Crypto, AmountFormatter } = require('@aeternity/aepp-sdk');
+const { Crypto, AmountFormatter, MemoryAccount } = require('@aeternity/aepp-sdk');
 
 const chai = require('chai');
 const assert = chai.assert;
@@ -8,7 +8,7 @@ describe('OracleDelegation', () => {
     let aeSdk;
     let oracleDelegationContractInstance;
     let initialTtl;
-    
+
     const qFee = 5000; // aettos
     const delegateKeypair = wallets[0];
     const oracleKeypair = Crypto.generateKeyPair();
@@ -54,7 +54,7 @@ describe('OracleDelegation', () => {
             const oracle = await aeSdk.getOracleObject(oracleId);
             assert.equal(oracle.ttl, initialTtl + 800);
         });
-        xit('should respond to a specific query', async () => {
+        it('should respond to a specific query', async () => {
             const createQueryResult = await oracleDelegationContractInstance.methods.create_query(
                 oracleId,
                 "how is the wheather over there?",
@@ -62,8 +62,11 @@ describe('OracleDelegation', () => {
                 { RelativeTTL: [200] },
                 { onAccount: inquiryKeypair, amount: qFee });
             const queryId = createQueryResult.decodedResult;
-            const oracleRespondSig = await aeSdk.createOracleDelegationSignature({ contractId: oracleDelegationContractInstance.deployInfo.address, queryId }, { onAccount: oracleKeypair });
-            // TODO why does this fail?
+            // TODO switch to onAccount after merging https://github.com/aeternity/aepp-sdk-js/pull/1418
+            await aeSdk.addAccount(MemoryAccount({ keypair: oracleKeypair }), { select: true })
+            const oracleRespondSig = await aeSdk.createOracleDelegationSignature(
+                { contractId: oracleDelegationContractInstance.deployInfo.address, queryId },
+            );
             await oracleDelegationContractInstance.methods.respond(oracleId, queryId, oracleRespondSig, 'sunny =)', { onAccount: delegateKeypair });
             // TODO receive query object from node and compare response
         });
