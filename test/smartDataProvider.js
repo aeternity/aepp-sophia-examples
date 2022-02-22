@@ -22,7 +22,7 @@ describe('SmartDataProvider', () => {
           backendContractInstance = await aeSdk.getContractInstance({ source: contractContent });
           await backendContractInstance.deploy([]);
       });
-  
+
       it('should deploy smart-data-provider client contract', async () => {
           // a filesystem object must be passed to the compiler if the contract uses custom includes
           const filesystem = utils.getFilesystem(SMART_DATA_PROVIDER_CLIENT_SOURCE);
@@ -33,16 +33,20 @@ describe('SmartDataProvider', () => {
           await clientContractInstance.deploy([]);
       });
     });
-    
+
     // TODO "Invocation failed?!" => Devmode bug?!
-    xdescribe('Interact with contracts', () => {
+    describe('Interact with contracts', () => {
       it('should get USD exchange rate', async () => {
-        const result = await clientContractInstance.methods.get_exchange_rate(backendContractInstance.deployInfo.address, "USD", { amount: 100 });
+        const result = await clientContractInstance.methods.get_exchange_rate(
+            backendContractInstance.deployInfo.address, "USD", { amount: 100, gas: 36000 },
+        );
         assert.equal(result.decodedResult, '1')
       });
-  
+
       it('should get EUR exchange rate', async () => {
-        const result = await clientContractInstance.methods.get_exchange_rate(backendContractInstance.deployInfo.address, "EUR", { amount: 100 });
+        const result = await clientContractInstance.methods.get_exchange_rate(
+            backendContractInstance.deployInfo.address, "EUR", { amount: 100, gas: 36000 },
+        );
         assert.equal(result.decodedResult, '2')
       });
     });
