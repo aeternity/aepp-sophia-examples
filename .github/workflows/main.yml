@@ -13,6 +13,5 @@ jobs:
         with:
           node-version: 15.x
       - run: npm ci
-      - run: npm install -g @aeternity/aeproject@4.0.0-beta.3
-      - run: aeproject env && sleep 3
-      - run: aeproject test
+      - run: npx aeproject env && sleep 3
+      - run: npx aeproject test
