@@ -80,10 +80,10 @@ describe('AensDelegation', () => {
         it('should add and get pointers correctly', async () => {
             // a little bit inconvenient right now, we're discussing how to deal with that in the following issue
             // => https://github.com/aeternity/aepp-sdk-js/issues/1332
-            const accountPointerKey = SCHEMA.NAME_ID_KEY['ak'];
-            const oraclePointerKey = SCHEMA.NAME_ID_KEY['ok'];
-            const contractPointerKey = SCHEMA.NAME_ID_KEY['ct'];
-            const channelPointerKey = SCHEMA.NAME_ID_KEY['ch'];
+            const accountPointerKey = SCHEMA.POINTER_KEY_BY_PREFIX['ak'];
+            const oraclePointerKey = SCHEMA.POINTER_KEY_BY_PREFIX['ok'];
+            const contractPointerKey = SCHEMA.POINTER_KEY_BY_PREFIX['ct'];
+            const channelPointerKey = SCHEMA.POINTER_KEY_BY_PREFIX['ch'];
             const expectedPointerResult = new Map();
             let getPointersResult = await contract.methods.get_pointers(testName);
             assert.deepEqual(getPointersResult.decodedResult, expectedPointerResult);

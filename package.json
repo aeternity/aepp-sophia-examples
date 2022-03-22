@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "providing basic and advanced Sophia contract examples",
   "scripts": {
-    "test": "mocha ./test/**/*.js"
+    "test": "mocha ./test/**/*.js --timeout 20000",
+    "test:exchangeOracles": "mocha ./test/exchangeOracles.js --timeout 20000",
+    "test:oracleDelegation": "mocha ./test/oracleDelegation.js --timeout 20000"
   },
   "author": "",
   "license": "ISC",
