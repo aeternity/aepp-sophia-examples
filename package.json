@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "providing basic and advanced Sophia contract examples",
   "scripts": {
-    "test": "mocha ./test/**/*.js --timeout 0 --exit"
+    "test": "mocha ./test/**/*.js"
   },
   "author": "",
   "license": "ISC",
