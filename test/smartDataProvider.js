@@ -11,7 +11,7 @@ describe('SmartDataProvider', () => {
     let backendContractInstance, clientContractInstance;
 
     before(async () => {
-      aeSdk = await utils.getClient();
+      aeSdk = await utils.getSdk();
     });
 
     describe('Deploy contracts', () => {

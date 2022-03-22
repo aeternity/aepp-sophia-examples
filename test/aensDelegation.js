@@ -23,7 +23,7 @@ describe('AensDelegation', () => {
     console.log(testName);
 
     before(async () => {
-        aeSdk = await utils.getClient();
+        aeSdk = await utils.getSdk();
         try {
             // path relative to root of project
             const contractContent = utils.getContractContent('./contracts/DelegationSignature/AensDelegation.aes');

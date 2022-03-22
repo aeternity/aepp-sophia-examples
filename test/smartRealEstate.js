@@ -8,7 +8,7 @@ describe('SmartRealEstate Contract', () => {
   const owner = wallets[0];
 
   before(async () => {
-    const aeSdk = await utils.getClient();
+    const aeSdk = await utils.getSdk();
     const contractContent = utils.getContractContent("./contracts/SmartRealEstate/SmartRealEstate.aes");
     smartRealEstateContractInstance = await aeSdk.getContractInstance({ source: contractContent });
   });

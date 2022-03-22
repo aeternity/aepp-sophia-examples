@@ -8,7 +8,7 @@ describe('SmartShop', () => {
   let sellerContractInstance, transportContractInstance, buyerContractInstance;
 
   before(async () => {
-    const aeSdk = await utils.getClient();
+    const aeSdk = await utils.getSdk();
     sellerContractInstance = await aeSdk.getContractInstance( { source: utils.getContractContent('./contracts/SmartShop/Seller.aes') });
     transportContractInstance = await aeSdk.getContractInstance( { source: utils.getContractContent('./contracts/SmartShop/Transport.aes') });
     const BUYER_SOURCE = './contracts/SmartShop/Buyer.aes';

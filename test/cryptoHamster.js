@@ -16,7 +16,7 @@ describe('Crypto Hamster', async () => {
     let cryptoHamsterInstance;
 
     beforeEach(async () => {
-        aeSdk = await utils.getClient();
+        aeSdk = await utils.getSdk();
         try {
             // path relative to root of project
             const contractContent = utils.getContractContent('./contracts/CryptoHamster/CryptoHamster.aes');

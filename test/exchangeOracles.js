@@ -13,7 +13,7 @@ describe('ExchangeOracles', () => {
 	let exchangeOracleInstance, exchangeMarketInstance;
 
 	before(async () => {
-        aeSdk = await utils.getClient();
+        aeSdk = await utils.getSdk();
 		exchangeOracleInstance = await aeSdk.getContractInstance({ source: exchangeOracleContent });
 		exchangeMarketInstance = await aeSdk.getContractInstance({ source: exchangeMarketContent });
 	});

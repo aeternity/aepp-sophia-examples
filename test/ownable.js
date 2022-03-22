@@ -11,7 +11,7 @@ describe('Ownable', () => {
   const newOwner = wallets[2];
 
   before(async () => {
-    const aeSdk = await utils.getClient();
+    const aeSdk = await utils.getSdk();
     try {
         // path relative to root of project
         const contractContent = utils.getContractContent('./contracts/Ownable/Ownable.aes');

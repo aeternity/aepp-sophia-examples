@@ -16,7 +16,7 @@ describe('OracleDelegation', () => {
     const oracleId = `ok_${oracleKeypair.publicKey.slice(3)}`;
 
     before(async () => {
-        aeSdk = await utils.getClient();
+        aeSdk = await utils.getSdk();
         try {
             // path relative to root of project
             const contractContent = utils.getContractContent('./contracts/DelegationSignature/OracleDelegation.aes');
