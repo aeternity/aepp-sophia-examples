@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "providing basic and advanced Sophia contract examples",
   "scripts": {
-    "test": "mocha ./test/**/*.js"
+    "test": "mocha ./test/**/*.js --timeout 4000"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "github:aeternity/aepp-sdk-js.git#develop"
+    "@aeternity/aepp-sdk": "^11.0.0"
   },
   "devDependencies": {
     "@aeternity/aeproject": "^4.0.0-beta.3",
