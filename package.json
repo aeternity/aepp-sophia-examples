@@ -5,7 +5,8 @@
   "scripts": {
     "test": "mocha ./test/**/*.js --timeout 20000",
     "test:exchangeOracles": "mocha ./test/exchangeOracles.js --timeout 20000",
-    "test:oracleDelegation": "mocha ./test/oracleDelegation.js --timeout 20000"
+    "test:oracleDelegation": "mocha ./test/oracleDelegation.js --timeout 20000",
+    "test:smartRealEstate": "mocha ./test/smartRealEstate.js"
   },
   "author": "",
   "license": "ISC",
