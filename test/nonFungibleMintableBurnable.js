@@ -10,7 +10,7 @@ describe('Non Fungible Token - Mintable & Burnable', () => {
     let nonFungibleMintableBurnableInstance;
 
     before(async () => {
-        const aeSdk = await utils.getClient();
+        const aeSdk = await utils.getSdk();
         const contractContent = utils.getContractContent('./contracts/NonFungibleToken/NonFungibleMintableBurnable.aes');
         nonFungibleMintableBurnableInstance = await aeSdk.getContractInstance({ source: contractContent });
     });

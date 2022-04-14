@@ -4,7 +4,8 @@ const chai = require('chai');
 const assert = chai.assert;
 const assertNode = require('assert').strict;
 
-describe('ExchangeOracles', () => {
+// excluded until https://github.com/aeternity/aeternity/issues/3871 is resolved
+xdescribe('ExchangeOracles', () => {
 	
 	let aeSdk;
 	const exchangeOracleContent = utils.getContractContent('./contracts/ExchangeOracles/ExchangeOracle.aes');
@@ -13,7 +14,7 @@ describe('ExchangeOracles', () => {
 	let exchangeOracleInstance, exchangeMarketInstance;
 
 	before(async () => {
-        aeSdk = await utils.getClient();
+        aeSdk = await utils.getSdk();
 		exchangeOracleInstance = await aeSdk.getContractInstance({ source: exchangeOracleContent });
 		exchangeMarketInstance = await aeSdk.getContractInstance({ source: exchangeMarketContent });
 	});

@@ -9,7 +9,7 @@ describe('SpendToMany', () => {
   let spendToManyContractInstance;
 
   before(async () => {
-    aeSdk = await utils.getClient();
+    aeSdk = await utils.getSdk();
     try {
         // path relative to root of project
         const contractContent = utils.getContractContent('./contracts/SpendToMany/SpendToMany.aes');

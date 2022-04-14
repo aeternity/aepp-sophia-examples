@@ -18,7 +18,7 @@ describe('LibraryUsage', () => {
   let libraryUsageInstance;
 
   before(async () => {
-    const aeSdk = await utils.getClient();
+    const aeSdk = await utils.getSdk();
     try {
       // path relative to root of project
       const LIBRARY_USAGE_SOURCE = './contracts/Libraries/LibraryUsage.aes';
