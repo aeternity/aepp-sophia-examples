@@ -3,19 +3,29 @@
   "version": "1.0.0",
   "description": "providing basic and advanced Sophia contract examples",
   "scripts": {
-    "test": "mocha ./test/**/*.js --timeout 20000",
-    "test:exchangeOracles": "mocha ./test/exchangeOracles.js --timeout 20000",
-    "test:oracleDelegation": "mocha ./test/oracleDelegation.js --timeout 20000",
-    "test:smartRealEstate": "mocha ./test/smartRealEstate.js"
+    "test": "mocha ./test/**/*.js --timeout 0 --exit",
+    "test:aensDelegation": "mocha ./test/aensDelegation.js --timeout 0 --exit",
+    "test:cryptoHamster": "mocha ./test/cryptoHamster.js --timeout 0 --exit",
+    "test:exchangeOracles": "mocha ./test/exchangeOracles.js --timeout 0 --exit",
+    "test:libraryUsage": "mocha ./test/libraryUsage.js --timeout 0 --exit",
+    "test:nonFungibleMintableBurnable": "mocha ./test/nonFungibleMintableBurnable.js --timeout 0 --exit",
+    "test:nonFungibleMintableBurnableMetadata": "mocha ./test/nonFungibleMintableBurnableMetadata.js --timeout 0 --exit",
+    "test:oracleDelegation": "mocha ./test/oracleDelegation.js --timeout 0 --exit",
+    "test:ownable": "mocha ./test/ownable.js --timeout 0 --exit",
+    "test:smartDataProvider": "mocha ./test/smartDataProvider.js --timeout 0 --exit",
+    "test:smartRealEstate": "mocha ./test/smartRealEstate.js --timeout 0 --exit",
+    "test:smartShop": "mocha ./test/smartShop.js --timeout 0 --exit",
+    "test:spendToMany": "mocha ./test/spendToMany.js --timeout 0 --exit",
+    "test:ticTacToe": "mocha ./test/ticTacToe.js --timeout 0 --exit"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "^11.0.1"
+    "@aeternity/aepp-sdk": "^12.0.0"
   },
   "devDependencies": {
-    "@aeternity/aeproject": "^4.0.0",
-    "chai": "^4.3.4",
-    "mocha": "^9.1.3"
+    "@aeternity/aeproject": "^4.1.1",
+    "chai": "^4.3.6",
+    "mocha": "^9.2.2"
   }
 }

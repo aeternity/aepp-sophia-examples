@@ -24,12 +24,12 @@ describe('SmartDataProvider', () => {
       });
 
       it('should deploy smart-data-provider client contract', async () => {
-          // a filesystem object must be passed to the compiler if the contract uses custom includes
-          const filesystem = utils.getFilesystem(SMART_DATA_PROVIDER_CLIENT_SOURCE);
+          // a fileSystem object must be passed to the compiler if the contract uses custom includes
+          const fileSystem = utils.getFilesystem(SMART_DATA_PROVIDER_CLIENT_SOURCE);
           // get content of contract
           const contractContent = utils.getContractContent(SMART_DATA_PROVIDER_CLIENT_SOURCE);
           // initialize the contract instance
-          clientContractInstance = await aeSdk.getContractInstance({ source: contractContent, filesystem});
+          clientContractInstance = await aeSdk.getContractInstance({ source: contractContent, fileSystem});
           await clientContractInstance.deploy([]);
       });
     });

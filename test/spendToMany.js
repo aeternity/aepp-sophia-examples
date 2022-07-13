@@ -45,9 +45,9 @@ describe('SpendToMany', () => {
     });
 
     it('should spend and check balance again', async () => {
-      const current_balance = await aeSdk.balance(wallets[1].publicKey);
+      const current_balance = await aeSdk.getBalance(wallets[1].publicKey);
       await spendToManyContractInstance.methods.spend_to_many([ [wallets[1].publicKey, 200] ], { amount: 200 });
-      const balance_after_spend = await aeSdk.balance(wallets[1].publicKey);
+      const balance_after_spend = await aeSdk.getBalance(wallets[1].publicKey);
       assert.equal(balance_after_spend, parseInt(current_balance, 10) + 200);
     });
 
