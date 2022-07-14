@@ -120,7 +120,7 @@ describe('AensDelegation', async () => {
             try {
                 nameResult = await aeSdk.aensQuery(testName);
             } catch(e) {
-                assert.equal(e.response.body.reason, 'Name revoked');
+              assert.equal(e.details.reason, 'Name revoked');
             }
         });
     });
