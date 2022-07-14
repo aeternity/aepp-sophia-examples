@@ -1,14 +1,18 @@
-const { utils, wallets } = require('@aeternity/aeproject');
+const { utils } = require('@aeternity/aeproject');
 
 const chai = require('chai');
 const assert = chai.assert;
 const assertNode = require('assert').strict;
 
-describe('Ownable', () => {
+describe('Ownable', async () => {
   let ownableInstance;
-  const owner = wallets[0];
-  const nonOwner = wallets[1];
-  const newOwner = wallets[2];
+  const accounts = utils.getDefaultAccounts();
+  const ownerAccount = accounts[0];
+  const ownerAddress = await ownerAccount.address();
+  const nonOwnerAccount = accounts[1];
+  const nonOwnerAddress = await nonOwnerAccount.address();
+  const newOwnerAccount = accounts[2];
+  const newOwnerAddress = await newOwnerAccount.address();
 
   before(async () => {
     const aeSdk = await utils.getSdk();
@@ -25,35 +29,35 @@ describe('Ownable', () => {
 
   describe('Deploy contract', () => {
     it('should deploy Ownable contract', async () => {
-      const init = await ownableInstance.deploy([], {onAccount: owner.publicKey});
+      const init = await ownableInstance.deploy([], {onAccount: ownerAccount});
       assert.equal(init.result.returnType, 'ok');
       const result = await ownableInstance.methods.owner();
-      assert.equal(result.decodedResult, owner.publicKey);
+      assert.equal(result.decodedResult, ownerAddress);
     });
   });
 
   describe('Interact with the contract', async () => {
     it('should fail when trying to receive ownership as nonOwner', async () => {
-      await assertNode.rejects(ownableInstance.methods.transfer_ownership(nonOwner.publicKey, {onAccount: nonOwner.publicKey}), (err) => {
+      await assertNode.rejects(ownableInstance.methods.transfer_ownership(nonOwnerAddress, {onAccount: nonOwnerAccount}), (err) => {
         assert.include(err.message, "The caller is different than the owner");
         return true;
       });
     });
 
     it('should transfer ownership', async () => {
-      await ownableInstance.methods.transfer_ownership(newOwner.publicKey, {onAccount: owner.publicKey});
+      await ownableInstance.methods.transfer_ownership(newOwnerAddress, {onAccount: ownerAccount});
       const result = await ownableInstance.methods.owner();
-      assert.equal(result.decodedResult, newOwner.publicKey);
+      assert.equal(result.decodedResult, newOwnerAddress);
     });
 
     it('should renounce ownership', async () => {
-      await ownableInstance.methods.renounce_ownership({onAccount: newOwner.publicKey});
+      await ownableInstance.methods.renounce_ownership({onAccount: newOwnerAccount});
       const result = await ownableInstance.methods.owner();
       assert.equal(result.decodedResult, undefined);
     });
 
     it('should fail after renounced ownership', async () => {
-      await assertNode.rejects(ownableInstance.methods.transfer_ownership(nonOwner.publicKey, {onAccount: newOwner.publicKey}), (err) => {
+      await assertNode.rejects(ownableInstance.methods.transfer_ownership(nonOwnerAddress, {onAccount: newOwnerAccount}), (err) => {
         assert.include(err.message, "Ownership has been renounced");
         return true;
       });

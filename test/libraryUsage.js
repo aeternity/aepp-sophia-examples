@@ -22,11 +22,11 @@ describe('LibraryUsage', () => {
     try {
       // path relative to root of project
       const LIBRARY_USAGE_SOURCE = './contracts/Libraries/LibraryUsage.aes';
-      // get filesystem for includes
-      const filesystem = utils.getFilesystem(LIBRARY_USAGE_SOURCE)
+      // get fileSystem for includes
+      const fileSystem = utils.getFilesystem(LIBRARY_USAGE_SOURCE)
       const contractContent = utils.getContractContent(LIBRARY_USAGE_SOURCE);
       // initialize the contract instance
-      libraryUsageInstance = await aeSdk.getContractInstance({ source: contractContent, filesystem });
+      libraryUsageInstance = await aeSdk.getContractInstance({ source: contractContent, fileSystem });
     } catch(err) {
       console.error(err);
       assert.fail('Could not initialize contract instance');

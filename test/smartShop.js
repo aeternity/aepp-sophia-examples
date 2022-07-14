@@ -1,10 +1,14 @@
-const { utils, wallets } = require('@aeternity/aeproject');
+const { utils } = require('@aeternity/aeproject');
 
 const chai = require('chai');
 const assert = chai.assert;
 
-describe('SmartShop', () => {
-  let owner = wallets[0], buyer = wallets[1];
+describe('SmartShop', async () => {
+  const accounts = utils.getDefaultAccounts();
+  const ownerAccount = accounts[0]
+  const buyerAccount = accounts[1];
+  const buyerAddress = await buyerAccount.address();
+  
   let sellerContractInstance, transportContractInstance, buyerContractInstance;
 
   before(async () => {
@@ -13,21 +17,21 @@ describe('SmartShop', () => {
     transportContractInstance = await aeSdk.getContractInstance( { source: utils.getContractContent('./contracts/SmartShop/Transport.aes') });
     const BUYER_SOURCE = './contracts/SmartShop/Buyer.aes';
     const buyerContractContent = utils.getContractContent(BUYER_SOURCE);
-    const filesystem = utils.getFilesystem(BUYER_SOURCE);
-    buyerContractInstance = await aeSdk.getContractInstance({ source: buyerContractContent, filesystem });
+    const fileSystem = utils.getFilesystem(BUYER_SOURCE);
+    buyerContractInstance = await aeSdk.getContractInstance({ source: buyerContractContent, fileSystem });
   });
 
   describe('Deploy Contracts', () => {
     it('Deploy SellerContract', async () => {
-      await sellerContractInstance.deploy([buyer.publicKey, 100], { onAccount: owner });
+      await sellerContractInstance.deploy([buyerAddress, 100], { onAccount: ownerAccount });
     });
 
     it('Deploy TransportContract', async () => {
-      await transportContractInstance.deploy(['Lagos'], { onAccount: owner });
+      await transportContractInstance.deploy(['Lagos'], { onAccount: ownerAccount });
     });
 
     it('Deploying BuyerContract', async () => {
-      await buyerContractInstance.deploy([sellerContractInstance.deployInfo.address, transportContractInstance.deployInfo.address], { onAccount: buyer });
+      await buyerContractInstance.deploy([sellerContractInstance.deployInfo.address, transportContractInstance.deployInfo.address], { onAccount: buyerAccount });
     });
   });
 
@@ -79,7 +83,7 @@ describe('SmartShop', () => {
     });
 
     it('Should recieve item from BuyerContract', async () => {
-      await buyerContractInstance.methods.received_item({onAccount: buyer});
+      await buyerContractInstance.methods.received_item({onAccount: buyerAccount});
     });
 
     it('Should check SellerContract balance from BuyerContract', async () => {
