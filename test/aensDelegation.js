@@ -45,7 +45,7 @@ describe('AensDelegation', async () => {
 
         // fund newOwner with 1 AE as there is currently an issue (shouldn't be required for delegated actions)
         // see https://github.com/aeternity/aeternity/issues/3674
-        await aeSdk.spend(1, nameOwnerAddress, {
+        await aeSdk.spend(1, newOwnerAddress, {
             onAccount: mainAccount,
             denomination: AE_AMOUNT_FORMATS.AE
         });
