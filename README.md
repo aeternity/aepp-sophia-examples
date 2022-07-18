@@ -15,7 +15,7 @@ The [Aeternity Expansions](https://github.com/aeternity/AEXs#aeternity-expansion
 - [AEX-9: Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-9.md)
     - [Reference Implementation](https://github.com/aeternity/aeternity-fungible-token)
 - [AEX-141: Non Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-141.md)
-    - Reference Implementation in progress
+    - [Example implementations](https://github.com/aeternity/aex141-examples) (Note: there is an ongoing discussion around AEX-141 and the example implementation, see https://github.com/aeternity/aex141-examples/issues/7)
 
 ## Smart Contract Examples
 
