@@ -1,5 +1,5 @@
 const { utils } = require('@aeternity/aeproject');
-const { AE_AMOUNT_FORMATS, MemoryAccount, POINTER_KEY_BY_PREFIX, commitmentHash, decode, generateKeyPair, getMinimumNameFee, salt } = require('@aeternity/aepp-sdk');
+const { AE_AMOUNT_FORMATS, MemoryAccount, getDefaultPointerKey, commitmentHash, decode, generateKeyPair, getMinimumNameFee, salt } = require('@aeternity/aepp-sdk');
 
 const { assert } = require('chai');
 
@@ -16,7 +16,7 @@ describe('AensDelegation', async () => {
     let contract;
     let randomSalt;
     let aensDelegationSignature;
-    
+
     const mainAccount = accounts[0]
     const delegateAccount = accounts[1];
     const nameOwnerAccount = new MemoryAccount({ keypair: generateKeyPair() });
@@ -84,27 +84,42 @@ describe('AensDelegation', async () => {
         it('should add and get pointers correctly', async () => {
             // a little bit inconvenient right now, we're discussing how to deal with that in the following issue
             // => https://github.com/aeternity/aepp-sdk-js/issues/1332
-            const accountPointerKey = POINTER_KEY_BY_PREFIX['ak'];
-            const oraclePointerKey = POINTER_KEY_BY_PREFIX['ok'];
-            const contractPointerKey = POINTER_KEY_BY_PREFIX['ct'];
-            const channelPointerKey = POINTER_KEY_BY_PREFIX['ch'];
-            const expectedPointerResult = new Map();
             let getPointersResult = await contract.methods.get_pointers(testName);
-            assert.deepEqual(getPointersResult.decodedResult, expectedPointerResult);
-            const accountPt = { 'AENS.AccountPt': [nameOwnerAddress] };
-            const contractPt = { 'AENS.ContractPt': [nameOwnerAddress] }; // faked contract (can be set!)
-            const oraclePt = { 'AENS.OraclePt': [nameOwnerAddress] }; // faked oracle (can be set!)
-            const channelPt = { 'AENS.ChannelPt': [nameOwnerAddress] }; // faked channel (can be set!)
-            await contract.methods.add_key(nameOwnerAddress, testName, accountPointerKey, accountPt, aensDelegationSignature, { onAccount: delegateAccount });
-            await contract.methods.add_key(nameOwnerAddress, testName, contractPointerKey, contractPt, aensDelegationSignature, { onAccount: delegateAccount });
-            await contract.methods.add_key(nameOwnerAddress, testName, oraclePointerKey, oraclePt, aensDelegationSignature, { onAccount: delegateAccount });
-            await contract.methods.add_key(nameOwnerAddress, testName, channelPointerKey, channelPt, aensDelegationSignature, { onAccount: delegateAccount });
-            expectedPointerResult.set('account_pubkey', accountPt);
-            expectedPointerResult.set('contract_pubkey', contractPt)
-            expectedPointerResult.set('oracle_pubkey', oraclePt);
-            expectedPointerResult.set('channel', channelPt);
+            assert.deepEqual(getPointersResult.decodedResult, new Map());
+
+            // TODO: move to SDK
+            function addressToAensPointee (address) {
+                const key = {
+                    ak: 'AENS.AccountPt',
+                    ct: 'AENS.ContractPt',
+                    ok: 'AENS.OraclePt',
+                    ch: 'AENS.ChannelPt',
+                }[address.substring(0, 2)];
+                return { [key]: [`ak${address.substring(2)}`] }
+            }
+
+            for (const prefix of ['ak', 'ct', 'ok', 'ch']) {
+                const address = nameOwnerAddress.replace('ak_', `${prefix}_`);
+                await contract.methods.add_key(
+                    nameOwnerAddress,
+                    testName,
+                    getDefaultPointerKey(address),
+                    addressToAensPointee(address),
+                    aensDelegationSignature,
+                    { onAccount: delegateAccount },
+                );
+            }
+
             getPointersResult = await contract.methods.get_pointers(testName);
-            assert.deepEqual(getPointersResult.decodedResult, expectedPointerResult);
+            assert.deepEqual(
+                getPointersResult.decodedResult,
+                new Map([
+                    ['account_pubkey', { 'AENS.AccountPt': [nameOwnerAddress] }],
+                    ['contract_pubkey', { 'AENS.ContractPt': [nameOwnerAddress] }], // faked contract (can be set!)
+                    ['oracle_pubkey', { 'AENS.OraclePt': [nameOwnerAddress] }], // faked oracle (can be set!)
+                    ['channel', { 'AENS.ChannelPt': [nameOwnerAddress] }], // faked channel (can be set!)
+                ]),
+            );
         });
         it('should transfer a name', async () => {
             let getOwnerDryRun = await contract.methods.get_owner(testName);
