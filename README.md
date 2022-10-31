@@ -1,4 +1,4 @@
-# aepp-sophia-examples
+# aepp-sophia-examples [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/aeternity/aepp-sophia-examples)
 
 ## AEproject
 [AEproject](https://github.com/aeternity/aeproject) is the testing framework for [Sophia](https://aeternity.com/aesophia) Smart Contract development and allows developers to easily run a local dev environment & test their Smart Contracts.
