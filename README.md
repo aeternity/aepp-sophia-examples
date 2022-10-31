@@ -9,13 +9,14 @@ The structure of this repository follows the default structure that AEproject pr
 - This repository doesn't provide any deployment scripts as it is only intended to showcase Sophia Smart Contracts & how to test those.
 - All Sophia examples are provided with corresponding tests written in JavaScript which can be found under [./test](test).
 
-## Standards (Aeternity Expansions) & Reference Implementations
+## Standards (Aeternity Expansions) & Implementations
 The [Aeternity Expansions](https://github.com/aeternity/AEXs#aeternity-expansions) (AEX) are standards on aeternity proposed by the community. If you have a good idea or face common requirements you can also submit a new AEX proposal for which a reference implementation can be developed.
 
 - [AEX-9: Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-9.md)
     - [Reference Implementation](https://github.com/aeternity/aeternity-fungible-token)
 - [AEX-141: Non Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-141.md)
-    - [Example implementations](https://github.com/aeternity/aex141-examples) (Note: there is an ongoing discussion around AEX-141 and the example implementation, see https://github.com/aeternity/aex141-examples/issues/7)
+    - [NFT Collection Example Implementation](https://github.com/aeternity/aex141-nft-collection-example)
+    - [Simple Marketplace Example Implementation](https://github.com/aeternity/aex141-nft-simple-marketplace)
 
 ## Smart Contract Examples
 
@@ -50,14 +51,6 @@ There also exists another repository [ae-oracle-pricefeed](https://github.com/ae
 
 An even more complex example which aggregates answers of multiple oracles is included in [tipping-oracle-service](https://github.com/aeternity/tipping-oracle-service). The contracts in this repository are being used by https://superhero.com.
 
-### NFTs (Non Fungible Tokens)
-The [AEX-141: Non Fungible Token](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-141.md) standard was published in January 2022 and should be considered when implementing NFT contracts.
-
-The following examples are old and independent examples. We **DO NOT recommend** to use those!
-
-- [NonFungibleMintableBurnable.aes](contracts/NonFungibleToken/NonFungibleMintableBurnable.aes)
-- [NonFungibleMintableBurnableMetadata.aes](contracts/NonFungibleToken/NonFungibleMintableBurnableMetadata.aes)
-
 ### Smart Shop
 
 This is a good example to see how to deal with contract interfaces to call remote contracts. All contracts can be found under [contracts/SmartShop](contracts/SmartShop).
@@ -81,12 +74,6 @@ This is a good example to see how to deal with contract interfaces to call remot
 - [SmartRealEstate.aes](contracts/SmartRealEstate/SmartRealEstate.aes)
 - [SpendToMany.aes](contracts/SpendToMany/SpendToMany.aes)
 - [TicTacToe.aes](contracts/SpendToMany/SpendToMany.aes)
-
-### Training
-The contracts in the folder [contracts/Training](contracts/Training) are simple examples and have been created to serve the [Educational content on aeternity development](https://www.youtube.com/playlist?list=PLZTjth8D1qBd47Qs3miHKtrHrxPzFpQ-3) (YouTube).
-
-- [SimpleToken.aes](contracts/Training/SimpleToken.aes)
-    - This is just a simple example. If you want to create a Fungible Token for your project you should take a look at the [Fungible Token Standard](https://github.com/aeternity/aeternity-fungible-token)
 
 ## Problems / Questions
 If you face a problem or have other questions please pick one of the following places:
