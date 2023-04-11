@@ -1,10 +1,10 @@
 tasks:
 - name: Setup Dev Environment
   before: |
-    npm i -g @aeternity/aeproject@^4.2.1
+    npm i -g @aeternity/aeproject@^4.6.0
     npm i
   init: |
-    aeproject env --nodeVersion v6.6.0 --compilerVersion v6.1.0
+    aeproject env
   command: |
     aeproject -V
     aeproject --help

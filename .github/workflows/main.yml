@@ -13,5 +13,5 @@ jobs:
         with:
           node-version: 16.x
       - run: npm ci
-      - run: npx aeproject env --nodeVersion v6.6.0 --compilerVersion v6.1.0 && sleep 3
+      - run: npx aeproject env && sleep 3
       - run: npx aeproject test

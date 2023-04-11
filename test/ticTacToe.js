@@ -14,7 +14,7 @@ describe('TicTacToe', () => {
         // path relative to root of project
         const contractContent = utils.getContractContent('./contracts/TicTacToe/TicTacToe.aes');
         // initialize the contract instance
-        ticTacToeContractInstance = await aeSdk.getContractInstance({ source: contractContent });
+        ticTacToeContractInstance = await aeSdk.initializeContract({ sourceCode: contractContent });
     } catch(err) {
         console.error(err);
         assert.fail('Could not initialize contract instance');
@@ -23,72 +23,72 @@ describe('TicTacToe', () => {
 
   describe('Deploy contract', () => {
     it('should deploy TicTacToe contract', async () => {
-      const init = await ticTacToeContractInstance.deploy([]);
+      const init = await ticTacToeContractInstance.init();
       assert.equal(init.result.returnType, 'ok');
     });
   });
 
   describe('Interact with the contract', () => {
     it('should reject with invalid position', async () => {
-      await assertNode.rejects(ticTacToeContractInstance.methods.make_move(41,1), (err) => {
+      await assertNode.rejects(ticTacToeContractInstance.make_move(41,1), (err) => {
         assert.include(err.message, 'Incorrect position!');
         return true;
       });
     });
 
     it('should reject with invalid player', async () => {
-      await assertNode.rejects(ticTacToeContractInstance.methods.make_move(11,3), (err) => {
+      await assertNode.rejects(ticTacToeContractInstance.make_move(11,3), (err) => {
         assert.include(err.message, 'Invalid player!');
         return true;
       });
     });
 
     it('should make move as player 1', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(11,1);
+      const result = await ticTacToeContractInstance.make_move(11,1);
       assert.equal(result.decodedResult, `Game continues. The other player's turn.`);
     });
 
     it('should reject not your turn', async () => {
-      await assertNode.rejects(ticTacToeContractInstance.methods.make_move(12,1), (err) => {
+      await assertNode.rejects(ticTacToeContractInstance.make_move(12,1), (err) => {
         assert.include(err.message, `It's not your turn! Player 2 has to play now!`);
         return true;
       });
     });
 
     it('should reject place already taken', async () => {
-      await assertNode.rejects(ticTacToeContractInstance.methods.make_move(11,2), (err) => {
+      await assertNode.rejects(ticTacToeContractInstance.make_move(11,2), (err) => {
         assert.include(err.message, 'Place is already taken!');
         return true;
       });
     });
 
     it('should make move as player 2', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(12,2);
+      const result = await ticTacToeContractInstance.make_move(12,2);
       assert.equal(result.decodedResult, `Game continues. The other player's turn.`);
     });
 
     it('should make move as player 1', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(33,1);
+      const result = await ticTacToeContractInstance.make_move(33,1);
       assert.equal(result.decodedResult, `Game continues. The other player's turn.`);
     });
 
     it('should make move as player 2', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(23,2);
+      const result = await ticTacToeContractInstance.make_move(23,2);
       assert.equal(result.decodedResult, `Game continues. The other player's turn.`);
     });
 
     it('should make move as player 1', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(31,1);
+      const result = await ticTacToeContractInstance.make_move(31,1);
       assert.equal(result.decodedResult, `Game continues. The other player's turn.`);
     });
 
     it('should make move as player 2', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(21,2);
+      const result = await ticTacToeContractInstance.make_move(21,2);
       assert.equal(result.decodedResult, `Game continues. The other player's turn.`);
     });
 
     it('should win as player 1', async () => {
-      const result = await ticTacToeContractInstance.methods.make_move(32,1);
+      const result = await ticTacToeContractInstance.make_move(32,1);
       assert.equal(result.decodedResult, 'You are the winner! Congratulations player 1');
     });
   });
