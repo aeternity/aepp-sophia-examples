@@ -19,8 +19,8 @@ describe('SmartDataProvider', () => {
           // get content of contract
           const contractContent = utils.getContractContent(SMART_DATA_PROVIDER_BACKEND_SOURCE);
           // initialize the contract instance
-          backendContractInstance = await aeSdk.getContractInstance({ source: contractContent });
-          await backendContractInstance.deploy([]);
+          backendContractInstance = await aeSdk.initializeContract({ sourceCode: contractContent });
+          await backendContractInstance.$deploy([]);
       });
 
       it('should deploy smart-data-provider client contract', async () => {
@@ -29,23 +29,23 @@ describe('SmartDataProvider', () => {
           // get content of contract
           const contractContent = utils.getContractContent(SMART_DATA_PROVIDER_CLIENT_SOURCE);
           // initialize the contract instance
-          clientContractInstance = await aeSdk.getContractInstance({ source: contractContent, fileSystem});
-          await clientContractInstance.deploy([]);
+          clientContractInstance = await aeSdk.initializeContract({ sourceCode: contractContent, fileSystem});
+          await clientContractInstance.$deploy([]);
       });
     });
 
     // TODO "Invocation failed?!" => Devmode bug?!
     describe('Interact with contracts', () => {
       it('should get USD exchange rate', async () => {
-        const result = await clientContractInstance.methods.get_exchange_rate(
-            backendContractInstance.deployInfo.address, "USD", { amount: 100, gas: 36000 },
+        const result = await clientContractInstance.get_exchange_rate(
+            backendContractInstance.$options.address, "USD", { amount: 100, gas: 36000 },
         );
         assert.equal(result.decodedResult, '1')
       });
 
       it('should get EUR exchange rate', async () => {
-        const result = await clientContractInstance.methods.get_exchange_rate(
-            backendContractInstance.deployInfo.address, "EUR", { amount: 100, gas: 36000 },
+        const result = await clientContractInstance.get_exchange_rate(
+            backendContractInstance.$options.address, "EUR", { amount: 100, gas: 36000 },
         );
         assert.equal(result.decodedResult, '2')
       });

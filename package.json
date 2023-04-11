@@ -8,8 +8,6 @@
     "test:cryptoHamster": "mocha ./test/cryptoHamster.js --timeout 0 --exit",
     "test:exchangeOracles": "mocha ./test/exchangeOracles.js --timeout 0 --exit",
     "test:libraryUsage": "mocha ./test/libraryUsage.js --timeout 0 --exit",
-    "test:nonFungibleMintableBurnable": "mocha ./test/nonFungibleMintableBurnable.js --timeout 0 --exit",
-    "test:nonFungibleMintableBurnableMetadata": "mocha ./test/nonFungibleMintableBurnableMetadata.js --timeout 0 --exit",
     "test:oracleDelegation": "mocha ./test/oracleDelegation.js --timeout 0 --exit",
     "test:ownable": "mocha ./test/ownable.js --timeout 0 --exit",
     "test:smartDataProvider": "mocha ./test/smartDataProvider.js --timeout 0 --exit",
@@ -21,10 +19,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "^12.1.3"
+    "@aeternity/aepp-sdk": "^13.0.0"
   },
   "devDependencies": {
-    "@aeternity/aeproject": "^4.1.5",
+    "@aeternity/aeproject": "^4.6.0",
     "chai": "^4.3.6",
     "mocha": "^9.2.2"
   }
